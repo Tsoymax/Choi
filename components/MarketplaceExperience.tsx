@@ -8,6 +8,7 @@ import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
 import { ProductGrid } from "./ProductGrid";
+import type { Language } from "./i18n";
 import type { Category, District, Product } from "./types";
 
 type MarketplaceExperienceProps = {
@@ -22,6 +23,7 @@ export function MarketplaceExperience({
   products
 }: MarketplaceExperienceProps) {
   const [query, setQuery] = useState("");
+  const [language, setLanguage] = useState<Language>("ru");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeDistrict, setActiveDistrict] = useState("all");
 
@@ -46,23 +48,27 @@ export function MarketplaceExperience({
 
   return (
     <main className="min-h-screen overflow-hidden">
-      <Header />
-      <Hero query={query} onQueryChange={setQuery} />
+      <div className="bg-[#050607]">
+        <Header language={language} onLanguageChange={setLanguage} />
+      </div>
+      <Hero query={query} language={language} onQueryChange={setQuery} />
       <CategoryGrid
         categories={categories}
         activeCategory={activeCategory}
+        language={language}
         onCategoryChange={setActiveCategory}
       />
       <section id="discover" className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
         <DistrictFilter
           districts={districts}
           activeDistrict={activeDistrict}
+          language={language}
           onDistrictChange={setActiveDistrict}
         />
-        <ProductGrid products={filteredProducts} />
+        <ProductGrid products={filteredProducts} language={language} />
       </section>
-      <FeaturedSellers products={products} />
-      <Footer />
+      <FeaturedSellers products={products} language={language} />
+      <Footer language={language} />
     </main>
   );
 }

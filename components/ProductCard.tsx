@@ -1,5 +1,7 @@
 import { BadgeCheck, Heart, Star } from "lucide-react";
 import type { Product } from "./types";
+import type { Language } from "./i18n";
+import { translations } from "./i18n";
 
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -18,9 +20,14 @@ const paletteMap: Record<string, string> = {
 
 type ProductCardProps = {
   product: Product;
+  language: Language;
 };
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, language }: ProductCardProps) {
+  const t = translations[language];
+  const title =
+    language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
+
   return (
     <article className="group overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft">
       <div className={`relative aspect-[4/3] bg-gradient-to-br ${paletteMap[product.palette]}`}>
@@ -37,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-ink">{product.title}</h3>
+            <h3 className="text-lg font-semibold text-ink">{title}</h3>
             <p className="mt-1 text-sm text-ink/58">{product.seller}</p>
           </div>
           <strong className="text-lg font-semibold text-ink">
@@ -51,7 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </span>
           <span className="inline-flex items-center gap-1">
             <BadgeCheck size={16} className="text-leaf" />
-            Verified
+            {t.verified}
           </span>
         </div>
       </div>

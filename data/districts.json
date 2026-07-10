@@ -1,18 +1,50 @@
 [
   {
-    "id": "hannam",
-    "label": "Hannam"
+    "id": "yunusabad",
+    "label": "Yunusabad",
+    "labelRu": "Юнусабад",
+    "labelUz": "Yunusobod"
   },
   {
-    "id": "seongsu",
-    "label": "Seongsu"
+    "id": "chilanzar",
+    "label": "Chilanzar",
+    "labelRu": "Чиланзар",
+    "labelUz": "Chilonzor"
   },
   {
-    "id": "yeonnam",
-    "label": "Yeonnam"
+    "id": "mirabad",
+    "label": "Mirabad",
+    "labelRu": "Мирабад",
+    "labelUz": "Mirobod"
   },
   {
-    "id": "bukchon",
-    "label": "Bukchon"
+    "id": "shaykhantakhur",
+    "label": "Shaykhantakhur",
+    "labelRu": "Шайхантахур",
+    "labelUz": "Shayxontohur"
+  },
+  {
+    "id": "yakkasaray",
+    "label": "Yakkasaray",
+    "labelRu": "Яккасарай",
+    "labelUz": "Yakkasaroy"
+  },
+  {
+    "id": "almazar",
+    "label": "Almazar",
+    "labelRu": "Алмазар",
+    "labelUz": "Olmazor"
+  },
+  {
+    "id": "sergeli",
+    "label": "Sergeli",
+    "labelRu": "Сергели",
+    "labelUz": "Sergeli"
+  },
+  {
+    "id": "uchtepa",
+    "label": "Uchtepa",
+    "labelRu": "Учтепа",
+    "labelUz": "Uchtepa"
   }
 ]

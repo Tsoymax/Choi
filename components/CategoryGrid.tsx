@@ -1,47 +1,53 @@
 import { SlidersHorizontal } from "lucide-react";
 import type { Category } from "./types";
+import type { Language } from "./i18n";
+import { translations } from "./i18n";
 
 type CategoryGridProps = {
   categories: Category[];
   activeCategory: string;
+  language: Language;
   onCategoryChange: (categoryId: string) => void;
 };
 
 export function CategoryGrid({
   categories,
   activeCategory,
+  language,
   onCategoryChange
 }: CategoryGridProps) {
+  const t = translations[language];
+
   return (
     <section id="categories" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-leaf">
-            Shop by mood
+            {t.categoriesEyebrow}
           </p>
           <h2 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
-            Fresh categories
+            {t.categoriesTitle}
           </h2>
         </div>
         <button className="focus-ring inline-flex h-11 w-fit items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm">
           <SlidersHorizontal size={17} />
-          Filters
+          {t.filters}
         </button>
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-3">
         <CategoryButton
           active={activeCategory === "all"}
-          label="All"
-          description="Everything nearby"
+          label={t.allCategories}
+          description={t.allCategoriesDescription}
           onClick={() => onCategoryChange("all")}
         />
         {categories.map((category) => (
           <CategoryButton
             key={category.id}
             active={activeCategory === category.id}
-            label={category.label}
-            description={category.description}
+            label={language === "uz" ? category.labelUz ?? category.label : category.labelRu ?? category.label}
+            description={language === "uz" ? category.descriptionUz ?? category.description : category.descriptionRu ?? category.description}
             onClick={() => onCategoryChange(category.id)}
           />
         ))}

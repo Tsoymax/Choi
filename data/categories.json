@@ -1,27 +1,47 @@
 [
   {
-    "id": "fashion",
-    "label": "Fashion",
-    "description": "Daily pieces and small labels"
+    "id": "electronics",
+    "label": "Electronics",
+    "labelRu": "Электроника",
+    "labelUz": "Elektronika",
+    "description": "Phones, laptops, accessories",
+    "descriptionRu": "Телефоны, ноутбуки, техника",
+    "descriptionUz": "Telefon, noutbuk, texnika"
   },
   {
     "id": "home",
     "label": "Home",
-    "description": "Objects for softer rooms"
+    "labelRu": "Дом",
+    "labelUz": "Uy",
+    "description": "Furniture and home goods",
+    "descriptionRu": "Мебель и товары для дома",
+    "descriptionUz": "Mebel va uy buyumlari"
   },
   {
-    "id": "beauty",
-    "label": "Beauty",
-    "description": "Skincare and ritual goods"
+    "id": "fashion",
+    "label": "Fashion",
+    "labelRu": "Одежда",
+    "labelUz": "Kiyim",
+    "description": "Clothes, bags, shoes",
+    "descriptionRu": "Одежда, сумки, обувь",
+    "descriptionUz": "Kiyim, sumka, poyabzal"
   },
   {
-    "id": "food",
-    "label": "Cafe & pantry",
-    "description": "Fresh treats and staples"
+    "id": "kids",
+    "label": "Kids",
+    "labelRu": "Детям",
+    "labelUz": "Bolalar",
+    "description": "Strollers, toys, school",
+    "descriptionRu": "Коляски, игрушки, школа",
+    "descriptionUz": "Kolyaska, o'yinchoq, maktab"
   },
   {
-    "id": "craft",
-    "label": "Craft",
-    "description": "Handmade and limited runs"
+    "id": "transport",
+    "label": "Transport",
+    "labelRu": "Транспорт",
+    "labelUz": "Transport",
+    "description": "Bikes, scooters, parts",
+    "descriptionRu": "Велосипеды, самокаты, запчасти",
+    "descriptionUz": "Velosiped, samokat, ehtiyot qismlar"
   }
 ]
