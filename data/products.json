@@ -1,0 +1,74 @@
+[
+  {
+    "id": "linen-tote",
+    "title": "Washed linen tote",
+    "seller": "Studio Onda",
+    "category": "fashion",
+    "district": "hannam",
+    "price": 64,
+    "rating": 4.9,
+    "reviews": 128,
+    "badge": "Low stock",
+    "palette": "sage"
+  },
+  {
+    "id": "ceramic-cup",
+    "title": "Hand-thrown ceramic cup",
+    "seller": "Mild Clay",
+    "category": "home",
+    "district": "bukchon",
+    "price": 38,
+    "rating": 4.8,
+    "reviews": 94,
+    "badge": "New drop",
+    "palette": "coral"
+  },
+  {
+    "id": "daily-serum",
+    "title": "Barrier repair serum",
+    "seller": "Leaf Lab",
+    "category": "beauty",
+    "district": "seongsu",
+    "price": 42,
+    "rating": 4.9,
+    "reviews": 213,
+    "badge": "Bestseller",
+    "palette": "sky"
+  },
+  {
+    "id": "market-candle",
+    "title": "Hinoki market candle",
+    "seller": "Room Note",
+    "category": "home",
+    "district": "yeonnam",
+    "price": 29,
+    "rating": 4.7,
+    "reviews": 76,
+    "badge": "Gift pick",
+    "palette": "ink"
+  },
+  {
+    "id": "sesame-cookie",
+    "title": "Black sesame cookies",
+    "seller": "Dawn Bakehouse",
+    "category": "food",
+    "district": "yeonnam",
+    "price": 18,
+    "rating": 4.9,
+    "reviews": 166,
+    "badge": "Today only",
+    "palette": "honey"
+  },
+  {
+    "id": "silk-scrunchie",
+    "title": "Silk cloud scrunchie",
+    "seller": "Slow Ribbon",
+    "category": "craft",
+    "district": "hannam",
+    "price": 24,
+    "rating": 4.8,
+    "reviews": 58,
+    "badge": "Handmade",
+    "palette": "plum"
+  }
+]
