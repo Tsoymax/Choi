@@ -1,47 +1,83 @@
 [
   {
+    "id": "auto",
+    "label": "Auto",
+    "labelRu": "Авто",
+    "labelUz": "Avto",
+    "description": "Cars and transport",
+    "descriptionRu": "Автомобили рядом",
+    "descriptionUz": "Yaqindagi avtomobillar"
+  },
+  {
+    "id": "real-estate",
+    "label": "Real estate",
+    "labelRu": "Недвижимость",
+    "labelUz": "Ko'chmas mulk",
+    "description": "Homes and apartments",
+    "descriptionRu": "Квартиры и дома",
+    "descriptionUz": "Uy va kvartiralar"
+  },
+  {
     "id": "electronics",
     "label": "Electronics",
     "labelRu": "Электроника",
     "labelUz": "Elektronika",
-    "description": "Phones, laptops, accessories",
-    "descriptionRu": "Телефоны, ноутбуки, техника",
-    "descriptionUz": "Telefon, noutbuk, texnika"
-  },
-  {
-    "id": "home",
-    "label": "Home",
-    "labelRu": "Дом",
-    "labelUz": "Uy",
-    "description": "Furniture and home goods",
-    "descriptionRu": "Мебель и товары для дома",
-    "descriptionUz": "Mebel va uy buyumlari"
+    "description": "Phones and devices",
+    "descriptionRu": "Телефоны и техника",
+    "descriptionUz": "Telefon va texnika"
   },
   {
     "id": "fashion",
     "label": "Fashion",
-    "labelRu": "Одежда",
-    "labelUz": "Kiyim",
-    "description": "Clothes, bags, shoes",
-    "descriptionRu": "Одежда, сумки, обувь",
-    "descriptionUz": "Kiyim, sumka, poyabzal"
+    "labelRu": "Одежда и аксессуары",
+    "labelUz": "Kiyim va aksessuarlar",
+    "description": "Clothes and style",
+    "descriptionRu": "Одежда, обувь, сумки",
+    "descriptionUz": "Kiyim, poyabzal, sumka"
   },
   {
-    "id": "kids",
-    "label": "Kids",
-    "labelRu": "Детям",
-    "labelUz": "Bolalar",
-    "description": "Strollers, toys, school",
-    "descriptionRu": "Коляски, игрушки, школа",
-    "descriptionUz": "Kolyaska, o'yinchoq, maktab"
+    "id": "jobs",
+    "label": "Jobs",
+    "labelRu": "Работа и подработка",
+    "labelUz": "Ish va qo'shimcha ish",
+    "description": "Local opportunities",
+    "descriptionRu": "Вакансии рядом",
+    "descriptionUz": "Yaqindagi ishlar"
   },
   {
-    "id": "transport",
-    "label": "Transport",
-    "labelRu": "Транспорт",
-    "labelUz": "Transport",
-    "description": "Bikes, scooters, parts",
-    "descriptionRu": "Велосипеды, самокаты, запчасти",
-    "descriptionUz": "Velosiped, samokat, ehtiyot qismlar"
+    "id": "services",
+    "label": "Services",
+    "labelRu": "Услуги",
+    "labelUz": "Xizmatlar",
+    "description": "Masters and help",
+    "descriptionRu": "Мастера и помощь",
+    "descriptionUz": "Ustalar va yordam"
+  },
+  {
+    "id": "parts",
+    "label": "Parts",
+    "labelRu": "Запчасти",
+    "labelUz": "Ehtiyot qismlar",
+    "description": "Auto parts",
+    "descriptionRu": "Запчасти для авто",
+    "descriptionUz": "Avto ehtiyot qismlari"
+  },
+  {
+    "id": "home",
+    "label": "Home",
+    "labelRu": "Для дома",
+    "labelUz": "Uy uchun",
+    "description": "Furniture and decor",
+    "descriptionRu": "Мебель и уют",
+    "descriptionUz": "Mebel va bezak"
+  },
+  {
+    "id": "business",
+    "label": "Business",
+    "labelRu": "Для бизнеса",
+    "labelUz": "Biznes uchun",
+    "description": "Equipment and spaces",
+    "descriptionRu": "Оборудование и точки",
+    "descriptionUz": "Jihozlar va joylar"
   }
 ]
