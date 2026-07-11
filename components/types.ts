@@ -26,6 +26,7 @@ export type Product = {
   price: number;
   rating: number;
   reviews: number;
-  badge: string;
-  palette: string;
+  image: string;
+  badgeRu?: string;
+  badgeUz?: string;
 };

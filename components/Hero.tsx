@@ -40,11 +40,11 @@ export function Hero({ query, language, onQueryChange }: HeroProps) {
 
           <div className="relative min-h-[260px] md:min-h-[380px]">
             <Image
-              src="/images/approved-home-reference.png"
+              src="/images/choi-teapot.png"
               alt="Blue and white Uzbek Choi teapot"
               fill
               priority
-              className="scale-[1.95] object-cover object-[78%_32%]"
+              className="object-contain object-center drop-shadow-[0_28px_38px_rgba(13,42,34,0.16)]"
               sizes="(max-width: 768px) 100vw, 720px"
             />
           </div>

@@ -10,8 +10,9 @@
     "price": 11200,
     "rating": 4.9,
     "reviews": 42,
-    "badge": "Top",
-    "palette": "sage"
+    "image": "/images/listings/cobalt.png",
+    "badgeRu": "Популярное",
+    "badgeUz": "Ommabop"
   },
   {
     "id": "apartment-chilanzar",
@@ -24,22 +25,22 @@
     "price": 43000,
     "rating": 4.8,
     "reviews": 31,
-    "badge": "New",
-    "palette": "honey"
+    "image": "/images/listings/apartment.png",
+    "badgeRu": "Новое",
+    "badgeUz": "Yangi"
   },
   {
     "id": "iphone-14",
-    "title": "iPhone 14 Pro 256GB",
-    "titleRu": "iPhone 14 Pro 256GB",
-    "titleUz": "iPhone 14 Pro 256GB",
+    "title": "iPhone 14 Pro 256 GB",
+    "titleRu": "iPhone 14 Pro 256 ГБ",
+    "titleUz": "iPhone 14 Pro 256 GB",
     "seller": "Bekzod",
     "category": "electronics",
     "district": "mirabad",
     "price": 780,
     "rating": 4.9,
     "reviews": 27,
-    "badge": "Clean",
-    "palette": "sky"
+    "image": "/images/listings/iphone.png"
   },
   {
     "id": "winter-coat",
@@ -52,22 +53,22 @@
     "price": 65,
     "rating": 4.8,
     "reviews": 22,
-    "badge": "Style",
-    "palette": "plum"
+    "image": "/images/listings/coat.png"
   },
   {
     "id": "courier-job",
     "title": "Courier evening shift",
     "titleRu": "Курьер на вечер",
     "titleUz": "Kechki kuryer ishi",
-    "seller": "Choi Jobs",
+    "seller": "Oybek",
     "category": "jobs",
     "district": "shaykhantakhur",
     "price": 35,
     "rating": 4.7,
     "reviews": 18,
-    "badge": "Today",
-    "palette": "ink"
+    "image": "/images/listings/courier.png",
+    "badgeRu": "Сегодня",
+    "badgeUz": "Bugun"
   },
   {
     "id": "repair-master",
@@ -80,49 +81,6 @@
     "price": 25,
     "rating": 4.9,
     "reviews": 54,
-    "badge": "Fast",
-    "palette": "coral"
-  },
-  {
-    "id": "spark-parts",
-    "title": "Spark wheel set",
-    "titleRu": "Комплект колёс Spark",
-    "titleUz": "Spark g'ildiraklari",
-    "seller": "Auto Line",
-    "category": "parts",
-    "district": "sergeli",
-    "price": 180,
-    "rating": 4.6,
-    "reviews": 15,
-    "badge": "Parts",
-    "palette": "sky"
-  },
-  {
-    "id": "sofa",
-    "title": "Compact living room sofa",
-    "titleRu": "Компактный диван",
-    "titleUz": "Ixcham divan",
-    "seller": "Zarina",
-    "category": "home",
-    "district": "uchtepa",
-    "price": 210,
-    "rating": 4.7,
-    "reviews": 18,
-    "badge": "Home",
-    "palette": "sage"
-  },
-  {
-    "id": "coffee-kiosk",
-    "title": "Coffee kiosk equipment",
-    "titleRu": "Оборудование для кофейни",
-    "titleUz": "Qahvaxona jihozlari",
-    "seller": "Business Hub",
-    "category": "business",
-    "district": "mirabad",
-    "price": 1250,
-    "rating": 4.8,
-    "reviews": 11,
-    "badge": "Biz",
-    "palette": "honey"
+    "image": "/images/listings/repair.png"
   }
 ]

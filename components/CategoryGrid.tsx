@@ -86,21 +86,20 @@ function CategoryCard({
   const label =
     language === "uz" ? category.labelUz ?? category.label : category.labelRu ?? category.label;
   const spanClass = index < 4 ? "lg:col-span-5" : "lg:col-span-4";
-  const tallClass = index < 4 ? "min-h-[220px]" : "min-h-[182px]";
 
   return (
     <button
       onClick={onClick}
-      className={`focus-ring group relative overflow-hidden rounded-[24px] border bg-white p-6 text-left shadow-[0_16px_44px_rgba(24,32,29,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_68px_rgba(24,32,29,0.13)] ${spanClass} ${tallClass} ${
+      className={`focus-ring group relative min-h-[214px] overflow-hidden rounded-[24px] border bg-white p-6 text-left shadow-[0_16px_44px_rgba(24,32,29,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_68px_rgba(24,32,29,0.13)] sm:min-h-[232px] lg:min-h-[220px] ${spanClass} ${
         active ? "border-leaf ring-2 ring-leaf/20" : "border-ink/8"
       }`}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-[#f7f5ef]" />
-      <h3 className="relative z-10 max-w-[12rem] text-xl font-semibold leading-tight text-ink">
+      <h3 className="relative z-20 max-w-[13rem] pr-2 text-lg font-semibold leading-tight text-ink sm:text-xl">
         {label}
       </h3>
       <div
-        className="absolute bottom-2 right-2 h-[72%] w-[76%] bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat transition duration-300 group-hover:scale-105"
+        className="absolute bottom-1 right-1 z-10 h-[68%] w-[72%] bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat transition duration-300 group-hover:scale-105 sm:h-[72%] sm:w-[74%]"
         style={{ backgroundPosition: spritePositions[index] }}
         aria-hidden="true"
       />

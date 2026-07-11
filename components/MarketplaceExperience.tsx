@@ -33,7 +33,14 @@ export function MarketplaceExperience({
     return products.filter((product) => {
       const matchesQuery =
         !normalizedQuery ||
-        [product.title, product.seller, product.badge]
+        [
+          product.title,
+          product.titleRu,
+          product.titleUz,
+          product.seller,
+          product.badgeRu,
+          product.badgeUz
+        ]
           .join(" ")
           .toLowerCase()
           .includes(normalizedQuery);
