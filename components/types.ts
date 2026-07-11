@@ -24,6 +24,8 @@ export type Product = {
   category: string;
   district: string;
   price: number;
+  currency?: "uzs" | "usd";
+  negotiable?: boolean;
   rating: number;
   reviews: number;
   image: string;

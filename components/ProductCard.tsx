@@ -10,6 +10,18 @@ const formatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0
 });
 
+function formatPrice(product: Product) {
+  if (product.negotiable) {
+    return "Договорная";
+  }
+
+  if (product.currency === "uzs") {
+    return `${new Intl.NumberFormat("ru-RU").format(product.price)} сум`;
+  }
+
+  return formatter.format(product.price);
+}
+
 type ProductCardProps = {
   product: Product;
   language: Language;
@@ -29,6 +41,7 @@ export function ProductCard({ product, language }: ProductCardProps) {
           src={product.image}
           alt={title}
           fill
+          unoptimized={product.image.startsWith("data:")}
           className="object-cover transition duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
@@ -47,8 +60,8 @@ export function ProductCard({ product, language }: ProductCardProps) {
             <h3 className="text-lg font-semibold text-ink">{title}</h3>
             <p className="mt-1 text-sm text-ink/58">{product.seller}</p>
           </div>
-          <strong className="text-lg font-semibold text-ink">
-            {formatter.format(product.price)}
+          <strong className="shrink-0 text-lg font-semibold text-ink">
+            {formatPrice(product)}
           </strong>
         </div>
         <div className="mt-4 flex items-center justify-between text-sm text-ink/62">

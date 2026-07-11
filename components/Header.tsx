@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronDown, Heart, MapPin, MessageCircle, Plus, Search } from "lucide-react";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
@@ -51,11 +52,14 @@ export function Header({
           <button className="focus-ring hidden h-12 items-center px-3 text-base font-semibold text-ink md:flex">
             {t.signIn}
           </button>
-          <button className="focus-ring inline-flex h-14 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] sm:px-6 sm:text-base">
+          <Link
+            href="/sell"
+            className="focus-ring inline-flex h-14 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] sm:px-6 sm:text-base"
+          >
             <Plus size={20} />
             <span className="hidden sm:inline">{t.postListing}</span>
             <span className="sm:hidden">{t.sell}</span>
-          </button>
+          </Link>
           <button
             onClick={() => onLanguageChange(language === "ru" ? "uz" : "ru")}
             className="focus-ring inline-flex h-14 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold uppercase text-ink shadow-sm sm:px-5"

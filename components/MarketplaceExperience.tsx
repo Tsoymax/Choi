@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CategoryGrid } from "./CategoryGrid";
 import { DistrictFilter } from "./DistrictFilter";
 import { FeaturedSellers } from "./FeaturedSellers";
@@ -10,6 +10,7 @@ import { Hero } from "./Hero";
 import { ProductGrid } from "./ProductGrid";
 import type { Language } from "./i18n";
 import type { Category, District, Product } from "./types";
+import { getStoredListings } from "@/utils/listings";
 
 type MarketplaceExperienceProps = {
   categories: Category[];
@@ -26,11 +27,21 @@ export function MarketplaceExperience({
   const [language, setLanguage] = useState<Language>("ru");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeDistrict, setActiveDistrict] = useState("all");
+  const [localProducts, setLocalProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    setLocalProducts(getStoredListings());
+  }, []);
+
+  const allProducts = useMemo(
+    () => [...localProducts, ...products],
+    [localProducts, products]
+  );
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return products.filter((product) => {
+    return allProducts.filter((product) => {
       const matchesQuery =
         !normalizedQuery ||
         [
@@ -51,7 +62,7 @@ export function MarketplaceExperience({
 
       return matchesQuery && matchesCategory && matchesDistrict;
     });
-  }, [activeCategory, activeDistrict, products, query]);
+  }, [activeCategory, activeDistrict, allProducts, query]);
 
   return (
     <main className="min-h-screen overflow-hidden">
@@ -77,7 +88,7 @@ export function MarketplaceExperience({
         />
         <ProductGrid products={filteredProducts} language={language} />
       </section>
-      <FeaturedSellers products={products} language={language} />
+      <FeaturedSellers products={allProducts} language={language} />
       <Footer language={language} />
     </main>
   );
