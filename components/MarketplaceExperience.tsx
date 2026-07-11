@@ -48,9 +48,12 @@ export function MarketplaceExperience({
 
   return (
     <main className="min-h-screen overflow-hidden">
-      <div className="bg-[#050607]">
-        <Header language={language} onLanguageChange={setLanguage} />
-      </div>
+      <Header
+        language={language}
+        onLanguageChange={setLanguage}
+        query={query}
+        onQueryChange={setQuery}
+      />
       <Hero query={query} language={language} onQueryChange={setQuery} />
       <CategoryGrid
         categories={categories}

@@ -14,21 +14,21 @@ export function SearchBar({
   onQueryChange
 }: SearchBarProps) {
   return (
-    <div className="mx-auto mt-10 flex min-h-20 w-full max-w-3xl items-center gap-4 rounded-full border-2 border-white/80 bg-[#17191f] p-3 text-white shadow-2xl shadow-black/30">
-      <div className="hidden items-center gap-2 border-r border-white/18 px-4 text-sm font-semibold text-white/88 sm:flex">
-        <MapPin size={18} />
+    <div className="mt-7 flex min-h-16 w-full max-w-[560px] items-center rounded-full border border-ink/10 bg-white px-5 shadow-[0_14px_36px_rgba(24,32,29,0.12)]">
+      <div className="hidden items-center gap-2 border-r border-ink/10 pr-5 text-sm font-semibold text-ink sm:flex">
+        <MapPin size={20} />
         {districtLabel}
       </div>
-      <label className="flex flex-1 items-center gap-3 px-2">
+      <label className="flex min-w-0 flex-1 items-center gap-3 px-0 sm:px-5">
         <input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          className="w-full bg-transparent text-lg font-medium text-white placeholder:text-white/55 focus:outline-none sm:text-2xl"
+          className="w-full bg-transparent text-base font-medium text-ink placeholder:text-ink/40 focus:outline-none"
           placeholder={placeholder}
         />
       </label>
-      <button className="focus-ring grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/12 text-white hover:bg-white/18">
-        <Search size={24} />
+      <button className="focus-ring grid h-12 w-12 shrink-0 place-items-center rounded-full bg-leaf text-white transition hover:bg-[#3f6d4d]">
+        <Search size={22} />
       </button>
     </div>
   );
