@@ -9,7 +9,6 @@ const basePath =
 
 const nextConfig = {
   typedRoutes: true,
-  output: "export",
   trailingSlash: true,
   images: {
     unoptimized: true

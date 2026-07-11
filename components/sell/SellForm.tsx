@@ -136,7 +136,19 @@ export function SellForm() {
     }
 
     setIsSubmitting(true);
-    const image = await fileToDataUrl(mainPhoto.file);
+    const imagePairs = await Promise.all(
+      photos.map(async (photo) => ({
+        id: photo.id,
+        image: await fileToDataUrl(photo.file)
+      }))
+    );
+    const mainImage = imagePairs.find((item) => item.id === mainPhoto.id)?.image ?? imagePairs[0].image;
+    const galleryImages = [
+      mainImage,
+      ...imagePairs
+        .filter((item) => item.image !== mainImage)
+        .map((item) => item.image)
+    ];
 
     saveStoredListing({
       title: title.trim(),
@@ -148,7 +160,8 @@ export function SellForm() {
       negotiable,
       seller: name.trim(),
       phone: phone.trim(),
-      image
+      image: mainImage,
+      images: galleryImages
     });
 
     router.push("/");

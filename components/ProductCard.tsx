@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { BadgeCheck, Heart, Star } from "lucide-react";
 import type { Product } from "./types";
 import type { Language } from "./i18n";
@@ -28,6 +31,7 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product, language }: ProductCardProps) {
+  const router = useRouter();
   const t = translations[language];
   const title =
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
@@ -35,7 +39,18 @@ export function ProductCard({ product, language }: ProductCardProps) {
     language === "uz" ? product.badgeUz ?? product.badgeRu : product.badgeRu;
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft">
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={() => router.push(`/listing/${product.id}` as never)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          router.push(`/listing/${product.id}` as never);
+        }
+      }}
+      className="group cursor-pointer overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f5ef]">
         <Image
           src={product.image}
@@ -50,7 +65,14 @@ export function ProductCard({ product, language }: ProductCardProps) {
             {badge}
           </div>
         ) : null}
-        <button className="focus-ring absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/88 text-ink shadow-sm">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          className="focus-ring absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/88 text-ink shadow-sm"
+          aria-label="Добавить в избранное"
+        >
           <Heart size={18} />
         </button>
       </div>
