@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Heart, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import type { Listing } from "@/utils/listings";
 import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
+import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 
 type SellerCardProps = {
   listing: Listing;
@@ -11,6 +13,20 @@ type SellerCardProps = {
 export function SellerCard({ listing }: SellerCardProps) {
   const trust = getSellerTrust(listing.seller);
   const phone = listing.phone ?? "+998901112233";
+  const [favorite, setFavorite] = useState(false);
+
+  useEffect(() => {
+    const syncFavorite = () => setFavorite(isFavorite(listing.id));
+
+    syncFavorite();
+    window.addEventListener(FAVORITES_EVENT, syncFavorite);
+    window.addEventListener("storage", syncFavorite);
+
+    return () => {
+      window.removeEventListener(FAVORITES_EVENT, syncFavorite);
+      window.removeEventListener("storage", syncFavorite);
+    };
+  }, [listing.id]);
 
   return (
     <aside className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -62,9 +78,15 @@ export function SellerCard({ listing }: SellerCardProps) {
         </a>
         <button
           type="button"
-          className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-mist px-5 text-sm font-semibold text-ink transition hover:bg-[#e4eee7]"
+          onClick={() => {
+            setFavorite(isFavorite(listing.id) ? false : true);
+            toggleFavorite(listing.id);
+          }}
+          className={`focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition ${
+            favorite ? "bg-leaf text-white" : "bg-mist text-ink hover:bg-[#e4eee7]"
+          }`}
         >
-          <Heart size={18} />
+          <Heart size={18} className={favorite ? "fill-white" : ""} />
           В избранное
         </button>
       </div>

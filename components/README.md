@@ -2,5 +2,5 @@ Planned components:
 - Header
 - SearchBar
 - CategoryGrid
-- ProductCard
+- ListingCard
 - Footer

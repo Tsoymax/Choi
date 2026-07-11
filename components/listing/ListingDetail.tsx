@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CalendarDays, MapPin, Tag } from "lucide-react";
-import { ProductCard } from "@/components/ProductCard";
+import { ListingCard } from "@/components/ListingCard";
 import type { Listing } from "@/utils/listings";
 import {
   formatListingDate,
@@ -123,7 +123,7 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
             </h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {relatedListings.map((item) => (
-                <ProductCard key={item.id} product={item} language="ru" />
+                <ListingCard key={item.id} product={item} language="ru" />
               ))}
             </div>
           </section>

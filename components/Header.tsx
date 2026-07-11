@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ChevronDown, Heart, MapPin, MessageCircle, Plus, Search } from "lucide-react";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
+import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
 
 type HeaderProps = {
   language: Language;
@@ -18,6 +22,20 @@ export function Header({
   onQueryChange
 }: HeaderProps) {
   const t = translations[language];
+  const [favoriteCount, setFavoriteCount] = useState(0);
+
+  useEffect(() => {
+    const syncFavoriteCount = () => setFavoriteCount(getFavoriteIds().length);
+
+    syncFavoriteCount();
+    window.addEventListener(FAVORITES_EVENT, syncFavoriteCount);
+    window.addEventListener("storage", syncFavoriteCount);
+
+    return () => {
+      window.removeEventListener(FAVORITES_EVENT, syncFavoriteCount);
+      window.removeEventListener("storage", syncFavoriteCount);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/5 bg-white/92 backdrop-blur-xl">
@@ -43,9 +61,18 @@ export function Header({
         </label>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
-          <button className="focus-ring grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist">
+          <Link
+            href="/favorites"
+            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+            aria-label="Избранное"
+          >
             <Heart size={25} />
-          </button>
+            {favoriteCount > 0 ? (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-leaf px-1 text-[11px] font-semibold leading-none text-white shadow-sm">
+                {favoriteCount}
+              </span>
+            ) : null}
+          </Link>
           <button className="focus-ring hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist sm:grid">
             <MessageCircle size={25} />
           </button>
