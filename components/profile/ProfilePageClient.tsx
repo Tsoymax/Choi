@@ -16,7 +16,7 @@ import {
   getCurrentUser,
   getCurrentUserListingsCount
 } from "@/utils/users";
-import { profileToChoiUser, updateProfile } from "@/lib/data/profiles";
+import { profileToChoiUser, updateCurrentProfile } from "@/lib/data/profiles";
 
 type ProfilePageClientProps = {
   initialUser: ChoiUser;
@@ -34,6 +34,7 @@ export function ProfilePageClient({
   const [listingsCount, setListingsCount] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("");
 
   useEffect(() => {
     const syncProfile = () => {
@@ -60,15 +61,25 @@ export function ProfilePageClient({
     name: string;
     district: string;
     addressMode: "aka" | "opa";
+    phone: string;
   }) {
-    const supabase = createClient();
-    const profile = await updateProfile(supabase, user.id, {
+    const { profile, error } = await updateCurrentProfile({
       name: input.name,
       district: input.district,
-      addressType: input.addressMode
+      addressType: input.addressMode,
+      phone: input.phone || null
     });
 
-    return profileToChoiUser(profile);
+    if (error || !profile) {
+      throw error ?? new Error("Не удалось сохранить профиль.");
+    }
+
+    const nextUser = profileToChoiUser(profile);
+    setSavedMessage("Профиль сохранён");
+    window.dispatchEvent(new Event(USER_EVENT));
+    window.setTimeout(() => setSavedMessage(""), 2800);
+
+    return nextUser;
   }
 
   async function signOut() {
@@ -96,6 +107,11 @@ export function ProfilePageClient({
           <p className="mt-3 text-lg text-ink/62">
             Ваше доверие, объявления и настройки Choi
           </p>
+          {savedMessage ? (
+            <p className="mt-4 inline-flex rounded-full bg-mist px-4 py-2 text-sm font-semibold text-leaf">
+              {savedMessage}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid items-start gap-8 lg:grid-cols-[420px_1fr]">

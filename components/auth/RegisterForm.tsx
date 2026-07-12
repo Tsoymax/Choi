@@ -61,7 +61,8 @@ export function RegisterForm() {
       options: {
         data: {
           name: name.trim()
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
 

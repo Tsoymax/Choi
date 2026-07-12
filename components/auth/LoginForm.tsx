@@ -17,6 +17,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = getSafeNext(searchParams.get("next"));
+  const confirmationError = searchParams.get("error") === "email_confirmation_failed";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -76,6 +77,11 @@ export function LoginForm() {
       </label>
 
       {error ? <p className="text-sm font-semibold text-coral">{error}</p> : null}
+      {confirmationError ? (
+        <p className="rounded-2xl bg-[#fff2ef] p-4 text-sm font-semibold text-coral">
+          Не удалось подтвердить email. Попробуйте войти еще раз или запросите новое письмо.
+        </p>
+      ) : null}
 
       <button
         type="submit"

@@ -10,6 +10,7 @@ export type ChoiUser = {
   name: string;
   city: string;
   district: string;
+  phone?: string;
   avatar?: string;
   joinedAt: number;
   phoneVerified: boolean;
@@ -23,6 +24,7 @@ export const defaultCurrentUser: ChoiUser = {
   name: "Макс",
   city: "Ташкент",
   district: "yunusabad",
+  phone: "+998901234567",
   joinedAt: 2026,
   phoneVerified: true,
   successfulDeals: 7,
@@ -124,7 +126,9 @@ export function getCurrentUser(): ChoiUser {
   }
 }
 
-export function updateCurrentUser(input: Pick<ChoiUser, "name" | "district" | "addressMode">) {
+export function updateCurrentUser(
+  input: Pick<ChoiUser, "name" | "district" | "addressMode"> & { phone?: string }
+) {
   const nextUser = { ...getCurrentUser(), ...input };
   window.localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(nextUser));
   notifyUserChanged();

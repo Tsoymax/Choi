@@ -2,6 +2,7 @@ import { MapPin, Phone, ShieldCheck } from "lucide-react";
 import type { ChoiUser } from "@/utils/users";
 import { getDistrictLabel } from "@/utils/listings";
 import { getTrustLevel } from "@/utils/trust";
+import { formatUzbekPhone } from "@/components/UzbekPhoneInput";
 import { TrustBadge } from "./TrustBadge";
 
 type ProfileHeaderProps = {
@@ -57,6 +58,11 @@ export function ProfileHeader({
               <Phone size={17} className="text-leaf" />
               {user.phoneVerified ? "Телефон подтвержден" : "Телефон не подтвержден"}
             </p>
+            {user.phone ? (
+              <p className="font-semibold text-ink">
+                +998 {formatUzbekPhone(user.phone)}
+              </p>
+            ) : null}
             <p className="font-semibold text-ink">{listingsCount} объявлений</p>
           </div>
         </div>
