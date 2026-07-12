@@ -126,7 +126,7 @@ export function Header({
           </Link>
           <Link
             href="/chat"
-            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+            className="focus-ring relative hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist md:grid"
             aria-label="Сообщения"
           >
             <MessageCircle size={25} />
@@ -147,7 +147,7 @@ export function Header({
           </Link>
           <Link
             href="/sell"
-            className="focus-ring inline-flex h-14 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] sm:px-6 sm:text-base"
+            className="focus-ring hidden h-14 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] md:inline-flex sm:px-6 sm:text-base"
           >
             <Plus size={20} />
             <span className="hidden sm:inline">{t.postListing}</span>
@@ -155,7 +155,7 @@ export function Header({
           </Link>
           <button
             onClick={() => onLanguageChange(language === "ru" ? "uz" : "ru")}
-            className="focus-ring inline-flex h-14 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold uppercase text-ink shadow-sm sm:px-5"
+            className="focus-ring hidden h-14 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold uppercase text-ink shadow-sm md:inline-flex sm:px-5"
           >
             {language === "ru" ? "РУ" : "UZ"}
             <ChevronDown size={16} />

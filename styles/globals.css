@@ -27,6 +27,12 @@ body {
     sans-serif;
 }
 
+@media (max-width: 767px) {
+  body {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+}
+
 button,
 input,
 select {
