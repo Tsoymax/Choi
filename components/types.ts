@@ -19,6 +19,7 @@ export type Product = {
   id: string;
   title: string;
   seller: string;
+  sellerId?: string;
   titleRu?: string;
   titleUz?: string;
   category: string;
@@ -29,6 +30,7 @@ export type Product = {
   rating: number;
   reviews: number;
   image: string;
+  status?: "active" | "sold";
   badgeRu?: string;
   badgeUz?: string;
 };

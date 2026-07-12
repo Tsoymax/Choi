@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Phone, ShieldCheck } from "lucide-react";
@@ -16,6 +17,7 @@ export function SellerCard({ listing }: SellerCardProps) {
   const router = useRouter();
   const trust = getSellerTrust(listing.seller);
   const phone = listing.phone ?? "+998901112233";
+  const sellerId = listing.sellerId ?? "seller-akmal";
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
@@ -33,7 +35,10 @@ export function SellerCard({ listing }: SellerCardProps) {
 
   return (
     <aside className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
-      <div className="flex items-start gap-4">
+      <Link
+        href={`/profile/${sellerId}`}
+        className="focus-ring flex items-start gap-4 rounded-2xl transition hover:bg-mist/60"
+      >
         <div className="grid h-14 w-14 place-items-center rounded-full bg-mist text-xl font-semibold text-leaf">
           {listing.seller.slice(0, 1).toUpperCase()}
         </div>
@@ -41,16 +46,16 @@ export function SellerCard({ listing }: SellerCardProps) {
           <h2 className="text-xl font-semibold text-ink">{listing.seller}</h2>
           <p className="mt-1 text-sm text-ink/58">{getDistrictLabel(listing.district)}</p>
         </div>
-      </div>
+      </Link>
 
-      <div className="mt-5 rounded-2xl bg-mist p-4">
+      <Link href={`/profile/${sellerId}`} className="focus-ring mt-5 block rounded-2xl bg-mist p-4">
         <p className="inline-flex items-center gap-2 text-sm font-semibold text-leaf">
           <ShieldCheck size={18} />
           Уровень доверия Choi
         </p>
         <p className="mt-2 text-2xl font-semibold text-ink">{trust.level}</p>
         <p className="mt-1 text-sm text-ink/58">{trust.since}</p>
-      </div>
+      </Link>
 
       <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl border border-ink/10 p-4">

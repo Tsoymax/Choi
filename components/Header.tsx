@@ -8,6 +8,7 @@ import type { Language } from "./i18n";
 import { translations } from "./i18n";
 import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
 import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
+import { USER_EVENT, type ChoiUser, getCurrentUser } from "@/utils/users";
 
 type HeaderProps = {
   language: Language;
@@ -25,6 +26,7 @@ export function Header({
   const t = translations[language];
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUser, setCurrentUser] = useState<ChoiUser | null>(null);
 
   useEffect(() => {
     const syncFavoriteCount = () => setFavoriteCount(getFavoriteIds().length);
@@ -36,6 +38,19 @@ export function Header({
     return () => {
       window.removeEventListener(FAVORITES_EVENT, syncFavoriteCount);
       window.removeEventListener("storage", syncFavoriteCount);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncCurrentUser = () => setCurrentUser(getCurrentUser());
+
+    syncCurrentUser();
+    window.addEventListener(USER_EVENT, syncCurrentUser);
+    window.addEventListener("storage", syncCurrentUser);
+
+    return () => {
+      window.removeEventListener(USER_EVENT, syncCurrentUser);
+      window.removeEventListener("storage", syncCurrentUser);
     };
   }, []);
 
@@ -100,9 +115,15 @@ export function Header({
               </span>
             ) : null}
           </Link>
-          <button className="focus-ring hidden h-12 items-center px-3 text-base font-semibold text-ink md:flex">
-            {t.signIn}
-          </button>
+          <Link
+            href="/profile"
+            className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-mist px-3 text-base font-semibold text-ink transition hover:bg-[#e4eee7] md:flex"
+          >
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-leaf text-sm font-semibold text-white">
+              {(currentUser?.name ?? "М").slice(0, 1).toUpperCase()}
+            </span>
+            {currentUser?.name ?? t.signIn}
+          </Link>
           <Link
             href="/sell"
             className="focus-ring inline-flex h-14 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] sm:px-6 sm:text-base"

@@ -10,7 +10,7 @@ import { Hero } from "./Hero";
 import { ProductGrid } from "./ProductGrid";
 import type { Language } from "./i18n";
 import type { Category, District, Product } from "./types";
-import { getStoredListings } from "@/utils/listings";
+import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
 
 type MarketplaceExperienceProps = {
   categories: Category[];
@@ -30,7 +30,19 @@ export function MarketplaceExperience({
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    setLocalProducts(getStoredListings());
+    const syncLocalProducts = () =>
+      setLocalProducts(
+        getStoredListings().filter((listing) => (listing.status ?? "active") === "active")
+      );
+
+    syncLocalProducts();
+    window.addEventListener(LISTINGS_EVENT, syncLocalProducts);
+    window.addEventListener("storage", syncLocalProducts);
+
+    return () => {
+      window.removeEventListener(LISTINGS_EVENT, syncLocalProducts);
+      window.removeEventListener("storage", syncLocalProducts);
+    };
   }, []);
 
   const allProducts = useMemo(

@@ -4,7 +4,18 @@ import districts from "@/data/districts.json";
 import products from "@/data/products.json";
 
 export const STORED_LISTINGS_KEY = "choi:listings";
+export const LISTINGS_EVENT = "choi:listings-changed";
 export const TRUST_LEVELS = ["Янги", "Ака / Опа", "Акажон / Опажон", "Устоз", "Устози Choi"] as const;
+
+const CURRENT_USER_ID = "current-user";
+const sellerIdsByName: Record<string, string> = {
+  Akmal: "seller-akmal",
+  Madina: "seller-madina",
+  Bekzod: "seller-bekzod",
+  Nilufar: "seller-nilufar",
+  Oybek: "seller-oybek",
+  Sardor: "seller-sardor"
+};
 
 export type Listing = Product & {
   description?: string;
@@ -66,9 +77,17 @@ const sellerTrust: Record<string, { level: string; since: string; listings: numb
   Sardor: { level: "Устоз", since: "На Choi с 2026 года", listings: 18 }
 };
 
+function notifyListingsChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(LISTINGS_EVENT));
+  }
+}
+
 function normalizeListing(product: Product): Listing {
   return {
     ...product,
+    sellerId: product.sellerId ?? sellerIdsByName[product.seller],
+    status: product.status ?? "active",
     description: fallbackDescriptions[product.id],
     phone: fallbackPhones[product.id],
     createdAt: "2026-07-11T09:00:00.000Z",
@@ -88,7 +107,13 @@ export function getStoredListings(): StoredListing[] {
     }
 
     const listings = JSON.parse(rawListings);
-    return Array.isArray(listings) ? listings : [];
+    return Array.isArray(listings)
+      ? listings.map((listing) => ({
+          ...listing,
+          sellerId: listing.sellerId ?? CURRENT_USER_ID,
+          status: listing.status ?? "active"
+        }))
+      : [];
   } catch {
     return [];
   }
@@ -105,6 +130,7 @@ export function saveStoredListing(input: StoredListingInput) {
     titleRu: input.title,
     titleUz: input.title,
     seller: input.seller,
+    sellerId: CURRENT_USER_ID,
     category: input.category,
     district: input.district,
     price: input.price ?? 0,
@@ -113,6 +139,7 @@ export function saveStoredListing(input: StoredListingInput) {
     rating: 5,
     reviews: 0,
     image: input.image,
+    status: "active",
     images: input.images?.length ? input.images : [input.image],
     badgeRu: "Сегодня",
     badgeUz: "Bugun",
@@ -126,6 +153,31 @@ export function saveStoredListing(input: StoredListingInput) {
     STORED_LISTINGS_KEY,
     JSON.stringify([listing, ...listings])
   );
+  notifyListingsChanged();
+}
+
+export function updateStoredListingStatus(id: string, status: "active" | "sold") {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const listings = getStoredListings().map((listing) =>
+    listing.id === id ? { ...listing, status } : listing
+  );
+  window.localStorage.setItem(STORED_LISTINGS_KEY, JSON.stringify(listings));
+  notifyListingsChanged();
+  return listings;
+}
+
+export function deleteStoredListing(id: string) {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const listings = getStoredListings().filter((listing) => listing.id !== id);
+  window.localStorage.setItem(STORED_LISTINGS_KEY, JSON.stringify(listings));
+  notifyListingsChanged();
+  return listings;
 }
 
 export function getStaticListings(): Listing[] {
