@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronDown, Heart, MapPin, MessageCircle, Plus, Search } from "lucide-react";
 import type { Language } from "./i18n";
@@ -23,6 +24,7 @@ export function Header({
   query,
   onQueryChange
 }: HeaderProps) {
+  const router = useRouter();
   const t = translations[language];
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -67,12 +69,25 @@ export function Header({
     };
   }, []);
 
+  function openSearch() {
+    const params = new URLSearchParams();
+    if (query.trim()) {
+      params.set("q", query.trim());
+    }
+
+    router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-ink/5 bg-white/92 backdrop-blur-xl">
       <div className="mx-auto flex h-24 w-full max-w-[1504px] items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <a href="#" className="flex shrink-0 items-center" aria-label="Choi home">
+        <Link
+          href="/"
+          className="flex shrink-0 cursor-pointer items-center transition hover:opacity-85"
+          aria-label="Choi home"
+        >
           <Image src="/logo.svg" alt="Choi" width={180} height={72} priority />
-        </a>
+        </Link>
 
         <button className="focus-ring hidden h-14 shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white px-5 text-base font-semibold text-ink shadow-sm md:flex">
           <MapPin size={21} />
@@ -80,7 +95,13 @@ export function Header({
           <ChevronDown size={17} />
         </button>
 
-        <label className="hidden h-14 min-w-0 flex-1 items-center gap-3 rounded-full border border-ink/10 bg-white px-6 shadow-sm lg:flex">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            openSearch();
+          }}
+          className="hidden h-14 min-w-0 flex-1 items-center gap-3 rounded-full border border-ink/10 bg-white px-6 shadow-sm lg:flex"
+        >
           <Search size={22} className="text-ink/45" />
           <input
             value={query}
@@ -88,7 +109,7 @@ export function Header({
             className="w-full bg-transparent text-base font-medium text-ink placeholder:text-ink/40 focus:outline-none"
             placeholder={t.searchPlaceholder}
           />
-        </label>
+        </form>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
           <Link

@@ -5,16 +5,24 @@ type SearchBarProps = {
   districtLabel: string;
   placeholder: string;
   onQueryChange: (query: string) => void;
+  onSearch?: () => void;
 };
 
 export function SearchBar({
   query,
   districtLabel,
   placeholder,
-  onQueryChange
+  onQueryChange,
+  onSearch
 }: SearchBarProps) {
   return (
-    <div className="mt-7 flex min-h-16 w-full max-w-[560px] items-center rounded-full border border-ink/10 bg-white px-5 shadow-[0_14px_36px_rgba(24,32,29,0.12)]">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSearch?.();
+      }}
+      className="mt-7 flex min-h-16 w-full max-w-[560px] items-center rounded-full border border-ink/10 bg-white px-5 shadow-[0_14px_36px_rgba(24,32,29,0.12)]"
+    >
       <div className="hidden items-center gap-2 border-r border-ink/10 pr-5 text-sm font-semibold text-ink sm:flex">
         <MapPin size={20} />
         {districtLabel}
@@ -27,9 +35,12 @@ export function SearchBar({
           placeholder={placeholder}
         />
       </label>
-      <button className="focus-ring grid h-12 w-12 shrink-0 place-items-center rounded-full bg-leaf text-white transition hover:bg-[#3f6d4d]">
+      <button
+        type="submit"
+        className="focus-ring grid h-12 w-12 shrink-0 place-items-center rounded-full bg-leaf text-white transition hover:bg-[#3f6d4d]"
+      >
         <Search size={22} />
       </button>
-    </div>
+    </form>
   );
 }

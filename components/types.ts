@@ -27,6 +27,7 @@ export type Product = {
   price: number;
   currency?: "uzs" | "usd";
   negotiable?: boolean;
+  distanceKm?: number;
   rating: number;
   reviews: number;
   image: string;

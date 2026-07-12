@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CategoryGrid } from "./CategoryGrid";
 import { DistrictFilter } from "./DistrictFilter";
 import { FeaturedSellers } from "./FeaturedSellers";
@@ -11,6 +12,7 @@ import { ProductGrid } from "./ProductGrid";
 import type { Language } from "./i18n";
 import type { Category, District, Product } from "./types";
 import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
+import { sellCategories } from "@/components/sell/sellData";
 
 type MarketplaceExperienceProps = {
   categories: Category[];
@@ -23,6 +25,7 @@ export function MarketplaceExperience({
   districts,
   products
 }: MarketplaceExperienceProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [language, setLanguage] = useState<Language>("ru");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -76,6 +79,25 @@ export function MarketplaceExperience({
     });
   }, [activeCategory, activeDistrict, allProducts, query]);
 
+  function openSearch(nextQuery = query) {
+    const params = new URLSearchParams();
+    if (nextQuery.trim()) {
+      params.set("q", nextQuery.trim());
+    }
+
+    router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
+  }
+
+  function openCategorySearch(categoryId: string) {
+    const params = new URLSearchParams();
+    const category = sellCategories.find((item) => item.id === categoryId);
+    if (category) {
+      params.set("category", category.label);
+    }
+
+    router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
+  }
+
   return (
     <main className="min-h-screen overflow-hidden">
       <Header
@@ -84,12 +106,17 @@ export function MarketplaceExperience({
         query={query}
         onQueryChange={setQuery}
       />
-      <Hero query={query} language={language} onQueryChange={setQuery} />
+      <Hero
+        query={query}
+        language={language}
+        onQueryChange={setQuery}
+        onSearch={() => openSearch()}
+      />
       <CategoryGrid
         categories={categories}
         activeCategory={activeCategory}
         language={language}
-        onCategoryChange={setActiveCategory}
+        onCategoryChange={openCategorySearch}
       />
       <section id="discover" className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
         <DistrictFilter

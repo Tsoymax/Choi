@@ -8,7 +8,11 @@ export default function SellPage() {
     <main className="min-h-screen bg-[#f7f5ef]">
       <header className="border-b border-ink/5 bg-white/92 backdrop-blur-xl">
         <div className="mx-auto flex h-24 max-w-[1504px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center" aria-label="Choi home">
+          <Link
+            href="/"
+            className="flex cursor-pointer items-center transition hover:opacity-85"
+            aria-label="Choi home"
+          >
             <Image src="/logo.svg" alt="Choi" width={180} height={72} priority />
           </Link>
           <Link

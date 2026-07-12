@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CalendarDays, MapPin, Tag } from "lucide-react";
+import { Header } from "@/components/Header";
+import type { Language } from "@/components/i18n";
 import { ListingCard } from "@/components/ListingCard";
 import type { Listing } from "@/utils/listings";
 import {
@@ -21,6 +23,8 @@ type ListingDetailProps = {
 };
 
 export function ListingDetail({ listingId }: ListingDetailProps) {
+  const [language, setLanguage] = useState<Language>("ru");
+  const [query, setQuery] = useState("");
   const [listing, setListing] = useState<Listing | undefined>(() => getListingById(listingId));
 
   useEffect(() => {
@@ -34,8 +38,14 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
 
   if (!listing) {
     return (
-      <main className="min-h-screen bg-[#f7f5ef] px-4 py-10">
-        <div className="mx-auto max-w-3xl rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+      <main className="min-h-screen bg-[#f7f5ef]">
+        <Header
+          language={language}
+          onLanguageChange={setLanguage}
+          query={query}
+          onQueryChange={setQuery}
+        />
+        <div className="mx-auto mt-10 max-w-3xl rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
           <h1 className="text-3xl font-semibold text-ink">Объявление не найдено</h1>
           <p className="mt-3 text-ink/62">
             Возможно, оно было удалено или открыто на другом устройстве.
@@ -56,6 +66,12 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
 
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
+      <Header
+        language={language}
+        onLanguageChange={setLanguage}
+        query={query}
+        onQueryChange={setQuery}
+      />
       <section className="mx-auto max-w-[1504px] px-4 py-6 sm:px-6 lg:px-8">
         <Link
           href="/"

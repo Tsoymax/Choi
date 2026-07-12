@@ -7,9 +7,10 @@ type HeroProps = {
   query: string;
   language: Language;
   onQueryChange: (query: string) => void;
+  onSearch?: () => void;
 };
 
-export function Hero({ query, language, onQueryChange }: HeroProps) {
+export function Hero({ query, language, onQueryChange, onSearch }: HeroProps) {
   const t = translations[language];
 
   return (
@@ -35,6 +36,7 @@ export function Hero({ query, language, onQueryChange }: HeroProps) {
               districtLabel={t.allDistricts}
               placeholder={t.searchPlaceholder}
               onQueryChange={onQueryChange}
+              onSearch={onSearch}
             />
           </div>
 
