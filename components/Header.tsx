@@ -9,7 +9,10 @@ import type { Language } from "./i18n";
 import { translations } from "./i18n";
 import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
 import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
-import { USER_EVENT, type ChoiUser, getCurrentUser } from "@/utils/users";
+import { USER_EVENT, getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { getProfileById } from "@/lib/data/profiles";
+import { createClient } from "@/utils/supabase/client";
 
 type HeaderProps = {
   language: Language;
@@ -28,7 +31,7 @@ export function Header({
   const t = translations[language];
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [currentUser, setCurrentUser] = useState<ChoiUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string } | null>(null);
 
   useEffect(() => {
     const syncFavoriteCount = () => setFavoriteCount(getFavoriteIds().length);
@@ -44,13 +47,53 @@ export function Header({
   }, []);
 
   useEffect(() => {
-    const syncCurrentUser = () => setCurrentUser(getCurrentUser());
+    let mounted = true;
 
-    syncCurrentUser();
+    const syncCurrentUser = async () => {
+      if (!hasSupabaseBrowserEnv()) {
+        setCurrentUser(getFallbackCurrentUser());
+        return;
+      }
+
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!data.user) {
+        setCurrentUser(null);
+        return;
+      }
+
+      const profile = await getProfileById(supabase, data.user.id);
+
+      if (!mounted) {
+        return;
+      }
+
+      setCurrentUser({
+        name:
+          profile?.name ??
+          data.user.user_metadata?.name ??
+          data.user.email?.split("@")[0] ??
+          "Choi"
+      });
+    };
+
+    const supabase = hasSupabaseBrowserEnv() ? createClient() : null;
+    const authSubscription = supabase?.auth.onAuthStateChange(() => {
+      void syncCurrentUser();
+    });
+
+    void syncCurrentUser();
     window.addEventListener(USER_EVENT, syncCurrentUser);
     window.addEventListener("storage", syncCurrentUser);
 
     return () => {
+      mounted = false;
+      authSubscription?.data.subscription.unsubscribe();
       window.removeEventListener(USER_EVENT, syncCurrentUser);
       window.removeEventListener("storage", syncCurrentUser);
     };
@@ -137,13 +180,13 @@ export function Header({
             ) : null}
           </Link>
           <Link
-            href="/profile"
+            href={(currentUser ? "/profile" : "/login") as never}
             className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-mist px-3 text-base font-semibold text-ink transition hover:bg-[#e4eee7] md:flex"
           >
             <span className="grid h-8 w-8 place-items-center rounded-full bg-leaf text-sm font-semibold text-white">
-              {(currentUser?.name ?? "М").slice(0, 1).toUpperCase()}
+              {(currentUser?.name ?? "В").slice(0, 1).toUpperCase()}
             </span>
-            {currentUser?.name ?? t.signIn}
+            {currentUser?.name ?? "Вход"}
           </Link>
           <Link
             href="/sell"

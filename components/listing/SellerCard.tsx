@@ -8,6 +8,7 @@ import type { Listing } from "@/utils/listings";
 import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
 import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 import { createConversation } from "@/utils/chat";
+import { requireCurrentUser } from "@/lib/auth/client";
 
 type SellerCardProps = {
   listing: Listing;
@@ -71,7 +72,13 @@ export function SellerCard({ listing }: SellerCardProps) {
       <div className="mt-6 grid gap-3">
         <button
           type="button"
-          onClick={() => {
+          onClick={async () => {
+            const user = await requireCurrentUser(router, `/listing/${listing.id}`);
+
+            if (!user) {
+              return;
+            }
+
             const conversation = createConversation(listing);
             router.push(`/chat/${conversation.id}` as never);
           }}
@@ -89,7 +96,13 @@ export function SellerCard({ listing }: SellerCardProps) {
         </a>
         <button
           type="button"
-          onClick={() => {
+          onClick={async () => {
+            const user = await requireCurrentUser(router, `/listing/${listing.id}`);
+
+            if (!user) {
+              return;
+            }
+
             setFavorite(isFavorite(listing.id) ? false : true);
             toggleFavorite(listing.id);
           }}

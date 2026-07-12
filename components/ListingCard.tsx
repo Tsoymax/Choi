@@ -9,6 +9,7 @@ import type { Language } from "./i18n";
 import { translations } from "./i18n";
 import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 import { formatListingPrice } from "@/utils/listings";
+import { requireCurrentUser } from "@/lib/auth/client";
 
 type ListingCardProps = {
   product: Product;
@@ -70,8 +71,17 @@ export function ListingCard({ product, language }: ListingCardProps) {
         ) : null}
         <button
           type="button"
-          onClick={(event) => {
+          onClick={async (event) => {
             event.stopPropagation();
+            const user = await requireCurrentUser(
+              router,
+              `${window.location.pathname}${window.location.search}`
+            );
+
+            if (!user) {
+              return;
+            }
+
             setFavorite(isFavorite(product.id) ? false : true);
             toggleFavorite(product.id);
           }}

@@ -55,7 +55,7 @@ export function ProfileHeader({
             </p>
             <p className="inline-flex items-center gap-2">
               <Phone size={17} className="text-leaf" />
-              Телефон подтвержден
+              {user.phoneVerified ? "Телефон подтвержден" : "Телефон не подтвержден"}
             </p>
             <p className="font-semibold text-ink">{listingsCount} объявлений</p>
           </div>

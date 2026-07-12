@@ -10,12 +10,47 @@ type ProfileEditModalProps = {
   user: ChoiUser;
   onClose: () => void;
   onSave: (user: ChoiUser) => void;
+  onSaveProfile?: (input: {
+    name: string;
+    district: string;
+    addressMode: "aka" | "opa";
+  }) => Promise<ChoiUser>;
 };
 
-export function ProfileEditModal({ user, onClose, onSave }: ProfileEditModalProps) {
+export function ProfileEditModal({
+  user,
+  onClose,
+  onSave,
+  onSaveProfile
+}: ProfileEditModalProps) {
   const [name, setName] = useState(user.name);
   const [district, setDistrict] = useState(user.district);
   const [addressMode, setAddressMode] = useState(user.addressMode);
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function saveProfile() {
+    setError("");
+    setIsSaving(true);
+
+    try {
+      const input = {
+        name: name.trim() || user.name,
+        district,
+        addressMode
+      };
+      const nextUser = onSaveProfile
+        ? await onSaveProfile(input)
+        : updateCurrentUser(input);
+
+      onSave(nextUser);
+      onClose();
+    } catch {
+      setError("Не удалось сохранить профиль. Попробуйте еще раз.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/28 p-4 backdrop-blur-sm">
@@ -78,20 +113,15 @@ export function ProfileEditModal({ user, onClose, onSave }: ProfileEditModalProp
           </div>
         </div>
 
+        {error ? <p className="mt-4 text-sm font-semibold text-coral">{error}</p> : null}
+
         <button
           type="button"
-          onClick={() => {
-            const nextUser = updateCurrentUser({
-              name: name.trim() || user.name,
-              district,
-              addressMode
-            });
-            onSave(nextUser);
-            onClose();
-          }}
+          onClick={saveProfile}
+          disabled={isSaving}
           className="focus-ring mt-7 h-14 w-full rounded-full bg-leaf px-6 text-base font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d]"
         >
-          Сохранить
+          {isSaving ? "Сохраняем..." : "Сохранить"}
         </button>
       </div>
     </div>

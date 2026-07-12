@@ -1,9 +1,24 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { SellForm } from "@/components/sell/SellForm";
+import { getCurrentUser } from "@/lib/auth/server";
 
-export default function SellPage() {
+export default async function SellPage() {
+  const hasSupabaseEnv = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  );
+
+  if (hasSupabaseEnv) {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      redirect("/login?next=/sell");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
       <header className="border-b border-ink/5 bg-white/92 backdrop-blur-xl">
