@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import type { Listing } from "@/utils/listings";
 import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
 import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
+import { createConversation } from "@/utils/chat";
 
 type SellerCardProps = {
   listing: Listing;
 };
 
 export function SellerCard({ listing }: SellerCardProps) {
+  const router = useRouter();
   const trust = getSellerTrust(listing.seller);
   const phone = listing.phone ?? "+998901112233";
   const [favorite, setFavorite] = useState(false);
@@ -63,7 +66,10 @@ export function SellerCard({ listing }: SellerCardProps) {
       <div className="mt-6 grid gap-3">
         <button
           type="button"
-          onClick={() => alert("Чат скоро будет доступен")}
+          onClick={() => {
+            const conversation = createConversation(listing);
+            router.push(`/chat/${conversation.id}` as never);
+          }}
           className="focus-ring inline-flex h-14 items-center justify-center gap-2 rounded-full bg-leaf px-5 text-base font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d]"
         >
           <MessageCircle size={20} />

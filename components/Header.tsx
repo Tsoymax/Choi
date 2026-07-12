@@ -7,6 +7,7 @@ import { ChevronDown, Heart, MapPin, MessageCircle, Plus, Search } from "lucide-
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
 import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
+import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
 
 type HeaderProps = {
   language: Language;
@@ -23,6 +24,7 @@ export function Header({
 }: HeaderProps) {
   const t = translations[language];
   const [favoriteCount, setFavoriteCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const syncFavoriteCount = () => setFavoriteCount(getFavoriteIds().length);
@@ -34,6 +36,19 @@ export function Header({
     return () => {
       window.removeEventListener(FAVORITES_EVENT, syncFavoriteCount);
       window.removeEventListener("storage", syncFavoriteCount);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncUnreadCount = () => setUnreadCount(getUnreadConversationCount());
+
+    syncUnreadCount();
+    window.addEventListener(CHAT_EVENT, syncUnreadCount);
+    window.addEventListener("storage", syncUnreadCount);
+
+    return () => {
+      window.removeEventListener(CHAT_EVENT, syncUnreadCount);
+      window.removeEventListener("storage", syncUnreadCount);
     };
   }, []);
 
@@ -73,9 +88,18 @@ export function Header({
               </span>
             ) : null}
           </Link>
-          <button className="focus-ring hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist sm:grid">
+          <Link
+            href="/chat"
+            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+            aria-label="Сообщения"
+          >
             <MessageCircle size={25} />
-          </button>
+            {unreadCount > 0 ? (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-leaf px-1 text-[11px] font-semibold leading-none text-white shadow-sm">
+                {unreadCount}
+              </span>
+            ) : null}
+          </Link>
           <button className="focus-ring hidden h-12 items-center px-3 text-base font-semibold text-ink md:flex">
             {t.signIn}
           </button>
