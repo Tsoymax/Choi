@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
-import { getProfileById, type ProfileRow } from "@/lib/data/profiles";
+import { ensureProfileForUser, getProfileById, type ProfileRow } from "@/lib/data/profiles";
 
 export async function getCurrentUser() {
   if (
@@ -31,4 +31,19 @@ export async function getCurrentProfile(): Promise<ProfileRow | null> {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   return getProfileById(supabase, user.id);
+}
+
+export async function ensureCurrentProfile(): Promise<{
+  profile: ProfileRow | null;
+  error: unknown | null;
+}> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return { profile: null, error: null };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  return ensureProfileForUser(supabase, user);
 }

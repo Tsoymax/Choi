@@ -2,34 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MapPin, Search } from "lucide-react";
 import { CategoryGrid } from "./CategoryGrid";
-import { DistrictFilter } from "./DistrictFilter";
-import { FeaturedSellers } from "./FeaturedSellers";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
-import { Hero } from "./Hero";
 import { ProductGrid } from "./ProductGrid";
 import type { Language } from "./i18n";
-import type { Category, District, Product } from "./types";
+import type { Category, Product } from "./types";
 import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
 import { sellCategories } from "@/components/sell/sellData";
 
 type MarketplaceExperienceProps = {
   categories: Category[];
-  districts: District[];
   products: Product[];
 };
 
 export function MarketplaceExperience({
   categories,
-  districts,
   products
 }: MarketplaceExperienceProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [language, setLanguage] = useState<Language>("ru");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [activeDistrict, setActiveDistrict] = useState("all");
+  const activeCategory = "all";
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -56,34 +51,38 @@ export function MarketplaceExperience({
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return allProducts.filter((product) => {
-      const matchesQuery =
-        !normalizedQuery ||
-        [
-          product.title,
-          product.titleRu,
-          product.titleUz,
-          product.seller,
-          product.badgeRu,
-          product.badgeUz
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery);
-      const matchesCategory =
-        activeCategory === "all" || product.category === activeCategory;
-      const matchesDistrict =
-        activeDistrict === "all" || product.district === activeDistrict;
-
-      return matchesQuery && matchesCategory && matchesDistrict;
-    });
-  }, [activeCategory, activeDistrict, allProducts, query]);
+    return allProducts
+      .filter((product) => {
+        const matchesQuery =
+          !normalizedQuery ||
+          [
+            product.title,
+            product.titleRu,
+            product.titleUz,
+            product.seller,
+            product.badgeRu,
+            product.badgeUz
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(normalizedQuery);
+        const matchesCategory =
+          activeCategory === "all" || product.category === activeCategory;
+        return matchesQuery && matchesCategory;
+      })
+      .sort((first, second) => {
+        const firstDistance = first.distanceKm ?? Number.POSITIVE_INFINITY;
+        const secondDistance = second.distanceKm ?? Number.POSITIVE_INFINITY;
+        return firstDistance - secondDistance;
+      });
+  }, [activeCategory, allProducts, query]);
 
   function openSearch(nextQuery = query) {
     const params = new URLSearchParams();
     if (nextQuery.trim()) {
       params.set("q", nextQuery.trim());
     }
+    params.set("district", "Юнусабад");
 
     router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
   }
@@ -99,35 +98,53 @@ export function MarketplaceExperience({
   }
 
   return (
-    <main className="min-h-screen overflow-hidden">
+    <main className="min-h-screen overflow-hidden bg-[#f7f5ef]">
       <Header
         language={language}
         onLanguageChange={setLanguage}
         query={query}
         onQueryChange={setQuery}
       />
-      <Hero
-        query={query}
-        language={language}
-        onQueryChange={setQuery}
-        onSearch={() => openSearch()}
-      />
+
+      <section className="mx-auto max-w-[1504px] px-4 pb-2 pt-5 sm:px-6 lg:px-8">
+        <div className="rounded-[24px] bg-white p-4 shadow-[0_14px_44px_rgba(24,32,29,0.08)] sm:p-5">
+          <div className="flex items-center gap-2 text-sm font-semibold text-leaf">
+            <MapPin size={18} />
+            Юнусабад
+          </div>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              openSearch();
+            }}
+            className="mt-4 flex h-14 items-center gap-3 rounded-2xl bg-mist px-4"
+          >
+            <Search size={22} className="text-ink/45" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-ink placeholder:text-ink/40 focus:outline-none"
+              placeholder="Что ищете рядом?"
+            />
+            <button
+              type="submit"
+              className="focus-ring hidden h-10 rounded-full bg-leaf px-5 text-sm font-semibold text-white sm:inline-flex sm:items-center"
+            >
+              Найти
+            </button>
+          </form>
+        </div>
+      </section>
+
       <CategoryGrid
         categories={categories}
         activeCategory={activeCategory}
         language={language}
         onCategoryChange={openCategorySearch}
       />
-      <section id="discover" className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
-        <DistrictFilter
-          districts={districts}
-          activeDistrict={activeDistrict}
-          language={language}
-          onDistrictChange={setActiveDistrict}
-        />
+      <section id="discover" className="mx-auto max-w-[1504px] px-4 py-5 sm:px-6 lg:px-8">
         <ProductGrid products={filteredProducts} language={language} />
       </section>
-      <FeaturedSellers products={allProducts} language={language} />
       <Footer language={language} />
     </main>
   );

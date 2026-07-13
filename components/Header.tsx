@@ -11,7 +11,7 @@ import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
 import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
 import { USER_EVENT, getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { getProfileById } from "@/lib/data/profiles";
+import { ensureProfileForUser } from "@/lib/data/profiles";
 import { createClient } from "@/utils/supabase/client";
 
 type HeaderProps = {
@@ -67,9 +67,20 @@ export function Header({
         return;
       }
 
-      const profile = await getProfileById(supabase, data.user.id);
+      const { profile, error } = await ensureProfileForUser(supabase, data.user);
 
       if (!mounted) {
+        return;
+      }
+
+      if (error) {
+        setCurrentUser({
+          name:
+            data.user.user_metadata?.name ??
+            data.user.user_metadata?.full_name ??
+            data.user.email?.split("@")[0] ??
+            "Choi"
+        });
         return;
       }
 
@@ -132,6 +143,11 @@ export function Header({
           <Image src="/logo.svg" alt="Choi" width={180} height={72} priority />
         </Link>
 
+        <div className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-mist px-3 text-sm font-semibold text-ink md:hidden">
+          <MapPin size={16} className="text-leaf" />
+          Юнусабад
+        </div>
+
         <button className="focus-ring hidden h-14 shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white px-5 text-base font-semibold text-ink shadow-sm md:flex">
           <MapPin size={21} />
           Ташкент
@@ -157,7 +173,7 @@ export function Header({
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
           <Link
             href="/favorites"
-            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+            className="focus-ring relative hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist md:grid"
             aria-label="Избранное"
           >
             <Heart size={25} />
@@ -169,7 +185,7 @@ export function Header({
           </Link>
           <Link
             href="/chat"
-            className="focus-ring relative hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist md:grid"
+            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
             aria-label="Сообщения"
           >
             <MessageCircle size={25} />

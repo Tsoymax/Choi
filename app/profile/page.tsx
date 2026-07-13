@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { ProfilePageClient } from "@/components/profile/ProfilePageClient";
-import { getCurrentProfile, getCurrentUser } from "@/lib/auth/server";
+import { ensureCurrentProfile, getCurrentUser } from "@/lib/auth/server";
 import { profileToChoiUser } from "@/lib/data/profiles";
 import { defaultCurrentUser, type ChoiUser } from "@/utils/users";
 
@@ -29,7 +30,27 @@ export default async function ProfilePage() {
     redirect("/login?next=/profile");
   }
 
-  const profile = await getCurrentProfile();
+  const { profile, error } = await ensureCurrentProfile();
+
+  if (error) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f7f5ef] px-4">
+        <section className="max-w-lg rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+          <h1 className="text-3xl font-semibold text-ink">Не удалось загрузить профиль</h1>
+          <p className="mt-3 text-ink/62">
+            Попробуйте обновить страницу или войти снова.
+          </p>
+          <Link
+            href="/login?next=/profile"
+            className="focus-ring mt-6 inline-flex h-12 items-center rounded-full bg-leaf px-6 text-sm font-semibold text-white"
+          >
+            Войти снова
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
   const initialUser = profile ? profileToChoiUser(profile) : userToFallbackProfile(user);
 
   return <ProfilePageClient initialUser={initialUser} isSupabaseUser />;

@@ -5,13 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveStoredListing } from "@/utils/listings";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
-import {
-  formatUzbekPhone,
-  isValidUzbekPhone,
-  UzbekPhoneInput
-} from "@/components/UzbekPhoneInput";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { getProfileById, updateCurrentProfile } from "@/lib/data/profiles";
+import { ensureCurrentProfile } from "@/lib/data/profiles";
 import { createClient } from "@/utils/supabase/client";
 import { CategorySelect } from "./CategorySelect";
 import { ListingPreview } from "./ListingPreview";
@@ -20,7 +15,7 @@ import { PhotoUploader, type UploadPhoto } from "./PhotoUploader";
 import { PriceField } from "./PriceField";
 
 type FormErrors = Partial<Record<
-  "photos" | "category" | "title" | "description" | "price" | "district" | "profile" | "phone",
+  "photos" | "category" | "title" | "description" | "price" | "district" | "profile",
   string
 >>;
 
@@ -45,13 +40,10 @@ export function SellForm() {
   const [negotiable, setNegotiable] = useState(false);
   const [district, setDistrict] = useState("");
   const [sellerName, setSellerName] = useState("");
-  const [profileDistrict, setProfileDistrict] = useState<string | null>(null);
-  const [profileAddressType, setProfileAddressType] = useState<"aka" | "opa">("aka");
-  const [profilePhone, setProfilePhone] = useState("");
-  const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState("");
   const photosRef = useRef<UploadPhoto[]>([]);
 
   const mainPhoto = useMemo(
@@ -70,10 +62,6 @@ export function SellForm() {
       if (!hasSupabaseBrowserEnv()) {
         const fallbackUser = getFallbackCurrentUser();
         setSellerName(fallbackUser.name);
-        setProfileDistrict(fallbackUser.district);
-        setProfileAddressType(fallbackUser.addressMode);
-        setProfilePhone(fallbackUser.phone ?? "");
-        setPhone(fallbackUser.phone ?? "");
         setDistrict(fallbackUser.district);
         setIsProfileLoading(false);
         return;
@@ -91,18 +79,20 @@ export function SellForm() {
         return;
       }
 
-      const profile = await getProfileById(supabase, data.user.id);
+      const { profile, error } = await ensureCurrentProfile();
 
       if (!mounted) {
         return;
       }
 
+      if (error || !profile) {
+        setProfileLoadError("Не удалось загрузить профиль");
+        setIsProfileLoading(false);
+        return;
+      }
+
       if (profile) {
         setSellerName(profile.name ?? "");
-        setProfileDistrict(profile.district);
-        setProfileAddressType(profile.address_type === "opa" ? "opa" : "aka");
-        setProfilePhone(profile.phone ?? "");
-        setPhone(profile.phone ?? "");
 
         if (profile.district) {
           setDistrict(profile.district);
@@ -169,6 +159,18 @@ export function SellForm() {
   function validateForm() {
     const nextErrors: FormErrors = {};
 
+    if (isProfileLoading) {
+      nextErrors.profile = "Подождите, профиль ещё загружается.";
+      setErrors(nextErrors);
+      return false;
+    }
+
+    if (profileLoadError) {
+      nextErrors.profile = "Не удалось загрузить профиль.";
+      setErrors(nextErrors);
+      return false;
+    }
+
     if (photos.length === 0) {
       nextErrors.photos = "Добавьте минимум 1 фото.";
     }
@@ -190,9 +192,6 @@ export function SellForm() {
     if (!sellerName.trim()) {
       nextErrors.profile = "Сначала укажите имя в профиле.";
     }
-    if (!isValidUzbekPhone(phone)) {
-      nextErrors.phone = "Введите 9 цифр номера после +998.";
-    }
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -206,26 +205,6 @@ export function SellForm() {
     }
 
     setIsSubmitting(true);
-
-    if (hasSupabaseBrowserEnv() && !profilePhone) {
-      const { profile, error } = await updateCurrentProfile({
-        name: sellerName.trim(),
-        district: profileDistrict,
-        addressType: profileAddressType,
-        phone
-      });
-
-      if (error || !profile) {
-        setErrors((current) => ({
-          ...current,
-          phone: "Не удалось сохранить телефон в профиле. Попробуйте еще раз."
-        }));
-        setIsSubmitting(false);
-        return;
-      }
-
-      setProfilePhone(profile.phone ?? "");
-    }
 
     const imagePairs = await Promise.all(
       photos.map(async (photo) => ({
@@ -250,7 +229,7 @@ export function SellForm() {
       currency,
       negotiable,
       seller: sellerName.trim(),
-      phone,
+      phone: "",
       image: mainImage,
       images: galleryImages
     });
@@ -274,15 +253,6 @@ export function SellForm() {
         />
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          <CategorySelect
-            value={category}
-            error={errors.category}
-            onChange={(value) => {
-              setCategory(value);
-              setErrors((current) => ({ ...current, category: undefined }));
-            }}
-          />
-
           <label className="block">
             <span className="text-sm font-semibold text-ink">Название объявления</span>
             <input
@@ -300,6 +270,31 @@ export function SellForm() {
               <span className="ml-auto text-ink/45">{title.length}/70</span>
             </span>
           </label>
+
+          <CategorySelect
+            value={category}
+            error={errors.category}
+            onChange={(value) => {
+              setCategory(value);
+              setErrors((current) => ({ ...current, category: undefined }));
+            }}
+          />
+
+          <PriceField
+            price={price}
+            currency={currency}
+            negotiable={negotiable}
+            error={errors.price}
+            onPriceChange={(value) => {
+              setPrice(value);
+              setErrors((current) => ({ ...current, price: undefined }));
+            }}
+            onCurrencyChange={setCurrency}
+            onNegotiableChange={(value) => {
+              setNegotiable(value);
+              setErrors((current) => ({ ...current, price: undefined }));
+            }}
+          />
 
           <label className="block">
             <span className="text-sm font-semibold text-ink">Описание</span>
@@ -319,22 +314,6 @@ export function SellForm() {
             </span>
           </label>
 
-          <PriceField
-            price={price}
-            currency={currency}
-            negotiable={negotiable}
-            error={errors.price}
-            onPriceChange={(value) => {
-              setPrice(value);
-              setErrors((current) => ({ ...current, price: undefined }));
-            }}
-            onCurrencyChange={setCurrency}
-            onNegotiableChange={(value) => {
-              setNegotiable(value);
-              setErrors((current) => ({ ...current, price: undefined }));
-            }}
-          />
-
           <LocationSelect
             value={district}
             error={errors.district}
@@ -346,11 +325,11 @@ export function SellForm() {
         </section>
 
         <section className="space-y-5 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          <h2 className="text-xl font-semibold text-ink">Контакты</h2>
+          <h2 className="text-xl font-semibold text-ink">Продавец</h2>
           <div className="rounded-2xl border border-ink/10 bg-mist p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-ink/58">Продавец</p>
+                <p className="text-sm font-semibold text-ink/58">Объявление будет опубликовано от имени</p>
                 <p className="mt-1 text-xl font-semibold text-ink">
                   {isProfileLoading ? "Загружаем..." : sellerName || "Имя не указано"}
                 </p>
@@ -362,6 +341,11 @@ export function SellForm() {
                 Изменить в профиле
               </Link>
             </div>
+            {profileLoadError ? (
+              <p className="mt-4 rounded-2xl bg-[#fff2ef] p-4 text-sm font-semibold text-coral">
+                {profileLoadError}
+              </p>
+            ) : null}
             {errors.profile ? (
               <div className="mt-4 rounded-2xl bg-[#fff2ef] p-4">
                 <p className="text-sm font-semibold text-coral">{errors.profile}</p>
@@ -374,38 +358,9 @@ export function SellForm() {
               </div>
             ) : null}
           </div>
-
-          <div>
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-ink">Номер телефона</span>
-              <Link href="/profile" className="text-sm font-semibold text-leaf hover:underline">
-                Изменить в профиле
-              </Link>
-            </div>
-
-            {profilePhone ? (
-              <div className="rounded-2xl border border-ink/10 bg-white px-4 py-4 text-base font-semibold text-ink shadow-sm">
-                +998 {formatUzbekPhone(profilePhone)}
-              </div>
-            ) : (
-              <UzbekPhoneInput
-                value={phone}
-                onChange={(value) => {
-                  setPhone(value);
-                  setErrors((current) => ({ ...current, phone: undefined }));
-                }}
-                disabled={isSubmitting}
-                error={errors.phone}
-              />
-            )}
-
-            {profilePhone && errors.phone ? (
-              <p className="mt-2 text-sm font-medium text-coral">{errors.phone}</p>
-            ) : null}
-            <p className="mt-2 text-xs font-medium text-ink/48">
-              Код страны +998 фиксирован. SMS-подтверждение подключим позже.
-            </p>
-          </div>
+          <p className="text-sm leading-6 text-ink/58">
+            Покупатели будут связываться с вами через Choi Chat. Телефон в объявлении не показывается.
+          </p>
         </section>
 
         <button

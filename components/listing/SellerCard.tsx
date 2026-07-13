@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 import type { Listing } from "@/utils/listings";
 import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
 import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 import { createConversation } from "@/utils/chat";
 import { requireCurrentUser } from "@/lib/auth/client";
+import { getUserById } from "@/utils/users";
+import { getTrustLevel } from "@/utils/trust";
+import { TrustBadge } from "@/components/profile/TrustBadge";
 
 type SellerCardProps = {
   listing: Listing;
@@ -17,8 +20,9 @@ type SellerCardProps = {
 export function SellerCard({ listing }: SellerCardProps) {
   const router = useRouter();
   const trust = getSellerTrust(listing.seller);
-  const phone = listing.phone ?? "+998901112233";
   const sellerId = listing.sellerId ?? "seller-akmal";
+  const sellerUser = getUserById(sellerId);
+  const trustLevel = sellerUser ? getTrustLevel(sellerUser) : null;
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
@@ -54,18 +58,24 @@ export function SellerCard({ listing }: SellerCardProps) {
           <ShieldCheck size={18} />
           Уровень доверия Choi
         </p>
-        <p className="mt-2 text-2xl font-semibold text-ink">{trust.level}</p>
+        <div className="mt-3">
+          {trustLevel ? <TrustBadge level={trustLevel} /> : <p className="text-2xl font-semibold text-ink">{trust.level}</p>}
+        </div>
         <p className="mt-1 text-sm text-ink/58">{trust.since}</p>
       </Link>
 
       <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl border border-ink/10 p-4">
-          <dt className="text-ink/52">Объявлений</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">{trust.listings}</dd>
+          <dt className="text-ink/52">Сделок</dt>
+          <dd className="mt-1 text-lg font-semibold text-ink">
+            {sellerUser?.successfulDeals ?? 0}
+          </dd>
         </div>
         <div className="rounded-2xl border border-ink/10 p-4">
-          <dt className="text-ink/52">Телефон</dt>
-          <dd className="mt-1 text-sm font-semibold text-leaf">подтвержден</dd>
+          <dt className="text-ink/52">На Choi</dt>
+          <dd className="mt-1 text-lg font-semibold text-ink">
+            {sellerUser?.joinedAt ?? 2026}
+          </dd>
         </div>
       </dl>
 
@@ -87,13 +97,6 @@ export function SellerCard({ listing }: SellerCardProps) {
           <MessageCircle size={20} />
           Написать
         </button>
-        <a
-          href={`tel:${phone}`}
-          className="focus-ring inline-flex h-14 items-center justify-center gap-2 rounded-full border border-ink/10 bg-white px-5 text-base font-semibold text-ink shadow-sm transition hover:border-leaf/30"
-        >
-          <Phone size={20} />
-          Позвонить
-        </a>
         <button
           type="button"
           onClick={async () => {

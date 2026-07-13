@@ -1,8 +1,7 @@
-import { MapPin, Phone, ShieldCheck } from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 import type { ChoiUser } from "@/utils/users";
 import { getDistrictLabel } from "@/utils/listings";
 import { getTrustLevel } from "@/utils/trust";
-import { formatUzbekPhone } from "@/components/UzbekPhoneInput";
 import { TrustBadge } from "./TrustBadge";
 
 type ProfileHeaderProps = {
@@ -48,21 +47,12 @@ export function ProfileHeader({
           <div className="mt-5 grid gap-3 text-sm text-ink/62 sm:grid-cols-2">
             <p className="inline-flex items-center gap-2">
               <MapPin size={17} className="text-leaf" />
-              {getDistrictLabel(user.district)}, {user.city}
+              {user.district ? getDistrictLabel(user.district) : "Район не указан"}, {user.city}
             </p>
             <p className="inline-flex items-center gap-2">
               <ShieldCheck size={17} className="text-leaf" />
               На Choi с {user.joinedAt} года
             </p>
-            <p className="inline-flex items-center gap-2">
-              <Phone size={17} className="text-leaf" />
-              {user.phoneVerified ? "Телефон подтвержден" : "Телефон не подтвержден"}
-            </p>
-            {user.phone ? (
-              <p className="font-semibold text-ink">
-                +998 {formatUzbekPhone(user.phone)}
-              </p>
-            ) : null}
             <p className="font-semibold text-ink">{listingsCount} объявлений</p>
           </div>
         </div>

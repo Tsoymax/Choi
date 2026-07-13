@@ -5,7 +5,6 @@ import { X } from "lucide-react";
 import type { ChoiUser } from "@/utils/users";
 import { updateCurrentUser } from "@/utils/users";
 import { tashkentDistricts } from "@/components/sell/sellData";
-import { isValidUzbekPhone, UzbekPhoneInput } from "@/components/UzbekPhoneInput";
 
 type ProfileEditModalProps = {
   user: ChoiUser;
@@ -15,7 +14,6 @@ type ProfileEditModalProps = {
     name: string;
     district: string;
     addressMode: "aka" | "opa";
-    phone: string;
   }) => Promise<ChoiUser>;
 };
 
@@ -28,17 +26,11 @@ export function ProfileEditModal({
   const [name, setName] = useState(user.name);
   const [district, setDistrict] = useState(user.district);
   const [addressMode, setAddressMode] = useState(user.addressMode);
-  const [phone, setPhone] = useState(user.phone ?? "");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   async function saveProfile() {
     setError("");
-
-    if (phone && !isValidUzbekPhone(phone)) {
-      setError("Введите 9 цифр номера после +998.");
-      return;
-    }
 
     setIsSaving(true);
 
@@ -46,8 +38,7 @@ export function ProfileEditModal({
       const input = {
         name: name.trim() || user.name,
         district,
-        addressMode,
-        phone
+        addressMode
       };
       const nextUser = onSaveProfile
         ? await onSaveProfile(input)
@@ -94,6 +85,7 @@ export function ProfileEditModal({
               onChange={(event) => setDistrict(event.target.value)}
               className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
             >
+              <option value="">Выберите район</option>
               {tashkentDistricts.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.label}
@@ -122,17 +114,6 @@ export function ProfileEditModal({
             </div>
           </div>
 
-          <label className="block">
-            <span className="text-sm font-semibold text-ink">Номер телефона</span>
-            <UzbekPhoneInput
-              value={phone}
-              onChange={setPhone}
-              disabled={isSaving}
-            />
-            <span className="mt-2 block text-xs font-medium text-ink/48">
-              SMS-подтверждение подключим позже.
-            </span>
-          </label>
         </div>
 
         {error ? <p className="mt-4 text-sm font-semibold text-coral">{error}</p> : null}

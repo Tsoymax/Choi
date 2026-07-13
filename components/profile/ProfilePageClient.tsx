@@ -61,13 +61,11 @@ export function ProfilePageClient({
     name: string;
     district: string;
     addressMode: "aka" | "opa";
-    phone: string;
   }) {
     const { profile, error } = await updateCurrentProfile({
       name: input.name,
-      district: input.district,
-      addressType: input.addressMode,
-      phone: input.phone || null
+      district: input.district || null,
+      addressType: input.addressMode
     });
 
     if (error || !profile) {

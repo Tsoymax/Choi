@@ -32,6 +32,7 @@ export type Product = {
   reviews: number;
   image: string;
   status?: "active" | "sold";
+  createdAt?: string;
   badgeRu?: string;
   badgeUz?: string;
 };
