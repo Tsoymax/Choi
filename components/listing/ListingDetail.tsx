@@ -30,21 +30,33 @@ import { SellerCard } from "./SellerCard";
 
 type ListingDetailProps = {
   listingId: string;
+  initialListing?: Listing | null;
+  initialCurrentUserId?: string;
 };
 
-export function ListingDetail({ listingId }: ListingDetailProps) {
+export function ListingDetail({
+  listingId,
+  initialListing = null,
+  initialCurrentUserId = ""
+}: ListingDetailProps) {
   const [language, setLanguage] = useState<Language>("ru");
   const [query, setQuery] = useState("");
-  const [listing, setListing] = useState<Listing | undefined>(() => getListingById(listingId));
-  const [currentUserId, setCurrentUserId] = useState(CURRENT_USER_ID);
+  const [listing, setListing] = useState<Listing | undefined>(
+    () => initialListing ?? getListingById(listingId)
+  );
+  const [currentUserId, setCurrentUserId] = useState(
+    initialCurrentUserId || CURRENT_USER_ID
+  );
   const [remoteRelatedListings, setRemoteRelatedListings] = useState<Listing[]>([]);
+  const [isLoadingListing, setIsLoadingListing] = useState(!initialListing);
 
   useEffect(() => {
     async function syncListing() {
       const localListing = getListingById(listingId);
-      setListing(localListing);
+      setListing((current) => current ?? localListing);
 
       if (!hasSupabaseBrowserEnv()) {
+        setIsLoadingListing(false);
         return;
       }
 
@@ -61,6 +73,8 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
 
       if (remoteListing) {
         setListing(mapListingRowToProduct(remoteListing) as Listing);
+      } else if (!localListing) {
+        setListing(undefined);
       }
 
       setRemoteRelatedListings(
@@ -68,6 +82,7 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
           .filter((item) => item.id !== listingId)
           .map((item) => mapListingRowToProduct(item) as Listing)
       );
+      setIsLoadingListing(false);
     }
 
     void syncListing();
@@ -94,6 +109,25 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
     },
     [listing, remoteRelatedListings]
   );
+
+  if (!listing && isLoadingListing) {
+    return (
+      <main className="min-h-screen bg-[#f7f5ef]">
+        <Header
+          language={language}
+          onLanguageChange={setLanguage}
+          query={query}
+          onQueryChange={setQuery}
+        />
+        <div className="mx-auto mt-10 max-w-3xl rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+          <h1 className="text-3xl font-semibold text-ink">Загружаем объявление</h1>
+          <p className="mt-3 text-ink/62">
+            Проверяем публикацию в Choi.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   if (!listing) {
     return (

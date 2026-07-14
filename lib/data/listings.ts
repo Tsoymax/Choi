@@ -126,8 +126,28 @@ export async function getActiveListings(supabase: SupabaseClient) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    logListingDebug("getActiveListings", { count: 0 }, error);
-    return [];
+    logListingDebug("getActiveListings_relation", { count: 0 }, error);
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+
+    if (fallbackError) {
+      logListingDebug("getActiveListings", { count: 0 }, fallbackError);
+      return [];
+    }
+
+    logListingDebug("getActiveListings_fallback", {
+      count: fallbackData?.length ?? 0,
+      listings: fallbackData?.map((listing) => ({
+        id: listing.id,
+        userId: listing.user_id,
+        status: listing.status
+      }))
+    });
+
+    return (fallbackData ?? []) as ListingWithRelations[];
   }
 
   logListingDebug("getActiveListings", {
@@ -165,13 +185,41 @@ export async function getListingsByUserId(supabase: SupabaseClient, userId: stri
 export async function getListingById(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(*), profiles(*)")
+    .select("*, listing_images(*), profiles(name)")
     .eq("id", id)
     .maybeSingle();
 
   if (error) {
-    logListingDebug("getListingById", { listingId: id }, error);
-    return null;
+    logListingDebug("getListingById_relation", { listingId: id }, error);
+    const { data: fallbackListing, error: fallbackError } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fallbackError || !fallbackListing) {
+      logListingDebug("getListingById", { listingId: id }, fallbackError);
+      return null;
+    }
+
+    const [{ data: images }, { data: profile }] = await Promise.all([
+      supabase
+        .from("listing_images")
+        .select("*")
+        .eq("listing_id", fallbackListing.id)
+        .order("position", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", fallbackListing.user_id)
+        .maybeSingle()
+    ]);
+
+    return {
+      ...fallbackListing,
+      listing_images: images ?? [],
+      profiles: profile ?? null
+    } as ListingWithRelations;
   }
 
   logListingDebug("getListingById", {
