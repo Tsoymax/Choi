@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { Conversation, Message } from "@/utils/chat";
 import {
@@ -15,11 +15,20 @@ import {
 import type { Listing } from "@/utils/listings";
 import { getListingById as getLocalListingById } from "@/utils/listings";
 import { getConfirmedDealsCount } from "@/utils/deals";
-import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import {
+  getConversationById as getRemoteConversationById,
+  mapConversationRow
+} from "@/lib/data/conversations";
 import {
   getListingById as getRemoteListingById,
   mapListingRowToProduct
 } from "@/lib/data/listings";
+import {
+  getMessagesByConversationId,
+  mapMessageRow,
+  sendMessage as sendRemoteMessage
+} from "@/lib/data/messages";
 import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
 import { ListingChatCard } from "./ListingChatCard";
@@ -44,6 +53,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     const initialConversation = getConversationById(conversationId);
     return initialConversation ? getLocalListingById(initialConversation.listingId) : undefined;
   });
+  const [currentUserId, setCurrentUserId] = useState("");
   const [isLoadingListing, setIsLoadingListing] = useState(true);
   const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -53,11 +63,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     const syncChat = () => {
       markConversationRead(conversationId);
       const nextConversation = getConversationById(conversationId);
-      setConversation(nextConversation);
+      setConversation((current) => current?.remote ? current : nextConversation);
       if (nextConversation) {
         setListing((current) => current ?? getLocalListingById(nextConversation.listingId));
       }
-      setMessages(getMessages(conversationId));
+      setMessages((current) => current.length > 0 ? current : getMessages(conversationId));
     };
 
     syncChat();
@@ -75,41 +85,81 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
   useEffect(() => {
     let mounted = true;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
 
     async function syncRemoteListing() {
-      const nextConversation = getConversationById(conversationId);
-      if (!nextConversation) {
-        setIsLoadingListing(false);
-        return;
-      }
-
-      const localListing = getLocalListingById(nextConversation.listingId);
-      if (localListing && mounted) {
-        setListing(localListing);
-      }
-
       if (!hasSupabaseBrowserEnv()) {
+        const nextConversation = getConversationById(conversationId);
+        if (nextConversation) {
+          setListing((current) => current ?? getLocalListingById(nextConversation.listingId));
+        }
         setIsLoadingListing(false);
         return;
       }
 
       const supabase = createClient();
-      const remoteListing = await getRemoteListingById(supabase, nextConversation.listingId);
+      const user = await getCurrentUser();
 
-      if (!mounted) {
+      if (!user) {
+        setIsLoadingListing(false);
         return;
       }
 
-      if (remoteListing) {
-        setListing(mapListingRowToProduct(remoteListing) as Listing);
+      const userId = user.id;
+      setCurrentUserId(userId);
+
+      async function syncRemoteChat() {
+        const remoteConversation = await getRemoteConversationById(supabase, conversationId);
+
+        if (!mounted) {
+          return;
+        }
+
+        if (!remoteConversation) {
+          const localConversation = getConversationById(conversationId);
+          if (localConversation) {
+            setConversation(localConversation);
+            setListing((current) =>
+              current ?? getLocalListingById(localConversation.listingId)
+            );
+          }
+          setIsLoadingListing(false);
+          return;
+        }
+
+        const mappedConversation = mapConversationRow(remoteConversation, userId);
+        setConversation(mappedConversation);
+        if (mappedConversation.listing) {
+          setListing(mappedConversation.listing as Listing);
+        } else {
+          const remoteListing = await getRemoteListingById(
+            supabase,
+            mappedConversation.listingId
+          );
+
+          if (remoteListing && mounted) {
+            setListing(mapListingRowToProduct(remoteListing) as Listing);
+          }
+        }
+
+        const remoteMessages = await getMessagesByConversationId(supabase, conversationId);
+        if (mounted) {
+          setMessages(remoteMessages.map((message) => mapMessageRow(message, userId)));
+          setIsLoadingListing(false);
+        }
       }
-      setIsLoadingListing(false);
+
+      await syncRemoteChat();
+      intervalId = setInterval(syncRemoteChat, 3500);
     }
 
     void syncRemoteListing();
 
     return () => {
       mounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
   }, [conversationId]);
 
@@ -118,6 +168,22 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   }, [messages.length]);
 
   function handleSend(text: string) {
+    if (conversation?.remote && currentUserId) {
+      const trimmedText = text.trim();
+      if (!trimmedText) {
+        return;
+      }
+
+      const supabase = createClient();
+      void sendRemoteMessage(supabase, conversationId, currentUserId, trimmedText).then(
+        async () => {
+          const remoteMessages = await getMessagesByConversationId(supabase, conversationId);
+          setMessages(remoteMessages.map((message) => mapMessageRow(message, currentUserId)));
+        }
+      );
+      return;
+    }
+
     const previousMessages = getMessages(conversationId);
     const shouldAutoReply =
       previousMessages.filter((message) => message.sender === "buyer").length === 0 &&

@@ -7,6 +7,9 @@ import { ChatList } from "@/components/chat/ChatList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import type { Conversation } from "@/utils/chat";
 import { CHAT_EVENT, getConversations } from "@/utils/chat";
+import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { getConversationsByUserId } from "@/lib/data/conversations";
+import { createClient } from "@/utils/supabase/client";
 
 type ConversationScreenProps = {
   conversationId: string;
@@ -18,13 +21,32 @@ export function ConversationScreen({ conversationId }: ConversationScreenProps) 
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
   useEffect(() => {
-    const syncConversations = () => setConversations(getConversations());
+    async function syncConversations() {
+      const localConversations = getConversations();
 
-    syncConversations();
+      if (!hasSupabaseBrowserEnv()) {
+        setConversations(localConversations);
+        return;
+      }
+
+      const user = await getCurrentUser();
+      if (!user) {
+        setConversations(localConversations);
+        return;
+      }
+
+      const supabase = createClient();
+      const remoteConversations = await getConversationsByUserId(supabase, user.id);
+      setConversations([...remoteConversations, ...localConversations]);
+    }
+
+    void syncConversations();
+    const intervalId = setInterval(syncConversations, 5000);
     window.addEventListener(CHAT_EVENT, syncConversations);
     window.addEventListener("storage", syncConversations);
 
     return () => {
+      clearInterval(intervalId);
       window.removeEventListener(CHAT_EVENT, syncConversations);
       window.removeEventListener("storage", syncConversations);
     };

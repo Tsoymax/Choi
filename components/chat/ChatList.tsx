@@ -18,8 +18,8 @@ export function ChatList({ conversations, activeConversationId }: ChatListProps)
           <ChatListItem
             key={conversation.id}
             conversation={conversation}
-            listing={getListingById(conversation.listingId)}
-            lastMessage={getLastMessage(conversation.id)}
+            listing={conversation.listing ?? getListingById(conversation.listingId)}
+            lastMessage={conversation.lastMessage ?? getLastMessage(conversation.id)}
             active={conversation.id === activeConversationId}
           />
         ))}

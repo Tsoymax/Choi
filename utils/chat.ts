@@ -10,8 +10,12 @@ export type Conversation = {
   sellerName: string;
   buyerName: string;
   buyerId?: string;
+  sellerId?: string;
   createdAt: string;
   updatedAt: string;
+  listing?: Listing;
+  lastMessage?: Message;
+  remote?: boolean;
 };
 
 export type Message = {

@@ -8,7 +8,9 @@ import type { Listing } from "@/utils/listings";
 import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
 import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 import { createConversation } from "@/utils/chat";
-import { requireCurrentUser } from "@/lib/auth/client";
+import { hasSupabaseBrowserEnv, requireCurrentUser } from "@/lib/auth/client";
+import { createConversation as createRemoteConversation } from "@/lib/data/conversations";
+import { createClient } from "@/utils/supabase/client";
 import { getUserById } from "@/utils/users";
 import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustBadge } from "@/components/trust/TrustBadge";
@@ -87,6 +89,22 @@ export function SellerCard({ listing }: SellerCardProps) {
 
             if (!user) {
               return;
+            }
+
+            if (hasSupabaseBrowserEnv() && listing.sellerId) {
+              try {
+                const supabase = createClient();
+                const conversation = await createRemoteConversation(
+                  supabase,
+                  listing.id,
+                  user.id,
+                  listing.sellerId
+                );
+                router.push(`/chat/${conversation.id}` as never);
+                return;
+              } catch {
+                // Prototype listings still use local chat as a fallback.
+              }
             }
 
             const conversation = createConversation(listing);

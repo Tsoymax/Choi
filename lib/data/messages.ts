@@ -1,4 +1,25 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Message } from "@/utils/chat";
+
+type MessageRow = {
+  id: string;
+  conversation_id: string;
+  sender_id: string | null;
+  text: string;
+  read: boolean | null;
+  created_at: string | null;
+};
+
+export function mapMessageRow(row: MessageRow, currentUserId: string): Message {
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    sender: row.sender_id === currentUserId ? "buyer" : "seller",
+    text: row.text,
+    createdAt: row.created_at ?? new Date().toISOString(),
+    read: row.read ?? false
+  };
+}
 
 export async function getMessagesByConversationId(
   supabase: SupabaseClient,
@@ -14,7 +35,7 @@ export async function getMessagesByConversationId(
     return [];
   }
 
-  return data;
+  return (data ?? []) as MessageRow[];
 }
 
 export async function sendMessage(
@@ -36,6 +57,11 @@ export async function sendMessage(
   if (error) {
     throw error;
   }
+
+  await supabase
+    .from("conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", conversationId);
 
   return data;
 }
