@@ -12,8 +12,15 @@ import {
   markConversationRead,
   sendMessage
 } from "@/utils/chat";
-import { getListingById } from "@/utils/listings";
+import type { Listing } from "@/utils/listings";
+import { getListingById as getLocalListingById } from "@/utils/listings";
 import { getConfirmedDealsCount } from "@/utils/deals";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import {
+  getListingById as getRemoteListingById,
+  mapListingRowToProduct
+} from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
 import { ListingChatCard } from "./ListingChatCard";
 import { MessageBubble } from "./MessageBubble";
@@ -33,19 +40,23 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     getConversationById(conversationId)
   );
   const [messages, setMessages] = useState<Message[]>(() => getMessages(conversationId));
+  const [listing, setListing] = useState<Listing | undefined>(() => {
+    const initialConversation = getConversationById(conversationId);
+    return initialConversation ? getLocalListingById(initialConversation.listingId) : undefined;
+  });
+  const [isLoadingListing, setIsLoadingListing] = useState(true);
   const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const listing = useMemo(
-    () => (conversation ? getListingById(conversation.listingId) : undefined),
-    [conversation]
-  );
   const confirmedDealsCount = listing?.sellerId ? getConfirmedDealsCount(listing.sellerId) : 0;
 
   useEffect(() => {
     const syncChat = () => {
       markConversationRead(conversationId);
-      setConversation(getConversationById(conversationId));
+      const nextConversation = getConversationById(conversationId);
+      setConversation(nextConversation);
+      if (nextConversation) {
+        setListing((current) => current ?? getLocalListingById(nextConversation.listingId));
+      }
       setMessages(getMessages(conversationId));
     };
 
@@ -59,6 +70,46 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       if (replyTimerRef.current) {
         clearTimeout(replyTimerRef.current);
       }
+    };
+  }, [conversationId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncRemoteListing() {
+      const nextConversation = getConversationById(conversationId);
+      if (!nextConversation) {
+        setIsLoadingListing(false);
+        return;
+      }
+
+      const localListing = getLocalListingById(nextConversation.listingId);
+      if (localListing && mounted) {
+        setListing(localListing);
+      }
+
+      if (!hasSupabaseBrowserEnv()) {
+        setIsLoadingListing(false);
+        return;
+      }
+
+      const supabase = createClient();
+      const remoteListing = await getRemoteListingById(supabase, nextConversation.listingId);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (remoteListing) {
+        setListing(mapListingRowToProduct(remoteListing) as Listing);
+      }
+      setIsLoadingListing(false);
+    }
+
+    void syncRemoteListing();
+
+    return () => {
+      mounted = false;
     };
   }, [conversationId]);
 
@@ -83,6 +134,15 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
         setMessages(getMessages(conversationId));
       }, delay);
     }
+  }
+
+  if (conversation && !listing && isLoadingListing) {
+    return (
+      <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+        <h1 className="text-2xl font-semibold text-ink">Загружаем диалог</h1>
+        <p className="mt-2 text-ink/58">Подтягиваем объявление из Choi.</p>
+      </section>
+    );
   }
 
   if (!conversation || !listing) {

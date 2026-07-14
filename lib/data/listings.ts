@@ -121,7 +121,7 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
 export async function getActiveListings(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(*), profiles(name)")
+    .select("*, listing_images(*), profiles!listings_user_id_fkey(name)")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
@@ -185,7 +185,7 @@ export async function getListingsByUserId(supabase: SupabaseClient, userId: stri
 export async function getListingById(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(*), profiles(name)")
+    .select("*, listing_images(*), profiles!listings_user_id_fkey(name)")
     .eq("id", id)
     .maybeSingle();
 
