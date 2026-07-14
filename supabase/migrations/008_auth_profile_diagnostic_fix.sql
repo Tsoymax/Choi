@@ -58,6 +58,10 @@ on conflict (id) do nothing;
 
 alter table public.profiles enable row level security;
 
+grant usage on schema public to anon, authenticated;
+grant select on public.profiles to anon, authenticated;
+grant insert, update on public.profiles to authenticated;
+
 drop policy if exists "Profiles are readable by everyone" on public.profiles;
 drop policy if exists "Users insert own profile" on public.profiles;
 drop policy if exists "Users update own profile" on public.profiles;
