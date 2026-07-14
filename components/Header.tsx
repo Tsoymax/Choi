@@ -15,6 +15,7 @@ import { ensureProfileForUser, type ProfileRow } from "@/lib/data/profiles";
 import { createClient } from "@/utils/supabase/client";
 import { DistrictSelector } from "@/components/location/DistrictSelector";
 import { DealNotificationModal } from "@/components/deals/DealNotificationModal";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   LOCATION_EVENT,
   loadHomeDistrict,
@@ -241,6 +242,7 @@ export function Header({
               </span>
             ) : null}
           </Link>
+          <NotificationBell />
           <Link
             href={(currentUser ? "/profile" : "/login") as never}
             className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-mist px-3 text-base font-semibold text-ink transition hover:bg-[#e4eee7] md:flex"
