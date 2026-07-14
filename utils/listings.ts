@@ -175,6 +175,45 @@ export function updateStoredListingStatus(id: string, status: ListingStatus) {
   return listings;
 }
 
+export function updateStoredListing(
+  id: string,
+  input: Omit<StoredListingInput, "seller" | "phone"> & {
+    seller?: string;
+    phone?: string;
+  }
+) {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const listings = getStoredListings().map((listing) =>
+    listing.id === id
+      ? {
+          ...listing,
+          title: input.title,
+          titleRu: input.title,
+          titleUz: input.title,
+          category: input.category,
+          district: input.district,
+          price: input.price ?? 0,
+          currency: input.currency,
+          negotiable: input.negotiable,
+          image: input.image,
+          images: input.images?.length ? input.images : [input.image],
+          description: input.description,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          seller: input.seller ?? listing.seller,
+          phone: input.phone ?? listing.phone
+        }
+      : listing
+  );
+
+  window.localStorage.setItem(STORED_LISTINGS_KEY, JSON.stringify(listings));
+  notifyListingsChanged();
+  return listings;
+}
+
 export function deleteStoredListing(id: string) {
   if (typeof window === "undefined") {
     return [];

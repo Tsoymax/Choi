@@ -47,6 +47,25 @@ export type CreateListingInput = {
   images: string[];
 };
 
+export type UpdateListingInput = {
+  category: string;
+  title: string;
+  description: string;
+  price: number | null;
+  currency: "uzs" | "usd";
+  negotiable: boolean;
+  district: string;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+export type UpdateListingImageInput = {
+  id?: string;
+  imageUrl: string;
+  position: number;
+  isPrimary: boolean;
+};
+
 export type ListingProduct = Product & {
   description?: string;
   phone?: string;
@@ -300,4 +319,178 @@ export async function createListingWithImages(
   }
 
   return { listing, error: null };
+}
+
+export async function updateListing(
+  supabase: SupabaseClient,
+  id: string,
+  input: UpdateListingInput
+) {
+  const { data, error } = await supabase
+    .from("listings")
+    .update({
+      category: input.category,
+      title: input.title,
+      description: input.description,
+      price: input.price,
+      currency: input.currency,
+      negotiable: input.negotiable,
+      district: input.district,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    logListingDebug("updateListing", { listingId: id }, error);
+  }
+
+  return { listing: data as ListingRow | null, error };
+}
+
+function getOwnedStoragePath(listingId: string, imageUrl: string) {
+  if (!imageUrl || imageUrl.startsWith("data:") || imageUrl.startsWith("/")) {
+    return null;
+  }
+
+  try {
+    const url = new URL(imageUrl);
+    const marker = "/storage/v1/object/public/listing-images/";
+    const markerIndex = url.pathname.indexOf(marker);
+
+    if (markerIndex === -1) {
+      return null;
+    }
+
+    const path = decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+    return path.startsWith(`${listingId}/`) ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+async function deleteListingStorageFiles(
+  supabase: SupabaseClient,
+  listingId: string,
+  imageUrls: string[]
+) {
+  const paths = imageUrls
+    .map((imageUrl) => getOwnedStoragePath(listingId, imageUrl))
+    .filter((path): path is string => Boolean(path));
+
+  if (paths.length === 0) {
+    return null;
+  }
+
+  const { error } = await supabase.storage.from("listing-images").remove(paths);
+
+  if (error) {
+    logListingDebug("deleteListingStorageFiles", { listingId, count: paths.length }, error);
+  }
+
+  return error;
+}
+
+export async function syncListingImages(
+  supabase: SupabaseClient,
+  listingId: string,
+  images: UpdateListingImageInput[],
+  removedImages: ListingImageRow[]
+) {
+  const storageError = await deleteListingStorageFiles(
+    supabase,
+    listingId,
+    removedImages.map((image) => image.image_url)
+  );
+
+  const removedIds = removedImages.map((image) => image.id);
+  if (removedIds.length > 0) {
+    const { error } = await supabase
+      .from("listing_images")
+      .delete()
+      .in("id", removedIds);
+
+    if (error) {
+      logListingDebug("deleteListingImages", { listingId, count: removedIds.length }, error);
+      return { error };
+    }
+  }
+
+  const existingImages = images.filter((image) => image.id);
+  for (const image of existingImages) {
+    const { error } = await supabase
+      .from("listing_images")
+      .update({
+        position: image.position,
+        is_primary: image.isPrimary
+      })
+      .eq("id", image.id)
+      .eq("listing_id", listingId);
+
+    if (error) {
+      logListingDebug("updateListingImage", { listingId, imageId: image.id }, error);
+      return { error };
+    }
+  }
+
+  const newImages = images.filter((image) => !image.id);
+  if (newImages.length > 0) {
+    const { error } = await supabase.from("listing_images").insert(
+      newImages.map((image) => ({
+        listing_id: listingId,
+        image_url: image.imageUrl,
+        position: image.position,
+        is_primary: image.isPrimary
+      }))
+    );
+
+    if (error) {
+      logListingDebug("insertListingImages", { listingId, count: newImages.length }, error);
+      return { error };
+    }
+  }
+
+  return { error: storageError };
+}
+
+export async function updateListingStatus(
+  supabase: SupabaseClient,
+  id: string,
+  status: "active" | "reserved" | "sold" | "archived"
+) {
+  const { data, error } = await supabase
+    .from("listings")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    logListingDebug("updateListingStatus", { listingId: id, status }, error);
+  }
+
+  return { listing: data as ListingRow | null, error };
+}
+
+export async function deleteListing(supabase: SupabaseClient, id: string) {
+  const listing = await getListingById(supabase, id);
+
+  if (listing?.listing_images?.length) {
+    await deleteListingStorageFiles(
+      supabase,
+      id,
+      listing.listing_images.map((image) => image.image_url)
+    );
+  }
+
+  const { error } = await supabase.from("listings").delete().eq("id", id);
+
+  if (error) {
+    logListingDebug("deleteListing", { listingId: id }, error);
+  }
+
+  return { error };
 }

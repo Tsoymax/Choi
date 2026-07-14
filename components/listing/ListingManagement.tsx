@@ -1,29 +1,97 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { Check, MoreHorizontal, PackageCheck, X } from "lucide-react";
-import type { Listing } from "@/utils/listings";
-import { updateStoredListingStatus } from "@/utils/listings";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
-  createDealForListing,
-  getDealInterlocutors,
-  type DealInterlocutor
-} from "@/utils/deals";
-import { getDistrictLabel } from "@/utils/listings";
+  Archive,
+  CheckCircle2,
+  Edit3,
+  PackageCheck,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+  X
+} from "lucide-react";
+import type { Listing, ListingStatus } from "@/utils/listings";
+import {
+  LISTINGS_EVENT,
+  deleteStoredListing,
+  updateStoredListingStatus
+} from "@/utils/listings";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import {
+  deleteListing as deleteRemoteListing,
+  updateListingStatus
+} from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 
 type ListingManagementProps = {
   listing: Listing;
 };
 
-export function ListingManagement({ listing }: ListingManagementProps) {
-  const [dealSheetOpen, setDealSheetOpen] = useState(false);
-  const interlocutors = useMemo(() => getDealInterlocutors(listing.id), [listing.id]);
-  const status = listing.status ?? "active";
+const statusLabels: Record<ListingStatus, string> = {
+  active: "В продаже",
+  reserved: "Забронировано",
+  sold: "Продано",
+  archived: "Снято с публикации"
+};
 
-  function markSold(buyer?: DealInterlocutor | null) {
-    createDealForListing(listing, buyer ?? null);
-    setDealSheetOpen(false);
+export function ListingManagement({ listing }: ListingManagementProps) {
+  const router = useRouter();
+  const [status, setStatus] = useState<ListingStatus>(listing.status ?? "active");
+  const [isBusy, setIsBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const isRemoteListing = hasSupabaseBrowserEnv() && !listing.id.startsWith("local-");
+
+  async function changeStatus(nextStatus: ListingStatus) {
+    setError("");
+    setIsBusy(true);
+
+    if (isRemoteListing) {
+      const supabase = createClient();
+      const result = await updateListingStatus(supabase, listing.id, nextStatus);
+
+      if (result.error) {
+        setError("Не удалось изменить статус объявления.");
+        setIsBusy(false);
+        return;
+      }
+
+      window.dispatchEvent(new Event(LISTINGS_EVENT));
+      router.refresh();
+    } else {
+      updateStoredListingStatus(listing.id, nextStatus);
+    }
+
+    setStatus(nextStatus);
+    setIsBusy(false);
+  }
+
+  async function deleteListing() {
+    setError("");
+    setIsBusy(true);
+
+    if (isRemoteListing) {
+      const supabase = createClient();
+      const result = await deleteRemoteListing(supabase, listing.id);
+
+      if (result.error) {
+        setError("Не удалось удалить объявление.");
+        setIsBusy(false);
+        setDeleteModalOpen(false);
+        return;
+      }
+
+      window.dispatchEvent(new Event(LISTINGS_EVENT));
+      router.push("/profile" as never);
+      router.refresh();
+      return;
+    }
+
+    deleteStoredListing(listing.id);
+    router.push("/profile" as never);
   }
 
   return (
@@ -31,124 +99,144 @@ export function ListingManagement({ listing }: ListingManagementProps) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-ink">Управление объявлением</h2>
-          {status === "reserved" ? (
-            <p className="mt-1 text-sm font-semibold text-leaf">Договорились</p>
-          ) : null}
+          <p className="mt-1 text-sm font-semibold text-leaf">{statusLabels[status]}</p>
         </div>
         <PackageCheck className="text-leaf" size={22} />
       </div>
 
+      {status === "sold" ? (
+        <div className="mt-5 rounded-2xl bg-mist p-4 text-sm font-semibold text-ink/68">
+          Проданное объявление нельзя редактировать, но его можно удалить или вернуть в продажу.
+        </div>
+      ) : null}
+
       <div className="mt-5 grid gap-2">
         <Link
-          href={`/sell?editId=${listing.id}`}
-          className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full bg-mist px-4 text-sm font-semibold text-ink transition hover:bg-[#e4eee7]"
+          href={`/listing/${listing.id}/edit` as never}
+          className={`focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full bg-mist px-4 text-sm font-semibold text-ink transition hover:bg-[#e4eee7] ${
+            status === "sold" ? "pointer-events-none opacity-55" : ""
+          }`}
+          aria-disabled={status === "sold"}
         >
-          <MoreHorizontal size={16} />
+          <Edit3 size={16} />
           Редактировать
         </Link>
 
         {status === "reserved" ? (
           <button
             type="button"
-            onClick={() => updateStoredListingStatus(listing.id, "active")}
-            className="focus-ring h-11 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink transition hover:border-leaf/30"
+            disabled={isBusy}
+            onClick={() => changeStatus("active")}
+            className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink transition hover:border-leaf/30 disabled:opacity-60"
           >
+            <RotateCcw size={16} />
             Снова в продаже
           </button>
-        ) : (
+        ) : null}
+
+        {status === "active" ? (
           <button
             type="button"
-            onClick={() => updateStoredListingStatus(listing.id, "reserved")}
-            className="focus-ring h-11 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink transition hover:border-leaf/30"
+            disabled={isBusy}
+            onClick={() => changeStatus("reserved")}
+            className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink transition hover:border-leaf/30 disabled:opacity-60"
           >
+            <ShieldCheck size={16} />
             Забронировать
           </button>
-        )}
+        ) : null}
+
+        {status === "active" || status === "reserved" ? (
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => changeStatus("sold")}
+            className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:opacity-60"
+          >
+            <CheckCircle2 size={17} />
+            Продано
+          </button>
+        ) : null}
+
+        {status === "active" || status === "reserved" ? (
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => changeStatus("archived")}
+            className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#fff2ef] px-4 text-sm font-semibold text-coral transition hover:bg-[#ffe4dc] disabled:opacity-60"
+          >
+            <Archive size={16} />
+            Снять с публикации
+          </button>
+        ) : null}
+
+        {status === "archived" || status === "sold" ? (
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => changeStatus("active")}
+            className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf transition hover:bg-mist disabled:opacity-60"
+          >
+            <RotateCcw size={16} />
+            Вернуть в публикацию
+          </button>
+        ) : null}
 
         <button
           type="button"
-          onClick={() => setDealSheetOpen(true)}
-          className="focus-ring h-12 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d]"
+          disabled={isBusy}
+          onClick={() => setDeleteModalOpen(true)}
+          className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-coral/20 bg-white px-4 text-sm font-semibold text-coral transition hover:bg-[#fff2ef] disabled:opacity-60"
         >
-          Продано
-        </button>
-
-        <button
-          type="button"
-          onClick={() => updateStoredListingStatus(listing.id, "archived")}
-          className="focus-ring h-11 rounded-full bg-[#fff2ef] px-4 text-sm font-semibold text-coral transition hover:bg-[#ffe4dc]"
-        >
-          Снять с публикации
+          <Trash2 size={16} />
+          Удалить
         </button>
       </div>
 
-      {dealSheetOpen ? (
-        <div className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm">
-          <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-[0_-18px_60px_rgba(24,32,29,0.18)] sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
+      {error ? (
+        <p className="mt-4 rounded-2xl bg-[#fff2ef] p-4 text-sm font-semibold text-coral">
+          {error}
+        </p>
+      ) : null}
+
+      {deleteModalOpen ? (
+        <div className="fixed inset-0 z-50 bg-ink/30 p-4 backdrop-blur-sm">
+          <div className="mx-auto mt-28 max-w-md rounded-[28px] bg-white p-6 shadow-[0_24px_80px_rgba(24,32,29,0.24)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold text-ink">Получилось продать? ☕</h2>
-                <p className="mt-1 text-sm text-ink/58">
-                  Выберите человека, с которым состоялась сделка
-                </p>
+                <h2 className="text-2xl font-semibold text-ink">Удалить объявление?</h2>
+                <p className="mt-2 text-sm text-ink/58">Это действие нельзя отменить</p>
               </div>
               <button
                 type="button"
-                onClick={() => setDealSheetOpen(false)}
+                onClick={() => setDeleteModalOpen(false)}
                 className="focus-ring grid h-10 w-10 place-items-center rounded-full bg-mist text-ink"
                 aria-label="Закрыть"
               >
                 <X size={18} />
               </button>
             </div>
-
-            {interlocutors.length > 0 ? (
-              <div className="mt-5 space-y-2">
-                {interlocutors.map((buyer) => (
-                  <button
-                    type="button"
-                    key={buyer.id}
-                    onClick={() => markSold(buyer)}
-                    className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-ink/10 bg-white p-3 text-left transition hover:border-leaf/30"
-                  >
-                    <div className="grid h-12 w-12 place-items-center rounded-full bg-mist text-base font-semibold text-leaf">
-                      {buyer.displayName.slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-ink">{buyer.displayName}</p>
-                      <p className="text-sm text-ink/58">{getDistrictLabel(buyer.district)}</p>
-                    </div>
-                    <Check className="text-leaf" size={18} />
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-5 rounded-2xl bg-mist p-4">
-                <p className="font-semibold text-ink">Продали через Choi?</p>
-                <p className="mt-1 text-sm text-ink/58">
-                  По этому объявлению пока нет диалогов. Можно отметить продажу другому человеку.
-                </p>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => markSold(null)}
-              className="focus-ring mt-5 h-12 w-full rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink transition hover:border-leaf/30"
-            >
-              Продал другому человеку
-            </button>
-            <button
-              type="button"
-              onClick={() => setDealSheetOpen(false)}
-              className="focus-ring mt-2 h-12 w-full rounded-full bg-mist px-4 text-sm font-semibold text-ink"
-            >
-              Отмена
-            </button>
+            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={deleteListing}
+                className="focus-ring h-12 rounded-full bg-coral px-4 text-sm font-semibold text-white transition hover:bg-[#d95a49] disabled:opacity-60"
+              >
+                Удалить
+              </button>
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={() => setDeleteModalOpen(false)}
+                className="focus-ring h-12 rounded-full bg-mist px-4 text-sm font-semibold text-ink disabled:opacity-60"
+              >
+                Отмена
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
     </section>
   );
 }
-

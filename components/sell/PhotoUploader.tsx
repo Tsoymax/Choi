@@ -1,10 +1,12 @@
 import Image from "next/image";
-import { Camera, Star, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Star, Trash2, Upload } from "lucide-react";
 
 export type UploadPhoto = {
   id: string;
-  file: File;
+  file?: File;
   previewUrl: string;
+  existingId?: string;
+  existingUrl?: string;
 };
 
 type PhotoUploaderProps = {
@@ -14,6 +16,7 @@ type PhotoUploaderProps = {
   onAddPhotos: (files: FileList | null) => void;
   onRemovePhoto: (photoId: string) => void;
   onMainPhotoChange: (photoId: string) => void;
+  onMovePhoto?: (photoId: string, direction: "left" | "right") => void;
 };
 
 export function PhotoUploader({
@@ -22,7 +25,8 @@ export function PhotoUploader({
   error,
   onAddPhotos,
   onRemovePhoto,
-  onMainPhotoChange
+  onMainPhotoChange,
+  onMovePhoto
 }: PhotoUploaderProps) {
   return (
     <section className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
@@ -87,6 +91,28 @@ export function PhotoUploader({
                     <Star size={17} className={isMain ? "fill-white" : ""} />
                   </button>
                 </div>
+                {onMovePhoto ? (
+                  <div className="absolute bottom-2 right-2 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onMovePhoto(photo.id, "left")}
+                      disabled={index === 0}
+                      className="focus-ring grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink shadow-sm transition hover:text-leaf disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label="Переместить фото левее"
+                    >
+                      <ArrowLeft size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onMovePhoto(photo.id, "right")}
+                      disabled={index === photos.length - 1}
+                      className="focus-ring grid h-8 w-8 place-items-center rounded-full bg-white/90 text-ink shadow-sm transition hover:text-leaf disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label="Переместить фото правее"
+                    >
+                      <ArrowRight size={15} />
+                    </button>
+                  </div>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => onRemovePhoto(photo.id)}

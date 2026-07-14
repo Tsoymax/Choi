@@ -72,7 +72,7 @@ export function MyListings() {
               <ListingCard product={listing} language="ru" />
               <div className="mt-3 grid gap-2 rounded-2xl border border-ink/10 bg-white p-3 sm:grid-cols-3">
                 <Link
-                  href={`/sell?editId=${listing.id}`}
+                  href={`/listing/${listing.id}/edit`}
                   className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-mist px-3 text-sm font-semibold text-ink transition hover:bg-[#e4eee7]"
                 >
                   <MoreHorizontal size={16} />

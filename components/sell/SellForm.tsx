@@ -1,12 +1,16 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { saveStoredListing } from "@/utils/listings";
+import { saveStoredListing, updateStoredListing } from "@/utils/listings";
 import { hasSupabaseBrowserEnv, getCurrentUser } from "@/lib/auth/client";
-import { createListingWithImages } from "@/lib/data/listings";
+import {
+  createListingWithImages,
+  syncListingImages,
+  updateListing as updateRemoteListing
+} from "@/lib/data/listings";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import type { ProfileRow } from "@/lib/data/profiles";
 import { getDistrictCoordinate } from "@/data/districtCoordinates";
@@ -31,27 +35,63 @@ function fileToDataUrl(file: File) {
 }
 
 type SellFormProps = {
+  mode?: "create" | "edit";
+  initialListing?: SellFormInitialListing | null;
   initialProfile?: ProfileRow | null;
   profileError?: string;
+  cancelHref?: string;
 };
 
-export function SellForm({ initialProfile = null, profileError = "" }: SellFormProps) {
+export type SellFormInitialListing = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  district: string;
+  price: number | null;
+  currency: "uzs" | "usd";
+  negotiable: boolean;
+  status: "active" | "reserved" | "sold" | "archived";
+  images: Array<{
+    id: string;
+    url: string;
+    isPrimary: boolean;
+    position: number;
+  }>;
+};
+
+export function SellForm({
+  mode = "create",
+  initialListing = null,
+  initialProfile = null,
+  profileError = "",
+  cancelHref = "/"
+}: SellFormProps) {
   const router = useRouter();
+  const isEditMode = mode === "edit" && Boolean(initialListing);
   const [photos, setPhotos] = useState<UploadPhoto[]>([]);
   const [mainPhotoId, setMainPhotoId] = useState("");
-  const [category, setCategory] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState<"uzs" | "usd">("uzs");
-  const [negotiable, setNegotiable] = useState(false);
-  const [district, setDistrict] = useState(initialProfile?.district ?? "");
+  const [category, setCategory] = useState(initialListing?.category ?? "");
+  const [title, setTitle] = useState(initialListing?.title ?? "");
+  const [description, setDescription] = useState(initialListing?.description ?? "");
+  const [price, setPrice] = useState(
+    initialListing?.price === null || initialListing?.price === undefined
+      ? ""
+      : String(initialListing.price)
+  );
+  const [currency, setCurrency] = useState<"uzs" | "usd">(initialListing?.currency ?? "uzs");
+  const [negotiable, setNegotiable] = useState(initialListing?.negotiable ?? false);
+  const [district, setDistrict] = useState(
+    initialListing?.district ?? initialProfile?.district ?? ""
+  );
   const [sellerName, setSellerName] = useState(initialProfile?.name ?? "");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [isProfileLoading] = useState(false);
   const [profileLoadError] = useState(profileError);
   const photosRef = useRef<UploadPhoto[]>([]);
+  const initialPhotoIdsRef = useRef(initialListing?.images.map((image) => image.id) ?? []);
 
   const mainPhoto = useMemo(
     () => photos.find((photo) => photo.id === mainPhotoId) ?? photos[0],
@@ -71,10 +111,63 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
   }, [initialProfile, profileError]);
 
   useEffect(() => {
+    if (!initialListing) {
+      return;
+    }
+
+    const sortedImages = [...initialListing.images].sort(
+      (first, second) => first.position - second.position
+    );
+
+    setPhotos(
+      sortedImages.map((image) => ({
+        id: image.id,
+        existingId: image.id,
+        existingUrl: image.url,
+        previewUrl: image.url
+      }))
+    );
+    setMainPhotoId(
+      sortedImages.find((image) => image.isPrimary)?.id ?? sortedImages[0]?.id ?? ""
+    );
+  }, [initialListing]);
+
+  useEffect(() => {
     return () => {
-      photosRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+      photosRef.current.forEach((photo) => {
+        if (photo.file) {
+          URL.revokeObjectURL(photo.previewUrl);
+        }
+      });
     };
   }, []);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirty) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isDirty, isEditMode]);
+
+  function markDirty() {
+    if (isEditMode) {
+      setIsDirty(true);
+    }
+  }
 
   function addPhotos(files: FileList | null) {
     if (!files) {
@@ -99,13 +192,14 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
       }
       return updated;
     });
+    markDirty();
     setErrors((current) => ({ ...current, photos: undefined }));
   }
 
   function removePhoto(photoId: string) {
     setPhotos((current) => {
       const removedPhoto = current.find((photo) => photo.id === photoId);
-      if (removedPhoto) {
+      if (removedPhoto?.file) {
         URL.revokeObjectURL(removedPhoto.previewUrl);
       }
 
@@ -115,43 +209,76 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
       }
       return updated;
     });
+    markDirty();
+  }
+
+  function movePhoto(photoId: string, direction: "left" | "right") {
+    setPhotos((current) => {
+      const index = current.findIndex((photo) => photo.id === photoId);
+      const nextIndex = direction === "left" ? index - 1 : index + 1;
+
+      if (index === -1 || nextIndex < 0 || nextIndex >= current.length) {
+        return current;
+      }
+
+      const updated = [...current];
+      const [photo] = updated.splice(index, 1);
+      updated.splice(nextIndex, 0, photo);
+      return updated;
+    });
+    markDirty();
+  }
+
+  function changeMainPhoto(photoId: string) {
+    setMainPhotoId(photoId);
+    markDirty();
+  }
+
+  function confirmCancel(event: MouseEvent<HTMLAnchorElement>) {
+    if (!isEditMode || !isDirty) {
+      return;
+    }
+
+    if (!window.confirm("РР·РјРµРЅРµРЅРёСЏ РЅРµ СЃРѕС…СЂР°РЅРµРЅС‹. Р’С‹Р№С‚Рё?")) {
+      event.preventDefault();
+    }
   }
 
   function validateForm() {
     const nextErrors: FormErrors = {};
 
     if (isProfileLoading) {
-      nextErrors.profile = "Подождите, профиль ещё загружается.";
+      nextErrors.profile = "РџРѕРґРѕР¶РґРёС‚Рµ, РїСЂРѕС„РёР»СЊ РµС‰С‘ Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ.";
       setErrors(nextErrors);
       return false;
     }
 
     if (profileLoadError) {
-      nextErrors.profile = "Не удалось загрузить профиль.";
+      nextErrors.profile = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїСЂРѕС„РёР»СЊ.";
       setErrors(nextErrors);
       return false;
     }
 
     if (photos.length === 0) {
-      nextErrors.photos = "Добавьте минимум 1 фото.";
+      nextErrors.photos = "Р”РѕР±Р°РІСЊС‚Рµ РјРёРЅРёРјСѓРј 1 С„РѕС‚Рѕ.";
     }
     if (!category) {
-      nextErrors.category = "Выберите категорию.";
+      nextErrors.category = "Р’С‹Р±РµСЂРёС‚Рµ РєР°С‚РµРіРѕСЂРёСЋ.";
     }
     if (!title.trim()) {
-      nextErrors.title = "Введите название объявления.";
+      nextErrors.title = "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РѕР±СЉСЏРІР»РµРЅРёСЏ.";
     }
     if (!description.trim()) {
-      nextErrors.description = "Добавьте описание.";
+      nextErrors.description = "Р”РѕР±Р°РІСЊС‚Рµ РѕРїРёСЃР°РЅРёРµ.";
     }
     if (!negotiable && !price) {
-      nextErrors.price = "Укажите цену или выберите «Договорная».";
+      nextErrors.price = "РЈРєР°Р¶РёС‚Рµ С†РµРЅСѓ РёР»Рё РІС‹Р±РµСЂРёС‚Рµ В«Р”РѕРіРѕРІРѕСЂРЅР°СЏВ».";
     }
     if (!district) {
-      nextErrors.district = "Выберите район.";
+      nextErrors.district = "Р’С‹Р±РµСЂРёС‚Рµ СЂР°Р№РѕРЅ.";
     }
     if (!sellerName.trim()) {
-      nextErrors.profile = "Сначала укажите имя в профиле.";
+      nextErrors.profile = "РЎРЅР°С‡Р°Р»Р° СѓРєР°Р¶РёС‚Рµ РёРјСЏ РІ РїСЂРѕС„РёР»Рµ.";
     }
 
     setErrors(nextErrors);
@@ -168,9 +295,12 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
     setIsSubmitting(true);
 
     const imagePairs = await Promise.all(
-      photos.map(async (photo) => ({
+      photos.map(async (photo, index) => ({
         id: photo.id,
-        image: await fileToDataUrl(photo.file)
+        existingId: photo.existingId,
+        image: photo.file ? await fileToDataUrl(photo.file) : photo.existingUrl ?? photo.previewUrl,
+        position: index,
+        isPrimary: photo.id === mainPhoto.id
       }))
     );
     const mainImage = imagePairs.find((item) => item.id === mainPhoto.id)?.image ?? imagePairs[0].image;
@@ -192,6 +322,70 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
       }
 
       const supabase = createClient();
+      if (isEditMode && initialListing) {
+        const listingResult = await updateRemoteListing(supabase, initialListing.id, {
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          district,
+          latitude: districtCoordinates.latitude,
+          longitude: districtCoordinates.longitude,
+          price: negotiable ? null : Number(price),
+          currency,
+          negotiable
+        });
+
+        if (listingResult.error) {
+          setErrors((current) => ({
+            ...current,
+            profile: "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°."
+          }));
+          setIsSubmitting(false);
+          return;
+        }
+
+        const remainingExistingIds = new Set(
+          imagePairs.map((image) => image.existingId).filter(Boolean)
+        );
+        const removedImages = initialListing.images
+          .filter((image) => initialPhotoIdsRef.current.includes(image.id))
+          .filter((image) => !remainingExistingIds.has(image.id))
+          .map((image) => ({
+            id: image.id,
+            listing_id: initialListing.id,
+            image_url: image.url,
+            position: image.position,
+            is_primary: image.isPrimary,
+            created_at: null
+          }));
+
+        const imageResult = await syncListingImages(
+          supabase,
+          initialListing.id,
+          imagePairs.map((image) => ({
+            id: image.existingId,
+            imageUrl: image.image,
+            position: image.position,
+            isPrimary: image.isPrimary
+          })),
+          removedImages
+        );
+
+        if (imageResult.error) {
+          setErrors((current) => ({
+            ...current,
+            profile: "РќРµРєРѕС‚РѕСЂС‹Рµ С„РѕС‚РѕРіСЂР°С„РёРё РЅРµ РѕР±РЅРѕРІРёР»РёСЃСЊ. РџСЂРѕРІРµСЂСЊС‚Рµ РѕР±СЉСЏРІР»РµРЅРёРµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°."
+          }));
+          setIsSubmitting(false);
+          return;
+        }
+
+        setIsDirty(false);
+        router.push(`/listing/${initialListing.id}?updated=1` as never);
+        router.refresh();
+        return;
+      }
+
       const result = await createListingWithImages(supabase, {
         userId: user.id,
         title: title.trim(),
@@ -209,7 +403,7 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
       if (result.error || !result.listing) {
         setErrors((current) => ({
           ...current,
-          profile: "Не удалось опубликовать объявление. Проверьте SQL-права Supabase и попробуйте снова."
+          profile: "РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ РѕР±СЉСЏРІР»РµРЅРёРµ. РџСЂРѕРІРµСЂСЊС‚Рµ SQL-РїСЂР°РІР° Supabase Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°."
         }));
         setIsSubmitting(false);
         return;
@@ -217,6 +411,26 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
 
       router.push(`/listing/${result.listing.id}` as never);
       router.refresh();
+      return;
+    }
+
+    if (isEditMode && initialListing) {
+      updateStoredListing(initialListing.id, {
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        district,
+        latitude: districtCoordinates.latitude,
+        longitude: districtCoordinates.longitude,
+        price: negotiable ? null : Number(price),
+        currency,
+        negotiable,
+        image: mainImage,
+        images: galleryImages
+      });
+
+      setIsDirty(false);
+      router.push(`/listing/${initialListing.id}` as never);
       return;
     }
 
@@ -251,21 +465,23 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
           error={errors.photos}
           onAddPhotos={addPhotos}
           onRemovePhoto={removePhoto}
-          onMainPhotoChange={setMainPhotoId}
+          onMainPhotoChange={changeMainPhoto}
+          onMovePhoto={movePhoto}
         />
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
           <label className="block">
-            <span className="text-sm font-semibold text-ink">Название объявления</span>
+            <span className="text-sm font-semibold text-ink">РќР°Р·РІР°РЅРёРµ РѕР±СЉСЏРІР»РµРЅРёСЏ</span>
             <input
               value={title}
               maxLength={70}
               onChange={(event) => {
                 setTitle(event.target.value);
+                markDirty();
                 setErrors((current) => ({ ...current, title: undefined }));
               }}
               className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
-              placeholder="Например, iPhone 14 Pro 256 ГБ"
+              placeholder="РќР°РїСЂРёРјРµСЂ, iPhone 14 Pro 256 Р“Р‘"
             />
             <span className="mt-2 flex items-center justify-between text-sm">
               <span className="font-medium text-coral">{errors.title}</span>
@@ -278,6 +494,7 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
             error={errors.category}
             onChange={(value) => {
               setCategory(value);
+              markDirty();
               setErrors((current) => ({ ...current, category: undefined }));
             }}
           />
@@ -289,26 +506,32 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
             error={errors.price}
             onPriceChange={(value) => {
               setPrice(value);
+              markDirty();
               setErrors((current) => ({ ...current, price: undefined }));
             }}
-            onCurrencyChange={setCurrency}
+            onCurrencyChange={(value) => {
+              setCurrency(value);
+              markDirty();
+            }}
             onNegotiableChange={(value) => {
               setNegotiable(value);
+              markDirty();
               setErrors((current) => ({ ...current, price: undefined }));
             }}
           />
 
           <label className="block">
-            <span className="text-sm font-semibold text-ink">Описание</span>
+            <span className="text-sm font-semibold text-ink">РћРїРёСЃР°РЅРёРµ</span>
             <textarea
               value={description}
               maxLength={3000}
               onChange={(event) => {
                 setDescription(event.target.value);
+                markDirty();
                 setErrors((current) => ({ ...current, description: undefined }));
               }}
               className="focus-ring mt-2 min-h-[180px] w-full resize-y rounded-2xl border border-ink/10 bg-white px-4 py-4 text-base font-medium text-ink shadow-sm"
-              placeholder="Опишите товар, состояние и важные детали"
+              placeholder="РћРїРёС€РёС‚Рµ С‚РѕРІР°СЂ, СЃРѕСЃС‚РѕСЏРЅРёРµ Рё РІР°Р¶РЅС‹Рµ РґРµС‚Р°Р»Рё"
             />
             <span className="mt-2 flex items-center justify-between text-sm">
               <span className="font-medium text-coral">{errors.description}</span>
@@ -321,26 +544,27 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
             error={errors.district}
             onChange={(value) => {
               setDistrict(value);
+              markDirty();
               setErrors((current) => ({ ...current, district: undefined }));
             }}
           />
         </section>
 
         <section className="space-y-5 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          <h2 className="text-xl font-semibold text-ink">Продавец</h2>
+          <h2 className="text-xl font-semibold text-ink">РџСЂРѕРґР°РІРµС†</h2>
           <div className="rounded-2xl border border-ink/10 bg-mist p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-ink/58">Объявление будет опубликовано от имени</p>
+                <p className="text-sm font-semibold text-ink/58">РћР±СЉСЏРІР»РµРЅРёРµ Р±СѓРґРµС‚ РѕРїСѓР±Р»РёРєРѕРІР°РЅРѕ РѕС‚ РёРјРµРЅРё</p>
                 <p className="mt-1 text-xl font-semibold text-ink">
-                  {isProfileLoading ? "Загружаем..." : sellerName || "Имя не указано"}
+                  {isProfileLoading ? "Р—Р°РіСЂСѓР¶Р°РµРј..." : sellerName || "РРјСЏ РЅРµ СѓРєР°Р·Р°РЅРѕ"}
                 </p>
               </div>
               <Link
                 href="/profile"
                 className="focus-ring inline-flex h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-leaf shadow-sm"
               >
-                Изменить в профиле
+                РР·РјРµРЅРёС‚СЊ РІ РїСЂРѕС„РёР»Рµ
               </Link>
             </div>
             {profileLoadError ? (
@@ -355,23 +579,40 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
                   href="/profile"
                   className="focus-ring mt-3 inline-flex h-10 items-center rounded-full bg-leaf px-4 text-sm font-semibold text-white"
                 >
-                  Перейти в профиль
+                  РџРµСЂРµР№С‚Рё РІ РїСЂРѕС„РёР»СЊ
                 </Link>
               </div>
             ) : null}
           </div>
           <p className="text-sm leading-6 text-ink/58">
-            Покупатели будут связываться с вами через Choi Chat. Телефон в объявлении не показывается.
+            РџРѕРєСѓРїР°С‚РµР»Рё Р±СѓРґСѓС‚ СЃРІСЏР·С‹РІР°С‚СЊСЃСЏ СЃ РІР°РјРё С‡РµСЂРµР· Choi Chat. РўРµР»РµС„РѕРЅ РІ РѕР±СЉСЏРІР»РµРЅРёРё РЅРµ РїРѕРєР°Р·С‹РІР°РµС‚СЃСЏ.
           </p>
         </section>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="focus-ring h-16 w-full rounded-full bg-leaf px-8 text-lg font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70"
-        >
-          {isSubmitting ? "Публикуем..." : "Опубликовать"}
-        </button>
+        <div className="sticky bottom-[calc(86px+env(safe-area-inset-bottom))] z-20 grid gap-3 rounded-[24px] bg-white/92 p-3 shadow-[0_18px_60px_rgba(24,32,29,0.12)] backdrop-blur md:static md:bg-transparent md:p-0 md:shadow-none">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="focus-ring h-16 w-full rounded-full bg-leaf px-8 text-lg font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70"
+          >
+            {isSubmitting
+              ? isEditMode
+                ? "Сохраняем..."
+                : "Публикуем..."
+              : isEditMode
+                ? "Сохранить изменения"
+                : "Опубликовать"}
+          </button>
+          {isEditMode ? (
+            <Link
+              href={cancelHref as never}
+              onClick={confirmCancel}
+              className="focus-ring inline-flex h-12 items-center justify-center rounded-full border border-ink/10 bg-white px-6 text-sm font-semibold text-ink transition hover:border-leaf/30"
+            >
+              Отмена
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <ListingPreview
