@@ -32,6 +32,10 @@ export type ProfileRow = {
   phone_verified: boolean | null;
   created_at: string | null;
   updated_at: string | null;
+  role?: "user" | "moderator" | "admin" | string | null;
+  is_blocked?: boolean | null;
+  blocked_until?: string | null;
+  block_reason?: string | null;
 };
 
 export type ProfileUpdateInput = {

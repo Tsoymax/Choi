@@ -33,7 +33,7 @@ export type Product = {
   rating: number;
   reviews: number;
   image: string;
-  status?: "active" | "reserved" | "sold" | "archived";
+  status?: "active" | "reserved" | "sold" | "archived" | "hidden" | "blocked";
   createdAt?: string;
   badgeRu?: string;
   badgeUz?: string;

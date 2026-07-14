@@ -125,7 +125,9 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
     status:
       listing.status === "reserved" ||
       listing.status === "sold" ||
-      listing.status === "archived"
+      listing.status === "archived" ||
+      listing.status === "hidden" ||
+      listing.status === "blocked"
         ? listing.status
         : "active",
     createdAt: listing.created_at ?? undefined,
@@ -459,7 +461,7 @@ export async function syncListingImages(
 export async function updateListingStatus(
   supabase: SupabaseClient,
   id: string,
-  status: "active" | "reserved" | "sold" | "archived"
+  status: "active" | "reserved" | "sold" | "archived" | "hidden" | "blocked"
 ) {
   const { data, error } = await supabase
     .from("listings")

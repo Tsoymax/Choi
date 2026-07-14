@@ -14,6 +14,7 @@ import { createClient } from "@/utils/supabase/client";
 import { getUserById } from "@/utils/users";
 import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustBadge } from "@/components/trust/TrustBadge";
+import { ReportModal } from "@/components/reports/ReportModal";
 
 type SellerCardProps = {
   listing: Listing;
@@ -134,6 +135,12 @@ export function SellerCard({ listing }: SellerCardProps) {
           <Heart size={18} className={favorite ? "fill-white" : ""} />
           В избранное
         </button>
+        <ReportModal
+          targetType="listing"
+          listingId={listing.id}
+          reportedUserId={listing.sellerId ?? null}
+          triggerLabel="Пожаловаться"
+        />
       </div>
     </aside>
   );

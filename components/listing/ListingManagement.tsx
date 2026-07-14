@@ -34,7 +34,9 @@ const statusLabels: Record<ListingStatus, string> = {
   active: "В продаже",
   reserved: "Забронировано",
   sold: "Продано",
-  archived: "Снято с публикации"
+  archived: "Снято с публикации",
+  hidden: "Скрыто модератором",
+  blocked: "Заблокировано"
 };
 
 export function ListingManagement({ listing }: ListingManagementProps) {

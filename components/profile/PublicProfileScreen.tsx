@@ -8,6 +8,7 @@ import type { Language } from "@/components/i18n";
 import { ListingCard } from "@/components/ListingCard";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { TrustCard } from "@/components/profile/TrustCard";
+import { ReportModal } from "@/components/reports/ReportModal";
 import type { Listing } from "@/utils/listings";
 import { getAllListings } from "@/utils/listings";
 import type { ChoiUser } from "@/utils/users";
@@ -82,6 +83,13 @@ export function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
           <div className="space-y-6">
             <ProfileHeader user={user} listingsCount={activeListings.length} />
             <TrustCard user={user} publicView />
+            <div className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+              <ReportModal
+                targetType="user"
+                reportedUserId={userId}
+                triggerLabel="Пожаловаться на пользователя"
+              />
+            </div>
           </div>
 
           <section className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-6">
