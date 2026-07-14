@@ -13,11 +13,13 @@
 
 html {
   scroll-behavior: smooth;
+  background: #f7f5ef;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
   background:
     linear-gradient(180deg, rgba(247, 245, 239, 0.96), rgba(238, 245, 240, 0.84) 46%, #ffffff),
     #f7f5ef;
