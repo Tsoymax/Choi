@@ -17,6 +17,13 @@ import {
   getRelatedListings
 } from "@/utils/listings";
 import { CURRENT_USER_ID } from "@/utils/users";
+import { hasSupabaseBrowserEnv, getCurrentUser } from "@/lib/auth/client";
+import {
+  getActiveListings,
+  getListingById as getRemoteListingById,
+  mapListingRowToProduct
+} from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 import { ListingGallery } from "./ListingGallery";
 import { ListingManagement } from "./ListingManagement";
 import { SellerCard } from "./SellerCard";
@@ -29,11 +36,41 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
   const [language, setLanguage] = useState<Language>("ru");
   const [query, setQuery] = useState("");
   const [listing, setListing] = useState<Listing | undefined>(() => getListingById(listingId));
+  const [currentUserId, setCurrentUserId] = useState(CURRENT_USER_ID);
+  const [remoteRelatedListings, setRemoteRelatedListings] = useState<Listing[]>([]);
 
   useEffect(() => {
-    const syncListing = () => setListing(getListingById(listingId));
+    async function syncListing() {
+      const localListing = getListingById(listingId);
+      setListing(localListing);
 
-    syncListing();
+      if (!hasSupabaseBrowserEnv()) {
+        return;
+      }
+
+      const supabase = createClient();
+      const [remoteListing, visibleListings, user] = await Promise.all([
+        getRemoteListingById(supabase, listingId),
+        getActiveListings(supabase),
+        getCurrentUser()
+      ]);
+
+      if (user?.id) {
+        setCurrentUserId(user.id);
+      }
+
+      if (remoteListing) {
+        setListing(mapListingRowToProduct(remoteListing) as Listing);
+      }
+
+      setRemoteRelatedListings(
+        visibleListings
+          .filter((item) => item.id !== listingId)
+          .map((item) => mapListingRowToProduct(item) as Listing)
+      );
+    }
+
+    void syncListing();
     window.addEventListener(LISTINGS_EVENT, syncListing);
     window.addEventListener("storage", syncListing);
 
@@ -44,8 +81,18 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
   }, [listingId]);
 
   const relatedListings = useMemo(
-    () => (listing ? getRelatedListings(listing) : []),
-    [listing]
+    () => {
+      if (!listing) {
+        return [];
+      }
+
+      const remoteMatches = remoteRelatedListings
+        .filter((item) => item.category === listing.category)
+        .slice(0, 4);
+
+      return remoteMatches.length > 0 ? remoteMatches : getRelatedListings(listing);
+    },
+    [listing, remoteRelatedListings]
   );
 
   if (!listing) {
@@ -75,7 +122,7 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
 
   const title = listing.titleRu ?? listing.title;
   const images = listing.images?.length ? listing.images : [listing.image];
-  const isOwner = listing.sellerId === CURRENT_USER_ID;
+  const isOwner = listing.sellerId === currentUserId;
 
   return (
     <main className="min-h-screen bg-[#f7f5ef]">

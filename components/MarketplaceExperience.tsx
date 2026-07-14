@@ -10,6 +10,9 @@ import { ProductGrid } from "./ProductGrid";
 import type { Language } from "./i18n";
 import type { Category, Product } from "./types";
 import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 import { sellCategories } from "@/components/sell/sellData";
 import { DistrictSelector } from "@/components/location/DistrictSelector";
 import { RadiusSelector } from "@/components/location/RadiusSelector";
@@ -44,6 +47,7 @@ export function MarketplaceExperience({
   const [language, setLanguage] = useState<Language>("ru");
   const activeCategory = "all";
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
+  const [remoteProducts, setRemoteProducts] = useState<Product[]>([]);
   const [homeDistrict, setHomeDistrict] = useState("yunusabad");
   const [currentLocation, setCurrentLocation] = useState<Coordinates>(
     getLocationForDistrict("yunusabad")
@@ -65,6 +69,33 @@ export function MarketplaceExperience({
     return () => {
       window.removeEventListener(LISTINGS_EVENT, syncLocalProducts);
       window.removeEventListener("storage", syncLocalProducts);
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncRemoteProducts() {
+      if (!hasSupabaseBrowserEnv()) {
+        return;
+      }
+
+      const supabase = createClient();
+      const listings = await getActiveListings(supabase);
+
+      if (!mounted) {
+        return;
+      }
+
+      setRemoteProducts(listings.map(mapListingRowToProduct));
+    }
+
+    void syncRemoteProducts();
+    window.addEventListener(LISTINGS_EVENT, syncRemoteProducts);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener(LISTINGS_EVENT, syncRemoteProducts);
     };
   }, []);
 
@@ -98,8 +129,8 @@ export function MarketplaceExperience({
   }, [gpsActive]);
 
   const allProducts = useMemo(
-    () => [...localProducts, ...products],
-    [localProducts, products]
+    () => [...remoteProducts, ...localProducts, ...products],
+    [localProducts, products, remoteProducts]
   );
 
   const filteredProducts = useMemo(() => {

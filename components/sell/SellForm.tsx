@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import { saveStoredListing } from "@/utils/listings";
+import { hasSupabaseBrowserEnv, getCurrentUser } from "@/lib/auth/client";
+import { createListingWithImages } from "@/lib/data/listings";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import type { ProfileRow } from "@/lib/data/profiles";
 import { getDistrictCoordinate } from "@/data/districtCoordinates";
@@ -179,6 +182,43 @@ export function SellForm({ initialProfile = null, profileError = "" }: SellFormP
     ];
 
     const districtCoordinates = getDistrictCoordinate(district);
+
+    if (hasSupabaseBrowserEnv()) {
+      const user = await getCurrentUser();
+
+      if (!user) {
+        router.push("/login?next=/sell" as never);
+        return;
+      }
+
+      const supabase = createClient();
+      const result = await createListingWithImages(supabase, {
+        userId: user.id,
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        district,
+        latitude: districtCoordinates.latitude,
+        longitude: districtCoordinates.longitude,
+        price: negotiable ? null : Number(price),
+        currency,
+        negotiable,
+        images: galleryImages
+      });
+
+      if (result.error || !result.listing) {
+        setErrors((current) => ({
+          ...current,
+          profile: "Не удалось опубликовать объявление. Проверьте SQL-права Supabase и попробуйте снова."
+        }));
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push(`/listing/${result.listing.id}` as never);
+      router.refresh();
+      return;
+    }
 
     saveStoredListing({
       title: title.trim(),

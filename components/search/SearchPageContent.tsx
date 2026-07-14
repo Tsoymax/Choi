@@ -11,6 +11,9 @@ import { SearchResults } from "@/components/search/SearchResults";
 import { SortSelect } from "@/components/search/SortSelect";
 import type { Listing } from "@/utils/listings";
 import { LISTINGS_EVENT, getAllListings } from "@/utils/listings";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 import {
   defaultSearchFilters,
   filterListings,
@@ -45,9 +48,26 @@ export function SearchPageContent() {
   }, [filters.q]);
 
   useEffect(() => {
-    const syncListings = () => setListings(getAllListings());
+    async function syncListings() {
+      const localListings = getAllListings();
 
-    syncListings();
+      if (!hasSupabaseBrowserEnv()) {
+        setListings(localListings);
+        return;
+      }
+
+      const supabase = createClient();
+      const remoteListings = await getActiveListings(supabase);
+      setListings([
+        ...remoteListings.map((listing) => ({
+          ...mapListingRowToProduct(listing),
+          description: listing.description
+        })),
+        ...localListings
+      ]);
+    }
+
+    void syncListings();
     window.addEventListener(LISTINGS_EVENT, syncListings);
     window.addEventListener("storage", syncListings);
 
