@@ -8,6 +8,7 @@ import type { Language } from "@/components/i18n";
 import { ListingCard } from "@/components/ListingCard";
 import type { Listing } from "@/utils/listings";
 import {
+  LISTINGS_EVENT,
   formatListingDate,
   formatListingPrice,
   getCategoryLabel,
@@ -15,7 +16,9 @@ import {
   getListingById,
   getRelatedListings
 } from "@/utils/listings";
+import { CURRENT_USER_ID } from "@/utils/users";
 import { ListingGallery } from "./ListingGallery";
+import { ListingManagement } from "./ListingManagement";
 import { SellerCard } from "./SellerCard";
 
 type ListingDetailProps = {
@@ -28,7 +31,16 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
   const [listing, setListing] = useState<Listing | undefined>(() => getListingById(listingId));
 
   useEffect(() => {
-    setListing(getListingById(listingId));
+    const syncListing = () => setListing(getListingById(listingId));
+
+    syncListing();
+    window.addEventListener(LISTINGS_EVENT, syncListing);
+    window.addEventListener("storage", syncListing);
+
+    return () => {
+      window.removeEventListener(LISTINGS_EVENT, syncListing);
+      window.removeEventListener("storage", syncListing);
+    };
   }, [listingId]);
 
   const relatedListings = useMemo(
@@ -63,6 +75,7 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
 
   const title = listing.titleRu ?? listing.title;
   const images = listing.images?.length ? listing.images : [listing.image];
+  const isOwner = listing.sellerId === CURRENT_USER_ID;
 
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
@@ -99,7 +112,7 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
                 {getDistrictLabel(listing.district)}
               </p>
               <p className="mt-2 text-sm text-ink/58">
-                Точное место встречи продавец сообщит в чате
+                Точное место встречи можно уточнить в чате
               </p>
             </section>
           </div>
@@ -128,7 +141,7 @@ export function ListingDetail({ listingId }: ListingDetailProps) {
               </div>
             </section>
 
-            <SellerCard listing={listing} />
+            {isOwner ? <ListingManagement listing={listing} /> : <SellerCard listing={listing} />}
           </div>
         </div>
 

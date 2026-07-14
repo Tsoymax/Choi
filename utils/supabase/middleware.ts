@@ -6,7 +6,9 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
-    request
+    request: {
+      headers: request.headers
+    }
   });
 
   const supabase = createServerClient(
@@ -21,7 +23,9 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
 
           supabaseResponse = NextResponse.next({
-            request
+            request: {
+              headers: request.headers
+            }
           });
 
           cookiesToSet.forEach(({ name, value, options }) =>

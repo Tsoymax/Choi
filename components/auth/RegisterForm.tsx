@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { ensureProfileForUser } from "@/lib/data/profiles";
 
 function getSafeNext(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -73,9 +74,16 @@ export function RegisterForm() {
       return;
     }
 
-    if (data.session) {
-      router.push(nextPath as never);
+    if (data.session && data.user) {
+      const { error: profileError } = await ensureProfileForUser(supabase, data.user);
+
+      if (profileError) {
+        setError("Аккаунт создан, но профиль не загрузился. Попробуйте войти ещё раз.");
+        return;
+      }
+
       router.refresh();
+      router.push(nextPath as never);
       return;
     }
 

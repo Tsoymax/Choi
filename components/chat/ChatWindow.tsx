@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Conversation, Message } from "@/utils/chat";
 import {
   CHAT_EVENT,
@@ -12,7 +12,9 @@ import {
   markConversationRead,
   sendMessage
 } from "@/utils/chat";
-import { getListingById, getSellerTrust } from "@/utils/listings";
+import { getListingById } from "@/utils/listings";
+import { getConfirmedDealsCount } from "@/utils/deals";
+import { TrustBadge } from "@/components/trust/TrustBadge";
 import { ListingChatCard } from "./ListingChatCard";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
@@ -38,7 +40,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     () => (conversation ? getListingById(conversation.listingId) : undefined),
     [conversation]
   );
-  const trust = conversation ? getSellerTrust(conversation.sellerName) : undefined;
+  const confirmedDealsCount = listing?.sellerId ? getConfirmedDealsCount(listing.sellerId) : 0;
 
   useEffect(() => {
     const syncChat = () => {
@@ -124,10 +126,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-ink">{conversation.sellerName}</p>
-              <p className="inline-flex items-center gap-1 text-xs font-semibold text-leaf">
-                <ShieldCheck size={14} />
-                {trust?.level}
-              </p>
+              <TrustBadge confirmedDealsCount={confirmedDealsCount} compact />
               <p className="truncate text-sm text-ink/52">{title}</p>
             </div>
           </div>

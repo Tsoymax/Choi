@@ -1,6 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { ensureProfileForUser } from "@/lib/data/profiles";
+
+type SupabaseErrorLike = {
+  message?: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+};
+
+function logCallbackError(scope: string, error: unknown) {
+  if (!error || process.env.NODE_ENV === "production") {
+    return;
+  }
+
+  const supabaseError = error as SupabaseErrorLike;
+  console.error(`[Choi auth:${scope}]`, {
+    message: supabaseError.message,
+    code: supabaseError.code,
+    details: supabaseError.details,
+    hint: supabaseError.hint
+  });
+}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -18,6 +40,21 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
+    logCallbackError("exchangeCodeForSession", error);
+    return NextResponse.redirect(errorRedirect);
+  }
+
+  const { data, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !data.user) {
+    logCallbackError("getUser", userError);
+    return NextResponse.redirect(errorRedirect);
+  }
+
+  const { error: profileError } = await ensureProfileForUser(supabase, data.user);
+
+  if (profileError) {
+    logCallbackError("ensureProfile", profileError);
     return NextResponse.redirect(errorRedirect);
   }
 

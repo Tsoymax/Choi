@@ -28,10 +28,12 @@ export type Product = {
   currency?: "uzs" | "usd";
   negotiable?: boolean;
   distanceKm?: number;
+  latitude?: number;
+  longitude?: number;
   rating: number;
   reviews: number;
   image: string;
-  status?: "active" | "sold";
+  status?: "active" | "reserved" | "sold" | "archived";
   createdAt?: string;
   badgeRu?: string;
   badgeUz?: string;

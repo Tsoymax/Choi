@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveStoredListing } from "@/utils/listings";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
-import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { ensureCurrentProfile } from "@/lib/data/profiles";
-import { createClient } from "@/utils/supabase/client";
+import type { ProfileRow } from "@/lib/data/profiles";
+import { getDistrictCoordinate } from "@/data/districtCoordinates";
 import { CategorySelect } from "./CategorySelect";
 import { ListingPreview } from "./ListingPreview";
 import { LocationSelect } from "./LocationSelect";
@@ -28,7 +27,12 @@ function fileToDataUrl(file: File) {
   });
 }
 
-export function SellForm() {
+type SellFormProps = {
+  initialProfile?: ProfileRow | null;
+  profileError?: string;
+};
+
+export function SellForm({ initialProfile = null, profileError = "" }: SellFormProps) {
   const router = useRouter();
   const [photos, setPhotos] = useState<UploadPhoto[]>([]);
   const [mainPhotoId, setMainPhotoId] = useState("");
@@ -38,12 +42,12 @@ export function SellForm() {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState<"uzs" | "usd">("uzs");
   const [negotiable, setNegotiable] = useState(false);
-  const [district, setDistrict] = useState("");
-  const [sellerName, setSellerName] = useState("");
+  const [district, setDistrict] = useState(initialProfile?.district ?? "");
+  const [sellerName, setSellerName] = useState(initialProfile?.name ?? "");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileLoadError, setProfileLoadError] = useState("");
+  const [isProfileLoading] = useState(false);
+  const [profileLoadError] = useState(profileError);
   const photosRef = useRef<UploadPhoto[]>([]);
 
   const mainPhoto = useMemo(
@@ -56,58 +60,12 @@ export function SellForm() {
   }, [photos]);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadProfile() {
-      if (!hasSupabaseBrowserEnv()) {
-        const fallbackUser = getFallbackCurrentUser();
-        setSellerName(fallbackUser.name);
-        setDistrict(fallbackUser.district);
-        setIsProfileLoading(false);
-        return;
-      }
-
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-
-      if (!mounted) {
-        return;
-      }
-
-      if (!data.user) {
-        router.push("/login?next=/sell" as never);
-        return;
-      }
-
-      const { profile, error } = await ensureCurrentProfile();
-
-      if (!mounted) {
-        return;
-      }
-
-      if (error || !profile) {
-        setProfileLoadError("Не удалось загрузить профиль");
-        setIsProfileLoading(false);
-        return;
-      }
-
-      if (profile) {
-        setSellerName(profile.name ?? "");
-
-        if (profile.district) {
-          setDistrict(profile.district);
-        }
-      }
-
-      setIsProfileLoading(false);
+    if (!initialProfile && !profileError) {
+      const fallbackUser = getFallbackCurrentUser();
+      setSellerName(fallbackUser.name);
+      setDistrict(fallbackUser.district);
     }
-
-    void loadProfile();
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
+  }, [initialProfile, profileError]);
 
   useEffect(() => {
     return () => {
@@ -220,11 +178,15 @@ export function SellForm() {
         .map((item) => item.image)
     ];
 
+    const districtCoordinates = getDistrictCoordinate(district);
+
     saveStoredListing({
       title: title.trim(),
       description: description.trim(),
       category,
       district,
+      latitude: districtCoordinates.latitude,
+      longitude: districtCoordinates.longitude,
       price: negotiable ? null : Number(price),
       currency,
       negotiable,
@@ -346,7 +308,7 @@ export function SellForm() {
                 {profileLoadError}
               </p>
             ) : null}
-            {errors.profile ? (
+            {!profileLoadError && errors.profile ? (
               <div className="mt-4 rounded-2xl bg-[#fff2ef] p-4">
                 <p className="text-sm font-semibold text-coral">{errors.profile}</p>
                 <Link

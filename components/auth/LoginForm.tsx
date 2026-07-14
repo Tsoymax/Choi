@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { ensureProfileForUser } from "@/lib/data/profiles";
 
 function getSafeNext(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -34,20 +35,33 @@ export function LoginForm() {
 
     setIsSubmitting(true);
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password
     });
 
-    setIsSubmitting(false);
-
     if (signInError) {
+      setIsSubmitting(false);
       setError("Не удалось войти. Проверьте email и пароль.");
       return;
     }
 
-    router.push(nextPath as never);
+    if (!data.user) {
+      setIsSubmitting(false);
+      setError("Не удалось получить пользователя после входа. Попробуйте ещё раз.");
+      return;
+    }
+
+    const { error: profileError } = await ensureProfileForUser(supabase, data.user);
+
+    if (profileError) {
+      setIsSubmitting(false);
+      setError("Вход выполнен, но профиль не загрузился. Попробуйте ещё раз.");
+      return;
+    }
+
     router.refresh();
+    router.push(nextPath as never);
   }
 
   return (

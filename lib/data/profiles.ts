@@ -11,6 +11,15 @@ type AuthUserLike = {
   email?: string;
 };
 
+type SupabaseErrorLike = {
+  message?: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+};
+
+export type ProfileDebugError = SupabaseErrorLike | null;
+
 export type ProfileRow = {
   id: string;
   name: string;
@@ -37,17 +46,50 @@ export type ProfileResult = {
   error: unknown | null;
 };
 
-function logProfileError(error: unknown) {
-  if (typeof window !== "undefined" && error) {
-    console.error("[Choi profile]", error);
+export function getSupabaseErrorInfo(error: unknown): ProfileDebugError {
+  if (!error) {
+    return null;
   }
+
+  const supabaseError = error as SupabaseErrorLike;
+  return {
+    message: supabaseError.message,
+    code: supabaseError.code,
+    details: supabaseError.details,
+    hint: supabaseError.hint
+  };
+}
+
+export function logProfileDebug(operation: string, userId: string | null, error: unknown) {
+  if (!error || process.env.NODE_ENV === "production") {
+    return;
+  }
+
+  const info = getSupabaseErrorInfo(error);
+  console.error("[CHOI PROFILE DEBUG]", {
+    operation,
+    userId,
+    errorCode: info?.code,
+    errorMessage: info?.message,
+    errorDetails: info?.details,
+    errorHint: info?.hint
+  });
+}
+
+function logProfileError(error: unknown, operation = "profile", userId: string | null = null) {
+  if (!error || process.env.NODE_ENV === "production") {
+    return;
+  }
+
+  logProfileDebug(operation, userId, error);
 }
 
 function getNameFromUser(user: AuthUserLike) {
   return (
     user.user_metadata?.name?.trim() ||
     user.user_metadata?.full_name?.trim() ||
-    ""
+    user.email?.split("@")[0]?.trim() ||
+    "Пользователь"
   );
 }
 
@@ -71,7 +113,7 @@ export async function getProfileById(
     .maybeSingle<ProfileRow>();
 
   if (error) {
-    logProfileError(error);
+    logProfileError(error, "select_profile_by_id", id);
     return null;
   }
 
@@ -89,7 +131,7 @@ export async function getProfileByIdWithError(
     .maybeSingle<ProfileRow>();
 
   if (error) {
-    logProfileError(error);
+    logProfileError(error, "select_profile_by_id", id);
     return { profile: null, error };
   }
 
@@ -121,7 +163,7 @@ export async function ensureProfileForUser(
         .single<ProfileRow>();
 
       if (error) {
-        logProfileError(error);
+        logProfileError(error, "update_empty_profile_name", user.id);
         return { profile: existing.profile, error };
       }
 
@@ -138,8 +180,7 @@ export async function ensureProfileForUser(
         id: user.id,
         name: metadataName,
         address_type: "aka",
-        district: null,
-        phone: null
+        district: null
       },
       { onConflict: "id" }
     )
@@ -147,7 +188,7 @@ export async function ensureProfileForUser(
     .single<ProfileRow>();
 
   if (error) {
-    logProfileError(error);
+    logProfileError(error, "upsert_profile", user.id);
     return { profile: null, error };
   }
 
@@ -190,11 +231,11 @@ export async function getCurrentProfile() {
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
-    logProfileError(error);
+    logProfileError(error, "client_get_user", null);
     return { profile: null, error };
   }
 
-  return getProfileByIdWithError(supabase, data.user.id);
+  return ensureProfileForUser(supabase, data.user);
 }
 
 export async function ensureCurrentProfile() {
@@ -202,7 +243,7 @@ export async function ensureCurrentProfile() {
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
-    logProfileError(error);
+    logProfileError(error, "client_get_user", null);
     return { profile: null, error };
   }
 

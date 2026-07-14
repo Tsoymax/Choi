@@ -1,5 +1,6 @@
 import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
 import type { SearchFiltersState } from "@/utils/search";
+import { distanceRadiusOptions } from "@/lib/location/distance";
 
 type SearchFiltersProps = {
   filters: SearchFiltersState;
@@ -37,6 +38,23 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
           {tashkentDistricts.map((district) => (
             <option key={district.id} value={district.label}>
               {district.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="block">
+        <span className="text-sm font-semibold text-ink">Расстояние</span>
+        <select
+          value={filters.distanceRadius}
+          onChange={(event) =>
+            onChange({ distanceRadius: event.target.value as SearchFiltersState["distanceRadius"] })
+          }
+          className="focus-ring mt-2 h-12 w-full rounded-2xl border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm"
+        >
+          {distanceRadiusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>

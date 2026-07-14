@@ -18,12 +18,22 @@ import {
   filtersToSearchParams,
   type SearchFiltersState
 } from "@/utils/search";
+import type { Coordinates } from "@/lib/location/distance";
+import {
+  LOCATION_EVENT,
+  getLocationForDistrict,
+  loadHomeDistrict
+} from "@/lib/location/currentLocation";
 
 export function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [language, setLanguage] = useState<Language>("ru");
   const [listings, setListings] = useState<Listing[]>([]);
+  const [homeDistrict, setHomeDistrict] = useState("yunusabad");
+  const [currentLocation, setCurrentLocation] = useState<Coordinates>(
+    getLocationForDistrict("yunusabad")
+  );
   const filters = useMemo(
     () => filtersFromSearchParams(new URLSearchParams(searchParams.toString())),
     [searchParams]
@@ -47,9 +57,34 @@ export function SearchPageContent() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncLocation() {
+      const result = await loadHomeDistrict();
+
+      if (!mounted) {
+        return;
+      }
+
+      setHomeDistrict(result.district);
+      setCurrentLocation(getLocationForDistrict(result.district));
+    }
+
+    void syncLocation();
+    window.addEventListener(LOCATION_EVENT, syncLocation);
+    window.addEventListener("storage", syncLocation);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener(LOCATION_EVENT, syncLocation);
+      window.removeEventListener("storage", syncLocation);
+    };
+  }, []);
+
   const results = useMemo(
-    () => filterListings(listings, filters),
-    [filters, listings]
+    () => filterListings(listings, filters, currentLocation, homeDistrict),
+    [currentLocation, filters, homeDistrict, listings]
   );
 
   function updateFilters(patch: Partial<SearchFiltersState>) {

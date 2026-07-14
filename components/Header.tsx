@@ -4,15 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, Heart, MapPin, MessageCircle, Plus, Search } from "lucide-react";
+import { ChevronDown, Heart, MessageCircle, Plus, Search } from "lucide-react";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
 import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
 import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
 import { USER_EVENT, getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { ensureProfileForUser } from "@/lib/data/profiles";
+import { ensureProfileForUser, type ProfileRow } from "@/lib/data/profiles";
 import { createClient } from "@/utils/supabase/client";
+import { DistrictSelector } from "@/components/location/DistrictSelector";
+import { DealNotificationModal } from "@/components/deals/DealNotificationModal";
+import {
+  LOCATION_EVENT,
+  loadHomeDistrict,
+  saveHomeDistrict
+} from "@/lib/location/currentLocation";
 
 type HeaderProps = {
   language: Language;
@@ -32,6 +39,8 @@ export function Header({
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUser, setCurrentUser] = useState<{ name: string } | null>(null);
+  const [homeDistrict, setHomeDistrict] = useState("yunusabad");
+  const [currentProfile, setCurrentProfile] = useState<ProfileRow | null>(null);
 
   useEffect(() => {
     const syncFavoriteCount = () => setFavoriteCount(getFavoriteIds().length);
@@ -123,18 +132,51 @@ export function Header({
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncLocation() {
+      const result = await loadHomeDistrict();
+
+      if (!mounted) {
+        return;
+      }
+
+      setHomeDistrict(result.district);
+      setCurrentProfile(result.profile);
+    }
+
+    void syncLocation();
+    window.addEventListener(LOCATION_EVENT, syncLocation);
+    window.addEventListener("storage", syncLocation);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener(LOCATION_EVENT, syncLocation);
+      window.removeEventListener("storage", syncLocation);
+    };
+  }, []);
+
+  async function changeDistrict(nextDistrict: string) {
+    setHomeDistrict(nextDistrict);
+    const result = await saveHomeDistrict(nextDistrict, currentProfile);
+    setCurrentProfile(result.profile);
+  }
+
   function openSearch() {
     const params = new URLSearchParams();
     if (query.trim()) {
       params.set("q", query.trim());
     }
+    params.set("district", homeDistrict);
 
     router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
   }
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/5 bg-white/92 backdrop-blur-xl">
-      <div className="mx-auto flex h-24 w-full max-w-[1504px] items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <DealNotificationModal />
+      <div className="mx-auto flex h-24 w-full max-w-[1504px] items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex shrink-0 cursor-pointer items-center transition hover:opacity-85"
@@ -143,16 +185,20 @@ export function Header({
           <Image src="/logo.svg" alt="Choi" width={180} height={72} priority />
         </Link>
 
-        <div className="inline-flex h-10 shrink-0 items-center gap-1 rounded-full bg-mist px-3 text-sm font-semibold text-ink md:hidden">
-          <MapPin size={16} className="text-leaf" />
-          Юнусабад
+        <div className="md:hidden">
+          <DistrictSelector
+            district={homeDistrict}
+            compact
+            onDistrictChange={changeDistrict}
+          />
         </div>
 
-        <button className="focus-ring hidden h-14 shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white px-5 text-base font-semibold text-ink shadow-sm md:flex">
-          <MapPin size={21} />
-          Ташкент
-          <ChevronDown size={17} />
-        </button>
+        <div className="hidden md:block">
+          <DistrictSelector
+            district={homeDistrict}
+            onDistrictChange={changeDistrict}
+          />
+        </div>
 
         <form
           onSubmit={(event) => {

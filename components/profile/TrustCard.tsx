@@ -1,6 +1,7 @@
 import type { ChoiUser } from "@/utils/users";
-import { getTrustLevel } from "@/utils/trust";
-import { TrustBadge } from "./TrustBadge";
+import { getConfirmedDealsCount } from "@/utils/deals";
+import { getTrustLevel } from "@/lib/trust/getTrustLevel";
+import { TrustBadge } from "@/components/trust/TrustBadge";
 import { TrustProgress } from "./TrustProgress";
 
 type TrustCardProps = {
@@ -9,7 +10,8 @@ type TrustCardProps = {
 };
 
 export function TrustCard({ user, publicView }: TrustCardProps) {
-  const trustLevel = getTrustLevel(user);
+  const confirmedDealsCount = getConfirmedDealsCount(user.id);
+  const trustLevel = getTrustLevel(confirmedDealsCount);
 
   return (
     <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -20,17 +22,17 @@ export function TrustCard({ user, publicView }: TrustCardProps) {
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-ink">Текущий уровень</h2>
         </div>
-        <TrustBadge level={trustLevel} compact />
+        <TrustBadge confirmedDealsCount={confirmedDealsCount} compact />
       </div>
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div className="rounded-2xl bg-mist p-4">
           <dt className="text-ink/52">Текущий уровень</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">{trustLevel.label}</dd>
+          <dd className="mt-1 text-lg font-semibold text-ink">{trustLevel.name}</dd>
         </div>
         <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">Успешных сделок</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">{user.successfulDeals}</dd>
+          <dt className="text-ink/52">Подтверждённых сделок</dt>
+          <dd className="mt-1 text-lg font-semibold text-ink">{confirmedDealsCount}</dd>
         </div>
         <div className="rounded-2xl bg-mist p-4">
           <dt className="text-ink/52">Телефон подтвержден</dt>

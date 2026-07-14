@@ -1,8 +1,8 @@
 import { MapPin, ShieldCheck } from "lucide-react";
 import type { ChoiUser } from "@/utils/users";
 import { getDistrictLabel } from "@/utils/listings";
-import { getTrustLevel } from "@/utils/trust";
-import { TrustBadge } from "./TrustBadge";
+import { getConfirmedDealsCount } from "@/utils/deals";
+import { TrustBadge } from "@/components/trust/TrustBadge";
 
 type ProfileHeaderProps = {
   user: ChoiUser;
@@ -17,7 +17,7 @@ export function ProfileHeader({
   isCurrentUser,
   onEdit
 }: ProfileHeaderProps) {
-  const trustLevel = getTrustLevel(user);
+  const confirmedDealsCount = getConfirmedDealsCount(user.id);
 
   return (
     <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -30,7 +30,7 @@ export function ProfileHeader({
             <div>
               <h1 className="text-3xl font-semibold text-ink">{user.name}</h1>
               <div className="mt-3">
-                <TrustBadge level={trustLevel} />
+                <TrustBadge confirmedDealsCount={confirmedDealsCount} />
               </div>
             </div>
             {isCurrentUser ? (
@@ -54,6 +54,7 @@ export function ProfileHeader({
               На Choi с {user.joinedAt} года
             </p>
             <p className="font-semibold text-ink">{listingsCount} объявлений</p>
+            <p className="font-semibold text-ink">{confirmedDealsCount} подтверждённых сделок</p>
           </div>
         </div>
       </div>

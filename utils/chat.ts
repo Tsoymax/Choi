@@ -9,6 +9,7 @@ export type Conversation = {
   listingId: string;
   sellerName: string;
   buyerName: string;
+  buyerId?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -69,6 +70,10 @@ export function getConversationByListingId(listingId: string) {
   return getConversations().find((conversation) => conversation.listingId === listingId);
 }
 
+export function getConversationsByListingId(listingId: string) {
+  return getConversations().filter((conversation) => conversation.listingId === listingId);
+}
+
 export function createConversation(listing: Listing) {
   const existingConversation = getConversationByListingId(listing.id);
   if (existingConversation) {
@@ -81,6 +86,7 @@ export function createConversation(listing: Listing) {
     listingId: listing.id,
     sellerName: listing.seller,
     buyerName: "Вы",
+    buyerId: "current-user",
     createdAt: now,
     updatedAt: now
   };

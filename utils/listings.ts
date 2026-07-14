@@ -36,6 +36,8 @@ export type StoredListingInput = {
   phone: string;
   image: string;
   images?: string[];
+  latitude?: number;
+  longitude?: number;
 };
 
 export type StoredListing = Listing & {
@@ -43,6 +45,8 @@ export type StoredListing = Listing & {
   phone: string;
   createdAt: string;
 };
+
+export type ListingStatus = NonNullable<Listing["status"]>;
 
 const fallbackDescriptions: Record<string, string> = {
   "cobalt-sedan":
@@ -139,6 +143,8 @@ export function saveStoredListing(input: StoredListingInput) {
     rating: 5,
     reviews: 0,
     image: input.image,
+    latitude: input.latitude,
+    longitude: input.longitude,
     status: "active",
     images: input.images?.length ? input.images : [input.image],
     badgeRu: "Сегодня",
@@ -156,7 +162,7 @@ export function saveStoredListing(input: StoredListingInput) {
   notifyListingsChanged();
 }
 
-export function updateStoredListingStatus(id: string, status: "active" | "sold") {
+export function updateStoredListingStatus(id: string, status: ListingStatus) {
   if (typeof window === "undefined") {
     return [];
   }
@@ -233,6 +239,21 @@ export function formatListingPrice(listing: Pick<Listing, "price" | "currency" |
 export function formatListingDate(createdAt?: string) {
   if (!createdAt) {
     return "Сегодня";
+  }
+
+  const createdTime = new Date(createdAt).getTime();
+  const diffMs = Date.now() - createdTime;
+
+  if (diffMs >= 0) {
+    const diffMinutes = Math.floor(diffMs / 60000);
+    if (diffMinutes < 1) return "только что";
+    if (diffMinutes < 60) return `${diffMinutes} мин назад`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} ч назад`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays} дн назад`;
   }
 
   return new Intl.DateTimeFormat("ru-RU", {

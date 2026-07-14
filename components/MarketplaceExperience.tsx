@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { CategoryGrid } from "./CategoryGrid";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
@@ -11,6 +11,24 @@ import type { Language } from "./i18n";
 import type { Category, Product } from "./types";
 import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
 import { sellCategories } from "@/components/sell/sellData";
+import { DistrictSelector } from "@/components/location/DistrictSelector";
+import { RadiusSelector } from "@/components/location/RadiusSelector";
+import type { ProfileRow } from "@/lib/data/profiles";
+import type { Coordinates, DistanceRadius } from "@/lib/location/distance";
+import {
+  getListingDistance,
+  getNextRadius,
+  isInsideRadius
+} from "@/lib/location/distance";
+import {
+  LOCATION_EVENT,
+  getLocationForDistrict,
+  getStoredSearchRadius,
+  loadHomeDistrict,
+  requestBrowserLocation,
+  saveHomeDistrict,
+  setStoredSearchRadius
+} from "@/lib/location/currentLocation";
 
 type MarketplaceExperienceProps = {
   categories: Category[];
@@ -26,6 +44,13 @@ export function MarketplaceExperience({
   const [language, setLanguage] = useState<Language>("ru");
   const activeCategory = "all";
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
+  const [homeDistrict, setHomeDistrict] = useState("yunusabad");
+  const [currentLocation, setCurrentLocation] = useState<Coordinates>(
+    getLocationForDistrict("yunusabad")
+  );
+  const [radius, setRadius] = useState<DistanceRadius>("5");
+  const [currentProfile, setCurrentProfile] = useState<ProfileRow | null>(null);
+  const [gpsActive, setGpsActive] = useState(false);
 
   useEffect(() => {
     const syncLocalProducts = () =>
@@ -43,6 +68,35 @@ export function MarketplaceExperience({
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncLocation() {
+      const result = await loadHomeDistrict();
+
+      if (!mounted) {
+        return;
+      }
+
+      setHomeDistrict(result.district);
+      setCurrentProfile(result.profile);
+      setCurrentLocation((location) =>
+        gpsActive ? location : getLocationForDistrict(result.district)
+      );
+      setRadius(getStoredSearchRadius());
+    }
+
+    void syncLocation();
+    window.addEventListener(LOCATION_EVENT, syncLocation);
+    window.addEventListener("storage", syncLocation);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener(LOCATION_EVENT, syncLocation);
+      window.removeEventListener("storage", syncLocation);
+    };
+  }, [gpsActive]);
+
   const allProducts = useMemo(
     () => [...localProducts, ...products],
     [localProducts, products]
@@ -53,6 +107,10 @@ export function MarketplaceExperience({
 
     return allProducts
       .filter((product) => {
+        if ((product.status ?? "active") !== "active") {
+          return false;
+        }
+
         const matchesQuery =
           !normalizedQuery ||
           [
@@ -68,21 +126,37 @@ export function MarketplaceExperience({
             .includes(normalizedQuery);
         const matchesCategory =
           activeCategory === "all" || product.category === activeCategory;
-        return matchesQuery && matchesCategory;
+        const distanceKm = getListingDistance(product, currentLocation);
+        const matchesRadius = isInsideRadius(product, distanceKm, radius, homeDistrict);
+
+        return matchesQuery && matchesCategory && matchesRadius;
       })
+      .map((product) => ({
+        ...product,
+        distanceKm: getListingDistance(product, currentLocation)
+      }))
       .sort((first, second) => {
         const firstDistance = first.distanceKm ?? Number.POSITIVE_INFINITY;
         const secondDistance = second.distanceKm ?? Number.POSITIVE_INFINITY;
-        return firstDistance - secondDistance;
+
+        if (firstDistance !== secondDistance) {
+          return firstDistance - secondDistance;
+        }
+
+        return (
+          new Date(second.createdAt ?? 0).getTime() -
+          new Date(first.createdAt ?? 0).getTime()
+        );
       });
-  }, [activeCategory, allProducts, query]);
+  }, [activeCategory, allProducts, currentLocation, homeDistrict, query, radius]);
 
   function openSearch(nextQuery = query) {
     const params = new URLSearchParams();
     if (nextQuery.trim()) {
       params.set("q", nextQuery.trim());
     }
-    params.set("district", "Юнусабад");
+    params.set("district", homeDistrict);
+    params.set("distanceRadius", radius);
 
     router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
   }
@@ -93,8 +167,33 @@ export function MarketplaceExperience({
     if (category) {
       params.set("category", category.label);
     }
+    params.set("district", homeDistrict);
+    params.set("distanceRadius", radius);
 
     router.push(`/search${params.toString() ? `?${params}` : ""}` as never);
+  }
+
+  async function changeDistrict(nextDistrict: string) {
+    setGpsActive(false);
+    setHomeDistrict(nextDistrict);
+    setCurrentLocation(getLocationForDistrict(nextDistrict));
+    const result = await saveHomeDistrict(nextDistrict, currentProfile);
+    setCurrentProfile(result.profile);
+  }
+
+  function changeRadius(nextRadius: DistanceRadius) {
+    setRadius(nextRadius);
+    setStoredSearchRadius(nextRadius);
+  }
+
+  async function useGpsLocation() {
+    const gpsLocation = await requestBrowserLocation();
+    setCurrentLocation(gpsLocation);
+    setGpsActive(true);
+  }
+
+  function expandRadius() {
+    changeRadius(getNextRadius(radius));
   }
 
   return (
@@ -108,10 +207,18 @@ export function MarketplaceExperience({
 
       <section className="mx-auto max-w-[1504px] px-4 pb-2 pt-5 sm:px-6 lg:px-8">
         <div className="rounded-[24px] bg-white p-4 shadow-[0_14px_44px_rgba(24,32,29,0.08)] sm:p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-leaf">
-            <MapPin size={18} />
-            Юнусабад
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <DistrictSelector
+              district={homeDistrict}
+              gpsActive={gpsActive}
+              onDistrictChange={changeDistrict}
+              onUseGps={useGpsLocation}
+            />
+            <div className="w-full sm:w-[220px]">
+              <RadiusSelector value={radius} onChange={changeRadius} />
+            </div>
           </div>
+
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -143,7 +250,11 @@ export function MarketplaceExperience({
         onCategoryChange={openCategorySearch}
       />
       <section id="discover" className="mx-auto max-w-[1504px] px-4 py-5 sm:px-6 lg:px-8">
-        <ProductGrid products={filteredProducts} language={language} />
+        <ProductGrid
+          products={filteredProducts}
+          language={language}
+          onExpandRadius={radius === "all" ? undefined : expandRadius}
+        />
       </section>
       <Footer language={language} />
     </main>

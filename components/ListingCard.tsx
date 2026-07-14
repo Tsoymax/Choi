@@ -9,6 +9,7 @@ import type { Language } from "./i18n";
 import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
 import { requireCurrentUser } from "@/lib/auth/client";
+import { formatDistanceKm } from "@/lib/location/distance";
 
 type ListingCardProps = {
   product: Product;
@@ -20,8 +21,7 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const title =
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
   const [favorite, setFavorite] = useState(false);
-  const distanceLabel =
-    typeof product.distanceKm === "number" ? `${product.distanceKm.toFixed(1)} км` : "рядом";
+  const distanceLabel = formatDistanceKm(product.distanceKm);
 
   useEffect(() => {
     const syncFavorite = () => setFavorite(isFavorite(product.id));
@@ -93,12 +93,19 @@ export function ListingCard({ product, language }: ListingCardProps) {
         <strong className="mt-2 block text-lg font-semibold text-ink">
           {formatListingPrice(product)}
         </strong>
+        {product.status === "reserved" ? (
+          <span className="mt-2 inline-flex rounded-full bg-mist px-3 py-1 text-xs font-semibold text-leaf">
+            Договорились
+          </span>
+        ) : null}
         <p className="mt-3 flex items-center gap-1 text-sm text-ink/58">
           <MapPin size={15} className="shrink-0 text-leaf" />
-          <span className="truncate">{getDistrictLabel(product.district)}</span>
+          <span className="truncate">
+            {getDistrictLabel(product.district)} · {distanceLabel}
+          </span>
         </p>
         <p className="mt-1 text-sm text-ink/50">
-          {distanceLabel} · {formatListingDate(product.createdAt)}
+          {formatListingDate(product.createdAt)}
         </p>
       </div>
     </article>

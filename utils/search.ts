@@ -1,6 +1,9 @@
 import type { Listing } from "@/utils/listings";
 import { getCategoryLabel, getDistrictLabel } from "@/utils/listings";
 import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
+import type { Coordinates, DistanceRadius } from "@/lib/location/distance";
+import { getListingDistance, isInsideRadius } from "@/lib/location/distance";
+import { getLocationForDistrict } from "@/lib/location/currentLocation";
 
 export type SearchSort = "newest" | "cheap" | "expensive" | "nearby";
 
@@ -12,6 +15,7 @@ export type SearchFiltersState = {
   maxPrice: string;
   currency: "" | "uzs" | "usd";
   sort: SearchSort;
+  distanceRadius: DistanceRadius;
   onlyWithPhoto: boolean;
   negotiable: boolean;
 };
@@ -24,6 +28,7 @@ export const defaultSearchFilters: SearchFiltersState = {
   maxPrice: "",
   currency: "",
   sort: "newest",
+  distanceRadius: "all",
   onlyWithPhoto: false,
   negotiable: false
 };
@@ -94,9 +99,15 @@ function compareOptionalDistance(a?: number, b?: number) {
   return 0;
 }
 
-export function filterListings(listings: Listing[], filters: SearchFiltersState) {
+export function filterListings(
+  listings: Listing[],
+  filters: SearchFiltersState,
+  currentLocation?: Coordinates,
+  homeDistrict = "yunusabad"
+) {
   const minPrice = filters.minPrice ? Number(filters.minPrice) : undefined;
   const maxPrice = filters.maxPrice ? Number(filters.maxPrice) : undefined;
+  const location = currentLocation ?? getLocationForDistrict(homeDistrict);
 
   const filteredListings = listings.filter((listing) => {
     if ((listing.status ?? "active") !== "active") return false;
@@ -107,6 +118,9 @@ export function filterListings(listings: Listing[], filters: SearchFiltersState)
     if (filters.negotiable && !listing.negotiable) return false;
     if (filters.currency && listing.currency !== filters.currency) return false;
 
+    const distanceKm = getListingDistance(listing, location);
+    if (!isInsideRadius(listing, distanceKm, filters.distanceRadius, homeDistrict)) return false;
+
     if (!listing.negotiable) {
       if (typeof minPrice === "number" && listing.price < minPrice) return false;
       if (typeof maxPrice === "number" && listing.price > maxPrice) return false;
@@ -115,10 +129,18 @@ export function filterListings(listings: Listing[], filters: SearchFiltersState)
     return true;
   });
 
-  return [...filteredListings].sort((a, b) => {
+  return filteredListings.map((listing) => ({
+    ...listing,
+    distanceKm: getListingDistance(listing, location)
+  })).sort((a, b) => {
     if (filters.sort === "cheap") return a.price - b.price;
     if (filters.sort === "expensive") return b.price - a.price;
-    if (filters.sort === "nearby") return compareOptionalDistance(a.distanceKm, b.distanceKm);
+    if (filters.sort === "nearby") {
+      return compareOptionalDistance(
+        getListingDistance(a, location),
+        getListingDistance(b, location)
+      );
+    }
 
     return (
       new Date(b.createdAt ?? 0).getTime() -
@@ -129,6 +151,7 @@ export function filterListings(listings: Listing[], filters: SearchFiltersState)
 
 export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFiltersState {
   const sort = searchParams.get("sort");
+  const distanceRadius = searchParams.get("distanceRadius");
 
   return {
     q: searchParams.get("q") ?? "",
@@ -138,6 +161,14 @@ export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFi
     maxPrice: searchParams.get("maxPrice") ?? "",
     currency: searchParams.get("currency") === "usd" ? "usd" : searchParams.get("currency") === "uzs" ? "uzs" : "",
     sort: sort === "cheap" || sort === "expensive" || sort === "nearby" ? sort : "newest",
+    distanceRadius:
+      distanceRadius === "district" ||
+      distanceRadius === "3" ||
+      distanceRadius === "5" ||
+      distanceRadius === "10" ||
+      distanceRadius === "all"
+        ? distanceRadius
+        : "all",
     onlyWithPhoto: searchParams.get("onlyWithPhoto") === "true",
     negotiable: searchParams.get("negotiable") === "true"
   };

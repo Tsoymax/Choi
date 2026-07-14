@@ -3,7 +3,8 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { SellForm } from "@/components/sell/SellForm";
-import { getCurrentUser } from "@/lib/auth/server";
+import { getCurrentProfileResult } from "@/lib/auth/server";
+import { getSupabaseErrorInfo, type ProfileRow } from "@/lib/data/profiles";
 
 export default async function SellPage() {
   const hasSupabaseEnv = Boolean(
@@ -12,13 +13,54 @@ export default async function SellPage() {
   );
 
   if (hasSupabaseEnv) {
-    const user = await getCurrentUser();
+    const profileResult = await getCurrentProfileResult();
 
-    if (!user) {
+    if (profileResult.status === "unauthenticated") {
       redirect("/login?next=/sell");
     }
+
+    if (profileResult.status === "profile_error") {
+      const errorInfo = getSupabaseErrorInfo(profileResult.error);
+
+      return (
+        <main className="min-h-screen bg-[#f7f5ef]">
+          <header className="border-b border-ink/5 bg-white/92 backdrop-blur-xl">
+            <div className="mx-auto flex h-24 max-w-[1504px] items-center justify-between px-4 sm:px-6 lg:px-8">
+              <Link
+                href="/"
+                className="flex cursor-pointer items-center transition hover:opacity-85"
+                aria-label="Choi home"
+              >
+                <Image src="/logo.svg" alt="Choi" width={180} height={72} priority />
+              </Link>
+            </div>
+          </header>
+          <section className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6 lg:px-8">
+            <div className="rounded-[24px] bg-white p-8 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+              <h1 className="text-3xl font-semibold text-ink">Не удалось загрузить профиль</h1>
+              <p className="mt-3 text-ink/62">Попробуйте обновить страницу или войти снова.</p>
+              {process.env.NODE_ENV !== "production" ? (
+                <p className="mt-3 text-xs font-semibold text-coral">
+                  Error code: {errorInfo?.code ?? "unknown"}
+                </p>
+              ) : null}
+            </div>
+          </section>
+        </main>
+      );
+    }
+
+    return <SellPageShell profile={profileResult.profile} />;
   }
 
+  return <SellPageShell profile={null} />;
+}
+
+function SellPageShell({
+  profile
+}: {
+  profile: ProfileRow | null;
+}) {
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
       <header className="border-b border-ink/5 bg-white/92 backdrop-blur-xl">
@@ -50,7 +92,7 @@ export default async function SellPage() {
           </p>
         </div>
 
-        <SellForm />
+        <SellForm initialProfile={profile} />
       </section>
     </main>
   );

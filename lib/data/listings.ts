@@ -10,6 +10,8 @@ export type ListingRow = {
   currency: string;
   negotiable: boolean | null;
   district: string;
+  latitude: number | null;
+  longitude: number | null;
   phone: string | null;
   status: string | null;
   created_at: string | null;

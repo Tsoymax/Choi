@@ -10,8 +10,8 @@ import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
 import { createConversation } from "@/utils/chat";
 import { requireCurrentUser } from "@/lib/auth/client";
 import { getUserById } from "@/utils/users";
-import { getTrustLevel } from "@/utils/trust";
-import { TrustBadge } from "@/components/profile/TrustBadge";
+import { getConfirmedDealsCount } from "@/utils/deals";
+import { TrustBadge } from "@/components/trust/TrustBadge";
 
 type SellerCardProps = {
   listing: Listing;
@@ -22,7 +22,7 @@ export function SellerCard({ listing }: SellerCardProps) {
   const trust = getSellerTrust(listing.seller);
   const sellerId = listing.sellerId ?? "seller-akmal";
   const sellerUser = getUserById(sellerId);
-  const trustLevel = sellerUser ? getTrustLevel(sellerUser) : null;
+  const confirmedDealsCount = getConfirmedDealsCount(sellerId);
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export function SellerCard({ listing }: SellerCardProps) {
           Уровень доверия Choi
         </p>
         <div className="mt-3">
-          {trustLevel ? <TrustBadge level={trustLevel} /> : <p className="text-2xl font-semibold text-ink">{trust.level}</p>}
+          <TrustBadge confirmedDealsCount={confirmedDealsCount} />
         </div>
         <p className="mt-1 text-sm text-ink/58">{trust.since}</p>
       </Link>
@@ -68,7 +68,7 @@ export function SellerCard({ listing }: SellerCardProps) {
         <div className="rounded-2xl border border-ink/10 p-4">
           <dt className="text-ink/52">Сделок</dt>
           <dd className="mt-1 text-lg font-semibold text-ink">
-            {sellerUser?.successfulDeals ?? 0}
+            {confirmedDealsCount}
           </dd>
         </div>
         <div className="rounded-2xl border border-ink/10 p-4">

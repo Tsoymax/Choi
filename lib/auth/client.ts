@@ -2,6 +2,7 @@
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { createClient } from "@/utils/supabase/client";
+import { logProfileDebug } from "@/lib/data/profiles";
 
 export function hasSupabaseBrowserEnv() {
   return Boolean(
@@ -19,6 +20,7 @@ export async function getCurrentUser() {
   const { data, error } = await supabase.auth.getUser();
 
   if (error) {
+    logProfileDebug("client_auth_get_user", null, error);
     return null;
   }
 
