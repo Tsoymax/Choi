@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { SellForm } from "@/components/sell/SellForm";
@@ -37,8 +37,12 @@ export default async function SellPage() {
           </header>
           <section className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6 lg:px-8">
             <div className="rounded-[24px] bg-white p-8 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
-              <h1 className="text-3xl font-semibold text-ink">Не удалось загрузить профиль</h1>
-              <p className="mt-3 text-ink/62">Попробуйте обновить страницу или войти снова.</p>
+              <h1 className="text-3xl font-semibold text-ink">
+                Не удалось загрузить профиль
+              </h1>
+              <p className="mt-3 text-ink/62">
+                Попробуйте обновить страницу или войти снова.
+              </p>
               {process.env.NODE_ENV !== "production" ? (
                 <p className="mt-3 text-xs font-semibold text-coral">
                   Error code: {errorInfo?.code ?? "unknown"}
@@ -56,11 +60,7 @@ export default async function SellPage() {
   return <SellPageShell profile={null} />;
 }
 
-function SellPageShell({
-  profile
-}: {
-  profile: ProfileRow | null;
-}) {
+function SellPageShell({ profile }: { profile: ProfileRow | null }) {
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
       <header className="border-b border-ink/5 bg-white/92 backdrop-blur-xl">

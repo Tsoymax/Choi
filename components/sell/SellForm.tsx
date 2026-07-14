@@ -1,6 +1,13 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -20,27 +27,12 @@ import { LocationSelect } from "./LocationSelect";
 import { PhotoUploader, type UploadPhoto } from "./PhotoUploader";
 import { PriceField } from "./PriceField";
 
-type FormErrors = Partial<Record<
-  "photos" | "category" | "title" | "description" | "price" | "district" | "profile",
-  string
->>;
-
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-type SellFormProps = {
-  mode?: "create" | "edit";
-  initialListing?: SellFormInitialListing | null;
-  initialProfile?: ProfileRow | null;
-  profileError?: string;
-  cancelHref?: string;
-};
+type FormErrors = Partial<
+  Record<
+    "photos" | "category" | "title" | "description" | "price" | "district" | "profile",
+    string
+  >
+>;
 
 export type SellFormInitialListing = {
   id: string;
@@ -59,6 +51,23 @@ export type SellFormInitialListing = {
     position: number;
   }>;
 };
+
+type SellFormProps = {
+  mode?: "create" | "edit";
+  initialListing?: SellFormInitialListing | null;
+  initialProfile?: ProfileRow | null;
+  profileError?: string;
+  cancelHref?: string;
+};
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 export function SellForm({
   mode = "create",
@@ -79,7 +88,9 @@ export function SellForm({
       ? ""
       : String(initialListing.price)
   );
-  const [currency, setCurrency] = useState<"uzs" | "usd">(initialListing?.currency ?? "uzs");
+  const [currency, setCurrency] = useState<"uzs" | "usd">(
+    initialListing?.currency ?? "uzs"
+  );
   const [negotiable, setNegotiable] = useState(initialListing?.negotiable ?? false);
   const [district, setDistrict] = useState(
     initialListing?.district ?? initialProfile?.district ?? ""
@@ -239,7 +250,7 @@ export function SellForm({
       return;
     }
 
-    if (!window.confirm("РР·РјРµРЅРµРЅРёСЏ РЅРµ СЃРѕС…СЂР°РЅРµРЅС‹. Р’С‹Р№С‚Рё?")) {
+    if (!window.confirm("Изменения не сохранены. Выйти?")) {
       event.preventDefault();
     }
   }
@@ -248,37 +259,37 @@ export function SellForm({
     const nextErrors: FormErrors = {};
 
     if (isProfileLoading) {
-      nextErrors.profile = "РџРѕРґРѕР¶РґРёС‚Рµ, РїСЂРѕС„РёР»СЊ РµС‰С‘ Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ.";
+      nextErrors.profile = "Подождите, профиль ещё загружается.";
       setErrors(nextErrors);
       return false;
     }
 
     if (profileLoadError) {
-      nextErrors.profile = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїСЂРѕС„РёР»СЊ.";
+      nextErrors.profile = "Не удалось загрузить профиль.";
       setErrors(nextErrors);
       return false;
     }
 
     if (photos.length === 0) {
-      nextErrors.photos = "Р”РѕР±Р°РІСЊС‚Рµ РјРёРЅРёРјСѓРј 1 С„РѕС‚Рѕ.";
+      nextErrors.photos = "Добавьте минимум 1 фото.";
     }
     if (!category) {
-      nextErrors.category = "Р’С‹Р±РµСЂРёС‚Рµ РєР°С‚РµРіРѕСЂРёСЋ.";
+      nextErrors.category = "Выберите категорию.";
     }
     if (!title.trim()) {
-      nextErrors.title = "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РѕР±СЉСЏРІР»РµРЅРёСЏ.";
+      nextErrors.title = "Введите название объявления.";
     }
     if (!description.trim()) {
-      nextErrors.description = "Р”РѕР±Р°РІСЊС‚Рµ РѕРїРёСЃР°РЅРёРµ.";
+      nextErrors.description = "Добавьте описание.";
     }
     if (!negotiable && !price) {
-      nextErrors.price = "РЈРєР°Р¶РёС‚Рµ С†РµРЅСѓ РёР»Рё РІС‹Р±РµСЂРёС‚Рµ В«Р”РѕРіРѕРІРѕСЂРЅР°СЏВ».";
+      nextErrors.price = "Укажите цену или выберите «Договорная».";
     }
     if (!district) {
-      nextErrors.district = "Р’С‹Р±РµСЂРёС‚Рµ СЂР°Р№РѕРЅ.";
+      nextErrors.district = "Выберите район.";
     }
     if (!sellerName.trim()) {
-      nextErrors.profile = "РЎРЅР°С‡Р°Р»Р° СѓРєР°Р¶РёС‚Рµ РёРјСЏ РІ РїСЂРѕС„РёР»Рµ.";
+      nextErrors.profile = "Сначала укажите имя в профиле.";
     }
 
     setErrors(nextErrors);
@@ -303,12 +314,11 @@ export function SellForm({
         isPrimary: photo.id === mainPhoto.id
       }))
     );
-    const mainImage = imagePairs.find((item) => item.id === mainPhoto.id)?.image ?? imagePairs[0].image;
+    const mainImage =
+      imagePairs.find((item) => item.id === mainPhoto.id)?.image ?? imagePairs[0].image;
     const galleryImages = [
       mainImage,
-      ...imagePairs
-        .filter((item) => item.image !== mainImage)
-        .map((item) => item.image)
+      ...imagePairs.filter((item) => item.image !== mainImage).map((item) => item.image)
     ];
 
     const districtCoordinates = getDistrictCoordinate(district);
@@ -338,7 +348,7 @@ export function SellForm({
         if (listingResult.error) {
           setErrors((current) => ({
             ...current,
-            profile: "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°."
+            profile: "Не удалось сохранить изменения. Попробуйте снова."
           }));
           setIsSubmitting(false);
           return;
@@ -374,7 +384,8 @@ export function SellForm({
         if (imageResult.error) {
           setErrors((current) => ({
             ...current,
-            profile: "РќРµРєРѕС‚РѕСЂС‹Рµ С„РѕС‚РѕРіСЂР°С„РёРё РЅРµ РѕР±РЅРѕРІРёР»РёСЃСЊ. РџСЂРѕРІРµСЂСЊС‚Рµ РѕР±СЉСЏРІР»РµРЅРёРµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°."
+            profile:
+              "Некоторые фотографии не обновились. Проверьте объявление и попробуйте снова."
           }));
           setIsSubmitting(false);
           return;
@@ -403,7 +414,8 @@ export function SellForm({
       if (result.error || !result.listing) {
         setErrors((current) => ({
           ...current,
-          profile: "РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ РѕР±СЉСЏРІР»РµРЅРёРµ. РџСЂРѕРІРµСЂСЊС‚Рµ SQL-РїСЂР°РІР° Supabase Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°."
+          profile:
+            "Не удалось опубликовать объявление. Проверьте SQL-права Supabase и попробуйте снова."
         }));
         setIsSubmitting(false);
         return;
@@ -471,7 +483,7 @@ export function SellForm({
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
           <label className="block">
-            <span className="text-sm font-semibold text-ink">РќР°Р·РІР°РЅРёРµ РѕР±СЉСЏРІР»РµРЅРёСЏ</span>
+            <span className="text-sm font-semibold text-ink">Название объявления</span>
             <input
               value={title}
               maxLength={70}
@@ -481,7 +493,7 @@ export function SellForm({
                 setErrors((current) => ({ ...current, title: undefined }));
               }}
               className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
-              placeholder="РќР°РїСЂРёРјРµСЂ, iPhone 14 Pro 256 Р“Р‘"
+              placeholder="Например, iPhone 14 Pro 256 ГБ"
             />
             <span className="mt-2 flex items-center justify-between text-sm">
               <span className="font-medium text-coral">{errors.title}</span>
@@ -521,7 +533,7 @@ export function SellForm({
           />
 
           <label className="block">
-            <span className="text-sm font-semibold text-ink">РћРїРёСЃР°РЅРёРµ</span>
+            <span className="text-sm font-semibold text-ink">Описание</span>
             <textarea
               value={description}
               maxLength={3000}
@@ -531,7 +543,7 @@ export function SellForm({
                 setErrors((current) => ({ ...current, description: undefined }));
               }}
               className="focus-ring mt-2 min-h-[180px] w-full resize-y rounded-2xl border border-ink/10 bg-white px-4 py-4 text-base font-medium text-ink shadow-sm"
-              placeholder="РћРїРёС€РёС‚Рµ С‚РѕРІР°СЂ, СЃРѕСЃС‚РѕСЏРЅРёРµ Рё РІР°Р¶РЅС‹Рµ РґРµС‚Р°Р»Рё"
+              placeholder="Опишите товар, состояние и важные детали"
             />
             <span className="mt-2 flex items-center justify-between text-sm">
               <span className="font-medium text-coral">{errors.description}</span>
@@ -551,20 +563,22 @@ export function SellForm({
         </section>
 
         <section className="space-y-5 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          <h2 className="text-xl font-semibold text-ink">РџСЂРѕРґР°РІРµС†</h2>
+          <h2 className="text-xl font-semibold text-ink">Продавец</h2>
           <div className="rounded-2xl border border-ink/10 bg-mist p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-ink/58">РћР±СЉСЏРІР»РµРЅРёРµ Р±СѓРґРµС‚ РѕРїСѓР±Р»РёРєРѕРІР°РЅРѕ РѕС‚ РёРјРµРЅРё</p>
+                <p className="text-sm font-semibold text-ink/58">
+                  Объявление будет опубликовано от имени
+                </p>
                 <p className="mt-1 text-xl font-semibold text-ink">
-                  {isProfileLoading ? "Р—Р°РіСЂСѓР¶Р°РµРј..." : sellerName || "РРјСЏ РЅРµ СѓРєР°Р·Р°РЅРѕ"}
+                  {isProfileLoading ? "Загружаем..." : sellerName || "Имя не указано"}
                 </p>
               </div>
               <Link
                 href="/profile"
                 className="focus-ring inline-flex h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-leaf shadow-sm"
               >
-                РР·РјРµРЅРёС‚СЊ РІ РїСЂРѕС„РёР»Рµ
+                Изменить в профиле
               </Link>
             </div>
             {profileLoadError ? (
@@ -579,13 +593,14 @@ export function SellForm({
                   href="/profile"
                   className="focus-ring mt-3 inline-flex h-10 items-center rounded-full bg-leaf px-4 text-sm font-semibold text-white"
                 >
-                  РџРµСЂРµР№С‚Рё РІ РїСЂРѕС„РёР»СЊ
+                  Перейти в профиль
                 </Link>
               </div>
             ) : null}
           </div>
           <p className="text-sm leading-6 text-ink/58">
-            РџРѕРєСѓРїР°С‚РµР»Рё Р±СѓРґСѓС‚ СЃРІСЏР·С‹РІР°С‚СЊСЃСЏ СЃ РІР°РјРё С‡РµСЂРµР· Choi Chat. РўРµР»РµС„РѕРЅ РІ РѕР±СЉСЏРІР»РµРЅРёРё РЅРµ РїРѕРєР°Р·С‹РІР°РµС‚СЃСЏ.
+            Покупатели будут связываться с вами через Choi Chat. Телефон в объявлении не
+            показывается.
           </p>
         </section>
 
