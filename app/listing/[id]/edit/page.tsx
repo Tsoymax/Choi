@@ -182,7 +182,14 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
       listing.status === "reserved" || listing.status === "sold" || listing.status === "archived"
         ? listing.status
         : "active",
-    images
+    images,
+    attributes: (listing.listing_attributes ?? []).reduce<Record<string, string>>(
+      (acc, attribute) => {
+        acc[attribute.attribute_key] = attribute.attribute_value;
+        return acc;
+      },
+      {}
+    )
   };
 
   return (

@@ -28,8 +28,17 @@ export type ListingImageRow = {
   created_at: string | null;
 };
 
+export type ListingAttributeRow = {
+  id: string;
+  listing_id: string;
+  attribute_key: string;
+  attribute_value: string;
+  created_at: string | null;
+};
+
 export type ListingWithRelations = ListingRow & {
   listing_images?: ListingImageRow[] | null;
+  listing_attributes?: ListingAttributeRow[] | null;
   profiles?: { name: string | null } | null;
 };
 
@@ -70,6 +79,7 @@ export type ListingProduct = Product & {
   description?: string;
   phone?: string;
   images?: string[];
+  attributes?: Record<string, string>;
 };
 
 type SupabaseErrorLike = {
@@ -134,6 +144,13 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
     description: listing.description,
     phone: listing.phone ?? "",
     images: images.length ? images.map((image) => image.image_url) : [primaryImage],
+    attributes: (listing.listing_attributes ?? []).reduce<Record<string, string>>(
+      (acc, attribute) => {
+        acc[attribute.attribute_key] = attribute.attribute_value;
+        return acc;
+      },
+      {}
+    ),
     badgeRu: "Сегодня",
     badgeUz: "Bugun"
   };
@@ -142,7 +159,7 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
 export async function getActiveListings(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(*), profiles!listings_user_id_fkey(name)")
+    .select("*, listing_images(*), listing_attributes(*), profiles!listings_user_id_fkey(name)")
     .in("status", ["active", "reserved"])
     .order("created_at", { ascending: false });
 
@@ -186,7 +203,7 @@ export async function getActiveListings(supabase: SupabaseClient) {
 export async function getListingsByUserId(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(*)")
+    .select("*, listing_images(*), listing_attributes(*)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -206,7 +223,7 @@ export async function getListingsByUserId(supabase: SupabaseClient, userId: stri
 export async function getListingById(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_images(*), profiles!listings_user_id_fkey(name)")
+    .select("*, listing_images(*), listing_attributes(*), profiles!listings_user_id_fkey(name)")
     .eq("id", id)
     .maybeSingle();
 
@@ -223,12 +240,17 @@ export async function getListingById(supabase: SupabaseClient, id: string) {
       return null;
     }
 
-    const [{ data: images }, { data: profile }] = await Promise.all([
+    const [{ data: images }, { data: attributes }, { data: profile }] = await Promise.all([
       supabase
         .from("listing_images")
         .select("*")
         .eq("listing_id", fallbackListing.id)
         .order("position", { ascending: true }),
+      supabase
+        .from("listing_attributes")
+        .select("*")
+        .eq("listing_id", fallbackListing.id)
+        .order("created_at", { ascending: true }),
       supabase
         .from("profiles")
         .select("name")
@@ -239,6 +261,7 @@ export async function getListingById(supabase: SupabaseClient, id: string) {
     return {
       ...fallbackListing,
       listing_images: images ?? [],
+      listing_attributes: attributes ?? [],
       profiles: profile ?? null
     } as ListingWithRelations;
   }

@@ -25,6 +25,7 @@ import {
 } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 import { ListingGallery } from "./ListingGallery";
+import { ListingAttributesSection } from "./ListingAttributesSection";
 import { ListingManagement } from "./ListingManagement";
 import { SellerCard } from "./SellerCard";
 
@@ -204,6 +205,11 @@ export function ListingDetail({
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-6">
             <ListingGallery images={images} title={title} />
+
+            <ListingAttributesSection
+              category={listing.category}
+              attributes={listing.attributes}
+            />
 
             <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
               <h2 className="text-2xl font-semibold text-ink">Описание</h2>

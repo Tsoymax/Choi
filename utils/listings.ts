@@ -22,6 +22,7 @@ export type Listing = Product & {
   phone?: string;
   createdAt?: string;
   images?: string[];
+  attributes?: Record<string, string>;
 };
 
 export type StoredListingInput = {
@@ -38,6 +39,7 @@ export type StoredListingInput = {
   images?: string[];
   latitude?: number;
   longitude?: number;
+  attributes?: Record<string, string>;
 };
 
 export type StoredListing = Listing & {
@@ -115,7 +117,8 @@ export function getStoredListings(): StoredListing[] {
       ? listings.map((listing) => ({
           ...listing,
           sellerId: listing.sellerId ?? CURRENT_USER_ID,
-          status: listing.status ?? "active"
+          status: listing.status ?? "active",
+          attributes: listing.attributes ?? {}
         }))
       : [];
   } catch {
@@ -147,6 +150,7 @@ export function saveStoredListing(input: StoredListingInput) {
     longitude: input.longitude,
     status: "active",
     images: input.images?.length ? input.images : [input.image],
+    attributes: input.attributes ?? {},
     badgeRu: "Сегодня",
     badgeUz: "Bugun",
     description: input.description,
@@ -200,6 +204,7 @@ export function updateStoredListing(
           negotiable: input.negotiable,
           image: input.image,
           images: input.images?.length ? input.images : [input.image],
+          attributes: input.attributes ?? {},
           description: input.description,
           latitude: input.latitude,
           longitude: input.longitude,

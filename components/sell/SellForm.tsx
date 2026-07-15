@@ -18,11 +18,18 @@ import {
   syncListingImages,
   updateListing as updateRemoteListing
 } from "@/lib/data/listings";
+import {
+  normalizeAttributeValues,
+  saveListingAttributes,
+  updateListingAttributes
+} from "@/lib/data/listingAttributes";
+import { getAttributeGroups } from "@/data/listingAttributeConfig";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import type { ProfileRow } from "@/lib/data/profiles";
 import { getDistrictCoordinate } from "@/data/districtCoordinates";
 import { CategorySelect } from "./CategorySelect";
 import { ListingPreview } from "./ListingPreview";
+import { ListingAttributesFields } from "./ListingAttributesFields";
 import { LocationSelect } from "./LocationSelect";
 import { PhotoUploader, type UploadPhoto } from "./PhotoUploader";
 import { PriceField } from "./PriceField";
@@ -50,6 +57,7 @@ export type SellFormInitialListing = {
     isPrimary: boolean;
     position: number;
   }>;
+  attributes?: Record<string, string>;
 };
 
 type SellFormProps = {
@@ -92,6 +100,10 @@ export function SellForm({
     initialListing?.currency ?? "uzs"
   );
   const [negotiable, setNegotiable] = useState(initialListing?.negotiable ?? false);
+  const [attributes, setAttributes] = useState<Record<string, string>>(
+    initialListing?.attributes ?? {}
+  );
+  const [attributeErrors, setAttributeErrors] = useState<Record<string, string>>({});
   const [district, setDistrict] = useState(
     initialListing?.district ?? initialProfile?.district ?? ""
   );
@@ -293,7 +305,17 @@ export function SellForm({
     }
 
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    const nextAttributeErrors: Record<string, string> = {};
+    getAttributeGroups(category).forEach((group) => {
+      group.fields.forEach((field) => {
+        if (field.required && !attributes[field.key]?.trim()) {
+          nextAttributeErrors[field.key] = "Заполните поле.";
+        }
+      });
+    });
+
+    setAttributeErrors(nextAttributeErrors);
+    return Object.keys(nextErrors).length === 0 && Object.keys(nextAttributeErrors).length === 0;
   }
 
   async function submitListing(event: FormEvent<HTMLFormElement>) {
@@ -322,6 +344,7 @@ export function SellForm({
     ];
 
     const districtCoordinates = getDistrictCoordinate(district);
+    const listingAttributes = normalizeAttributeValues(attributes);
 
     if (hasSupabaseBrowserEnv()) {
       const user = await getCurrentUser();
@@ -349,6 +372,21 @@ export function SellForm({
           setErrors((current) => ({
             ...current,
             profile: "Не удалось сохранить изменения. Попробуйте снова."
+          }));
+          setIsSubmitting(false);
+          return;
+        }
+
+        const attributeResult = await updateListingAttributes(
+          supabase,
+          initialListing.id,
+          listingAttributes
+        );
+
+        if (attributeResult.error) {
+          setErrors((current) => ({
+            ...current,
+            profile: "Не удалось сохранить характеристики. Попробуйте снова."
           }));
           setIsSubmitting(false);
           return;
@@ -421,6 +459,22 @@ export function SellForm({
         return;
       }
 
+      const attributeResult = await saveListingAttributes(
+        supabase,
+        result.listing.id,
+        listingAttributes
+      );
+
+      if (attributeResult.error) {
+        setErrors((current) => ({
+          ...current,
+          profile:
+            "Объявление опубликовано, но характеристики не сохранились. Откройте редактирование и попробуйте снова."
+        }));
+        setIsSubmitting(false);
+        return;
+      }
+
       router.push(`/listing/${result.listing.id}` as never);
       router.refresh();
       return;
@@ -438,7 +492,8 @@ export function SellForm({
         currency,
         negotiable,
         image: mainImage,
-        images: galleryImages
+        images: galleryImages,
+        attributes: Object.fromEntries(listingAttributes.map((item) => [item.key, item.value]))
       });
 
       setIsDirty(false);
@@ -459,7 +514,8 @@ export function SellForm({
       seller: sellerName.trim(),
       phone: "",
       image: mainImage,
-      images: galleryImages
+      images: galleryImages,
+      attributes: Object.fromEntries(listingAttributes.map((item) => [item.key, item.value]))
     });
 
     router.push("/");
@@ -506,8 +562,31 @@ export function SellForm({
             error={errors.category}
             onChange={(value) => {
               setCategory(value);
+              setAttributes({});
+              setAttributeErrors({});
               markDirty();
               setErrors((current) => ({ ...current, category: undefined }));
+            }}
+          />
+
+          <ListingAttributesFields
+            category={category}
+            values={attributes}
+            errors={attributeErrors}
+            onChange={(key, value) => {
+              setAttributes((current) => {
+                const next = { ...current, [key]: value };
+                if (key === "brand") {
+                  delete next.model;
+                }
+                return next;
+              });
+              setAttributeErrors((current) => {
+                const next = { ...current };
+                delete next[key];
+                return next;
+              });
+              markDirty();
             }}
           />
 
