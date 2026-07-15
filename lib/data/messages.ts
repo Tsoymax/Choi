@@ -65,3 +65,16 @@ export async function sendMessage(
 
   return data;
 }
+
+export async function markMessagesRead(
+  supabase: SupabaseClient,
+  conversationId: string,
+  currentUserId: string
+) {
+  return supabase
+    .from("messages")
+    .update({ read: true })
+    .eq("conversation_id", conversationId)
+    .neq("sender_id", currentUserId)
+    .eq("read", false);
+}

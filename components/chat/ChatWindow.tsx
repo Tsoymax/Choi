@@ -26,6 +26,7 @@ import {
 } from "@/lib/data/listings";
 import {
   getMessagesByConversationId,
+  markMessagesRead,
   mapMessageRow,
   sendMessage as sendRemoteMessage
 } from "@/lib/data/messages";
@@ -37,6 +38,7 @@ import {
   respondToDeal,
   type RemoteDealRow
 } from "@/lib/data/deals";
+import { markConversationMessageNotificationsRead } from "@/lib/data/notifications";
 import { getReviewByDealAndReviewer, type DealReviewRow } from "@/lib/data/reviews";
 import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
@@ -123,6 +125,8 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
       const userId = user.id;
       setCurrentUserId(userId);
+      await markMessagesRead(supabase, conversationId, userId);
+      await markConversationMessageNotificationsRead(supabase, userId, conversationId);
 
       async function syncRemoteChat() {
         const remoteConversation = await getRemoteConversationById(supabase, conversationId);

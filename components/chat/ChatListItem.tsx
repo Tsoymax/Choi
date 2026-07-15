@@ -30,7 +30,9 @@ export function ChatListItem({
   lastMessage,
   active
 }: ChatListItemProps) {
-  const unread = hasUnreadConversation(conversation.id);
+  const unread = conversation.remote
+    ? Boolean(lastMessage && lastMessage.sender === "seller" && !lastMessage.read)
+    : hasUnreadConversation(conversation.id);
   const title = listing?.titleRu ?? listing?.title ?? "Объявление";
 
   return (

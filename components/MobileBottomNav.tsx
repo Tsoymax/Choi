@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, MessageCircle, Plus, Search, User } from "lucide-react";
-import { useEffect, useState } from "react";
-import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
+import { useUnreadChatCount } from "@/lib/chat/useUnreadChatCount";
 
 type NavItem = {
   label: string;
@@ -39,20 +38,7 @@ function isActivePath(pathname: string, key: NavItem["key"]) {
 
 export function MobileBottomNav() {
   const pathname = usePathname() ?? "/";
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    const syncUnreadCount = () => setUnreadCount(getUnreadConversationCount());
-
-    syncUnreadCount();
-    window.addEventListener(CHAT_EVENT, syncUnreadCount);
-    window.addEventListener("storage", syncUnreadCount);
-
-    return () => {
-      window.removeEventListener(CHAT_EVENT, syncUnreadCount);
-      window.removeEventListener("storage", syncUnreadCount);
-    };
-  }, []);
+  const unreadCount = useUnreadChatCount();
 
   if (pathname.startsWith("/chat/")) {
     return null;

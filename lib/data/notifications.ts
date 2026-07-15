@@ -91,6 +91,46 @@ export async function getUnreadNotificationsCount(
   return count ?? 0;
 }
 
+export async function getUnreadMessageNotificationsCount(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("type", "message")
+    .eq("is_read", false);
+
+  if (error) {
+    logNotificationDebug("message_unread_count_error", {
+      userId,
+      errorCode: error.code,
+      errorMessage: error.message
+    });
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+export async function markConversationMessageNotificationsRead(
+  supabase: SupabaseClient,
+  userId: string,
+  conversationId: string
+) {
+  const result = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", userId)
+    .eq("type", "message")
+    .eq("conversation_id", conversationId)
+    .eq("is_read", false);
+
+  emitNotificationChanged();
+  return result;
+}
+
 export async function markNotificationRead(
   supabase: SupabaseClient,
   id: string

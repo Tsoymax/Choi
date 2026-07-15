@@ -8,8 +8,8 @@ import { ChevronDown, Heart, MessageCircle, Plus, Search } from "lucide-react";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
 import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
-import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
 import { USER_EVENT, getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
+import { useUnreadChatCount } from "@/lib/chat/useUnreadChatCount";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { ensureProfileForUser, type ProfileRow } from "@/lib/data/profiles";
 import { createClient } from "@/utils/supabase/client";
@@ -38,7 +38,7 @@ export function Header({
   const router = useRouter();
   const t = translations[language];
   const [favoriteCount, setFavoriteCount] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUnreadChatCount();
   const [currentUser, setCurrentUser] = useState<{ name: string } | null>(null);
   const [homeDistrict, setHomeDistrict] = useState("yunusabad");
   const [currentProfile, setCurrentProfile] = useState<ProfileRow | null>(null);
@@ -117,19 +117,6 @@ export function Header({
       authSubscription?.data.subscription.unsubscribe();
       window.removeEventListener(USER_EVENT, syncCurrentUser);
       window.removeEventListener("storage", syncCurrentUser);
-    };
-  }, []);
-
-  useEffect(() => {
-    const syncUnreadCount = () => setUnreadCount(getUnreadConversationCount());
-
-    syncUnreadCount();
-    window.addEventListener(CHAT_EVENT, syncUnreadCount);
-    window.addEventListener("storage", syncUnreadCount);
-
-    return () => {
-      window.removeEventListener(CHAT_EVENT, syncUnreadCount);
-      window.removeEventListener("storage", syncUnreadCount);
     };
   }, []);
 
