@@ -34,7 +34,7 @@ const statusLabels: Record<ListingStatus, string> = {
   active: "В продаже",
   reserved: "Забронировано",
   sold: "Продано",
-  archived: "Снято с публикации",
+  archived: "В архиве",
   hidden: "Скрыто модератором",
   blocked: "Заблокировано"
 };
@@ -46,6 +46,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
   const [error, setError] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const isRemoteListing = hasSupabaseBrowserEnv() && !listing.id.startsWith("local-");
+  const isFinalStatus = status === "sold" || status === "archived";
 
   async function changeStatus(nextStatus: ListingStatus) {
     setError("");
@@ -106,9 +107,9 @@ export function ListingManagement({ listing }: ListingManagementProps) {
         <PackageCheck className="text-leaf" size={22} />
       </div>
 
-      {status === "sold" ? (
+      {isFinalStatus ? (
         <div className="mt-5 rounded-2xl bg-mist p-4 text-sm font-semibold text-ink/68">
-          Проданное объявление нельзя редактировать, но его можно удалить или вернуть в продажу.
+          Завершённое объявление находится в истории. Его нельзя вернуть в продажу.
         </div>
       ) : null}
 
@@ -116,9 +117,9 @@ export function ListingManagement({ listing }: ListingManagementProps) {
         <Link
           href={`/listing/${listing.id}/edit` as never}
           className={`focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full bg-mist px-4 text-sm font-semibold text-ink transition hover:bg-[#e4eee7] ${
-            status === "sold" ? "pointer-events-none opacity-55" : ""
+            isFinalStatus ? "pointer-events-none opacity-55" : ""
           }`}
-          aria-disabled={status === "sold"}
+          aria-disabled={isFinalStatus}
         >
           <Edit3 size={16} />
           Редактировать
@@ -152,7 +153,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
           <button
             type="button"
             disabled={isBusy}
-            onClick={() => changeStatus("sold")}
+            onClick={() => changeStatus("archived")}
             className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:opacity-60"
           >
             <CheckCircle2 size={17} />
@@ -169,18 +170,6 @@ export function ListingManagement({ listing }: ListingManagementProps) {
           >
             <Archive size={16} />
             Снять с публикации
-          </button>
-        ) : null}
-
-        {status === "archived" || status === "sold" ? (
-          <button
-            type="button"
-            disabled={isBusy}
-            onClick={() => changeStatus("active")}
-            className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf transition hover:bg-mist disabled:opacity-60"
-          >
-            <RotateCcw size={16} />
-            Вернуть в публикацию
           </button>
         ) : null}
 

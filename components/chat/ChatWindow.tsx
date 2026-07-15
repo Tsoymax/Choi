@@ -326,7 +326,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       setConfirmedDeal(confirmed ? deal : null);
       setTerminalDeal(deal);
       setListing((current) =>
-        current ? { ...current, status: confirmed ? "sold" : "active" } : current
+        current ? { ...current, status: confirmed ? "archived" : "active" } : current
       );
       setDealStatusText(
         confirmed ? "Сделка подтверждена. Спасибо!" : "Сделка отменена."

@@ -147,12 +147,12 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     redirect(`/listing/${id}`);
   }
 
-  if (listing.status === "sold") {
+  if (listing.status === "sold" || listing.status === "archived") {
     return (
       <EditPageShell title="Редактировать объявление">
         <InfoCard
-          title="Проданное объявление нельзя редактировать"
-          text="Если нужно создать новое объявление, опубликуйте его заново."
+          title="Завершённое объявление нельзя редактировать"
+          text="Сделка уже завершена, поэтому объявление осталось только в истории."
           href={`/listing/${id}`}
           action="Вернуться к объявлению"
         />

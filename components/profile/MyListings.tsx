@@ -74,7 +74,14 @@ export function MyListings() {
   }, []);
 
   const filteredListings = useMemo(
-    () => listings.filter((listing) => (listing.status ?? "active") === activeTab),
+    () =>
+      listings.filter((listing) => {
+        const status = listing.status ?? "active";
+        if (activeTab === "active") {
+          return status === "active" || status === "reserved";
+        }
+        return status === "sold" || status === "archived";
+      }),
     [activeTab, listings]
   );
 
@@ -141,24 +148,25 @@ export function MyListings() {
               <div className="mt-3 grid gap-2 rounded-2xl border border-ink/10 bg-white p-3 sm:grid-cols-3">
                 <Link
                   href={`/listing/${listing.id}/edit`}
-                  className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-mist px-3 text-sm font-semibold text-ink transition hover:bg-[#e4eee7]"
+                  className={`focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-mist px-3 text-sm font-semibold text-ink transition hover:bg-[#e4eee7] ${
+                    (listing.status ?? "active") === "sold" || (listing.status ?? "active") === "archived"
+                      ? "pointer-events-none opacity-55"
+                      : ""
+                  }`}
+                  aria-disabled={(listing.status ?? "active") === "sold" || (listing.status ?? "active") === "archived"}
                 >
                   <MoreHorizontal size={16} />
                   Редактировать
                 </Link>
                 <button
                   type="button"
-                  onClick={() =>
-                    void changeListingStatus(
-                      listing,
-                      (listing.status ?? "active") === "active" ? "sold" : "active"
-                    )
-                  }
-                  className="focus-ring h-10 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink transition hover:border-leaf/30"
+                  onClick={() => void changeListingStatus(listing, "archived")}
+                  disabled={(listing.status ?? "active") === "sold" || (listing.status ?? "active") === "archived"}
+                  className="focus-ring h-10 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink transition hover:border-leaf/30 disabled:opacity-55"
                 >
-                  {(listing.status ?? "active") === "active"
+                  {(listing.status ?? "active") === "active" || (listing.status ?? "active") === "reserved"
                     ? "Отметить проданным"
-                    : "Вернуть в активные"}
+                    : "В истории"}
                 </button>
                 <button
                   type="button"

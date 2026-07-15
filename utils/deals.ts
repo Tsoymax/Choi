@@ -125,7 +125,7 @@ export function createDealForListing(listing: Listing, buyer?: DealInterlocutor 
   };
 
   writeArray(DEALS_KEY, [deal, ...deals], DEALS_EVENT);
-  updateStoredListingStatus(listing.id, "sold");
+  updateStoredListingStatus(listing.id, "archived");
 
   if (buyer) {
     const notifications = getNotifications();
@@ -227,4 +227,3 @@ export function getOwnedListingById(listingId: string) {
     (listing) => listing.id === listingId && listing.sellerId === CURRENT_USER_ID
   );
 }
-
