@@ -9,6 +9,7 @@ import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { TrustCard } from "@/components/profile/TrustCard";
 import { createClient } from "@/utils/supabase/client";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { LISTINGS_EVENT } from "@/utils/listings";
 import {
   USER_EVENT,
@@ -17,6 +18,7 @@ import {
   getCurrentUserListingsCount
 } from "@/utils/users";
 import { profileToChoiUser, updateCurrentProfile } from "@/lib/data/profiles";
+import { getReviewStatsForUser, type ReviewStats } from "@/lib/data/reviews";
 
 type ProfilePageClientProps = {
   initialUser: ChoiUser;
@@ -35,6 +37,13 @@ export function ProfilePageClient({
   const [isEditing, setIsEditing] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [reviewStats, setReviewStats] = useState<ReviewStats>({
+    total: 0,
+    positive: 0,
+    negative: 0,
+    topTags: [],
+    recentComments: []
+  });
 
   useEffect(() => {
     const syncProfile = () => {
@@ -56,6 +65,29 @@ export function ProfilePageClient({
       window.removeEventListener("storage", syncProfile);
     };
   }, [isSupabaseUser]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadReviewStats() {
+      if (!hasSupabaseBrowserEnv() || !user.id) {
+        return;
+      }
+
+      const supabase = createClient();
+      const stats = await getReviewStatsForUser(supabase, user.id);
+
+      if (mounted) {
+        setReviewStats(stats);
+      }
+    }
+
+    void loadReviewStats();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user.id]);
 
   async function saveSupabaseProfile(input: {
     name: string;
@@ -120,7 +152,7 @@ export function ProfilePageClient({
               isCurrentUser
               onEdit={() => setIsEditing(true)}
             />
-            <TrustCard user={user} />
+            <TrustCard user={user} reviewStats={reviewStats} />
             {isSupabaseUser ? (
               <button
                 type="button"

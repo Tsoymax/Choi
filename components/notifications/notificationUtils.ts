@@ -22,6 +22,7 @@ export function getNotificationIcon(type: NotificationType): LucideIcon {
   if (type === "offer_accepted") return CheckCircle2;
   if (type === "offer_declined") return XCircle;
   if (type === "listing_reserved") return PackageCheck;
+  if (type === "review_request") return ShieldCheck;
   if (type === "review_received") return ShieldCheck;
   if (type === "system") return Sparkles;
   return Bell;
@@ -41,20 +42,21 @@ export function getNotificationHref(notification: NotificationRow) {
     return `/chat/${notification.conversation_id}`;
   }
 
+  if (notification.type === "review_request" && notification.deal_id) {
+    return `/deals/${notification.deal_id}/review`;
+  }
+
+  if (notification.type === "review_received" || notification.type === "trust_level") {
+    return "/profile";
+  }
+
   if (
     (notification.type === "deal_confirmation" ||
       notification.type === "deal_confirmed" ||
-      notification.type === "deal_cancelled" ||
-      notification.type === "listing_reserved") &&
-    (notification.conversation_id || notification.deal_id)
+      notification.type === "deal_cancelled") &&
+    notification.conversation_id
   ) {
-    return notification.conversation_id
-      ? `/chat/${notification.conversation_id}`
-      : "/notifications";
-  }
-
-  if (notification.type === "trust_level" || notification.type === "review_received") {
-    return "/profile";
+    return `/chat/${notification.conversation_id}`;
   }
 
   if (notification.type === "listing_reserved" && notification.listing_id) {

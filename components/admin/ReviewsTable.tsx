@@ -1,7 +1,7 @@
 "use client";
 
 import { EyeOff, Trash2 } from "lucide-react";
-import type { AdminReviewRow } from "@/lib/data/reviews";
+import { formatReviewTag, type AdminReviewRow } from "@/lib/data/reviews";
 
 export type ReviewActionRequest = {
   type: "review";
@@ -39,79 +39,86 @@ export function ReviewsTable({ reviews, onAction }: ReviewsTableProps) {
             </tr>
           </thead>
           <tbody>
-            {reviews.map((review) => (
-              <tr key={review.id} className="border-t border-ink/8 align-top">
-                <td className="px-3 py-4 font-semibold text-ink">
-                  {review.profiles_reviewer?.name ?? review.reviewer_id.slice(0, 8)}
-                </td>
-                <td className="px-3 py-4 font-semibold text-ink">
-                  {review.profiles_reviewed?.name ?? review.reviewed_user_id.slice(0, 8)}
-                </td>
-                <td className="px-3 py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      review.rating_type === "positive"
-                        ? "bg-leaf/10 text-leaf"
-                        : "bg-[#fff2ef] text-coral"
-                    }`}
-                  >
-                    {review.rating_type === "positive" ? "Положительный" : "Негативный"}
-                  </span>
-                </td>
-                <td className="px-3 py-4 text-ink/66">
-                  {(review.deal_review_tags ?? []).map((tag) => tag.tag).join(", ") || "—"}
-                </td>
-                <td className="max-w-[260px] px-3 py-4 text-ink/66">
-                  {review.comment || "—"}
-                  {review.hidden_at ? (
-                    <span className="mt-2 block text-xs font-semibold text-coral">
-                      Скрыт
+            {reviews.map((review) => {
+              const isHidden = Boolean(review.is_hidden || review.hidden_at);
+
+              return (
+                <tr key={review.id} className="border-t border-ink/8 align-top">
+                  <td className="px-3 py-4 font-semibold text-ink">
+                    {review.profiles_reviewer?.name ?? review.reviewer_id.slice(0, 8)}
+                  </td>
+                  <td className="px-3 py-4 font-semibold text-ink">
+                    {review.profiles_reviewed?.name ?? review.reviewed_user_id.slice(0, 8)}
+                  </td>
+                  <td className="px-3 py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        review.rating_type === "positive"
+                          ? "bg-leaf/10 text-leaf"
+                          : "bg-[#fff2ef] text-coral"
+                      }`}
+                    >
+                      {review.rating_type === "positive" ? "Положительный" : "Негативный"}
                     </span>
-                  ) : null}
-                </td>
-                <td className="px-3 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {!review.hidden_at ? (
+                  </td>
+                  <td className="px-3 py-4 text-ink/66">
+                    {(review.deal_review_tags ?? [])
+                      .map((tag) => formatReviewTag(tag.tag))
+                      .join(", ") || "—"}
+                  </td>
+                  <td className="max-w-[260px] px-3 py-4 text-ink/66">
+                    {review.comment || "—"}
+                    {isHidden ? (
+                      <span className="mt-2 block text-xs font-semibold text-coral">
+                        Скрыт
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      {!isHidden ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onAction({
+                              type: "review",
+                              id: review.id,
+                              action: "hide",
+                              title: "Скрыть отзыв?",
+                              description:
+                                "Отзыв перестанет отображаться в публичном профиле.",
+                              confirmLabel: "Скрыть"
+                            })
+                          }
+                          className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-ink/10 px-3 text-xs font-semibold text-ink"
+                        >
+                          <EyeOff size={15} />
+                          Скрыть
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() =>
                           onAction({
                             type: "review",
                             id: review.id,
-                            action: "hide",
-                            title: "Скрыть отзыв?",
-                            description: "Отзыв перестанет отображаться в публичном профиле.",
-                            confirmLabel: "Скрыть"
+                            action: "delete",
+                            title: "Удалить отзыв?",
+                            description: "Это действие нельзя отменить.",
+                            confirmLabel: "Удалить",
+                            danger: true
                           })
                         }
-                        className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-ink/10 px-3 text-xs font-semibold text-ink"
+                        className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-coral/20 px-3 text-xs font-semibold text-coral"
                       >
-                        <EyeOff size={15} />
-                        Скрыть
+                        <Trash2 size={15} />
+                        Удалить
                       </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onAction({
-                          type: "review",
-                          id: review.id,
-                          action: "delete",
-                          title: "Удалить отзыв?",
-                          description: "Это действие нельзя отменить.",
-                          confirmLabel: "Удалить",
-                          danger: true
-                        })
-                      }
-                      className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-coral/20 px-3 text-xs font-semibold text-coral"
-                    >
-                      <Trash2 size={15} />
-                      Удалить
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -1,23 +1,40 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const positiveReviewTags = [
-  "🤝 Вежливый",
-  "💬 Быстро отвечает",
-  "📦 Всё соответствует описанию",
-  "⏰ Пунктуальный",
-  "👍 Сделка прошла отлично",
-  "⚡ Быстро договорились"
-] as const;
-
-export const negativeReviewTags = [
-  "❌ Не пришёл",
-  "❌ Не отвечал",
-  "❌ Описание не совпало",
-  "❌ Отменил встречу",
-  "❌ Невежлив"
-] as const;
-
 export type ReviewType = "positive" | "negative";
+
+export type ReviewTagOption = {
+  id: string;
+  label: string;
+  type: ReviewType;
+};
+
+export const positiveReviewTags: ReviewTagOption[] = [
+  { id: "polite", label: "🤝 Вежливый", type: "positive" },
+  { id: "quick_reply", label: "💬 Быстро отвечает", type: "positive" },
+  { id: "as_described", label: "📦 Всё соответствует описанию", type: "positive" },
+  { id: "on_time", label: "⏰ Пунктуальный", type: "positive" },
+  { id: "smooth_deal", label: "👍 Сделка прошла отлично", type: "positive" },
+  { id: "easy_to_agree", label: "⚡ Быстро договорились", type: "positive" }
+];
+
+export const negativeReviewTags: ReviewTagOption[] = [
+  { id: "no_show", label: "Не пришёл", type: "negative" },
+  { id: "no_reply", label: "Не отвечал", type: "negative" },
+  { id: "not_as_described", label: "Описание не совпало", type: "negative" },
+  { id: "cancelled_without_notice", label: "Отменил встречу", type: "negative" },
+  { id: "rude", label: "Невежлив", type: "negative" }
+];
+
+export const reviewTagLabels = [...positiveReviewTags, ...negativeReviewTags].reduce<
+  Record<string, string>
+>((labels, tag) => {
+  labels[tag.id] = tag.label;
+  return labels;
+}, {});
+
+export function formatReviewTag(tag: string) {
+  return reviewTagLabels[tag] ?? tag;
+}
 
 export type DealReviewRow = {
   id: string;
@@ -27,14 +44,17 @@ export type DealReviewRow = {
   rating_type: ReviewType;
   comment: string | null;
   created_at: string | null;
+  is_hidden?: boolean | null;
+  hidden_at?: string | null;
+  deleted_at?: string | null;
   deal_review_tags?: Array<{ tag: string }> | null;
 };
 
 export type AdminReviewRow = DealReviewRow & {
   profiles_reviewed?: { name: string | null } | null;
   profiles_reviewer?: { name: string | null } | null;
-  hidden_at?: string | null;
-  deleted_at?: string | null;
+  moderated_at?: string | null;
+  moderation_reason?: string | null;
 };
 
 export type ReviewStats = {
@@ -105,7 +125,9 @@ export async function getReviewStatsForUser(
     };
   }
 
-  const reviews = (data ?? []) as DealReviewRow[];
+  const reviews = ((data ?? []) as DealReviewRow[]).filter(
+    (review) => !review.is_hidden && !review.hidden_at && !review.deleted_at
+  );
   const tagCounts = new Map<string, number>();
 
   reviews.forEach((review) => {
@@ -121,7 +143,7 @@ export async function getReviewStatsForUser(
   const topTags = [...tagCounts.entries()]
     .sort((first, second) => second[1] - first[1])
     .slice(0, 4)
-    .map(([tag]) => tag);
+    .map(([tag]) => formatReviewTag(tag));
 
   return {
     total: reviews.length,
@@ -154,6 +176,7 @@ export async function hideReview(
   return supabase
     .from("deal_reviews")
     .update({
+      is_hidden: true,
       hidden_at: new Date().toISOString(),
       moderated_at: new Date().toISOString(),
       moderation_reason: reason || "Скрыто модератором"

@@ -31,15 +31,15 @@ export function DealReviewForm({
   const [submitted, setSubmitted] = useState(false);
 
   const tags = useMemo(
-    () => ratingType === "positive" ? positiveReviewTags : negativeReviewTags,
+    () => (ratingType === "positive" ? positiveReviewTags : negativeReviewTags),
     [ratingType]
   );
 
-  function toggleTag(tag: string) {
+  function toggleTag(tagId: string) {
     setSelectedTags((current) =>
-      current.includes(tag)
-        ? current.filter((item) => item !== tag)
-        : [...current, tag]
+      current.includes(tagId)
+        ? current.filter((item) => item !== tagId)
+        : [...current, tagId]
     );
   }
 
@@ -132,16 +132,16 @@ export function DealReviewForm({
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {tags.map((tag) => (
           <button
-            key={tag}
+            key={tag.id}
             type="button"
-            onClick={() => toggleTag(tag)}
+            onClick={() => toggleTag(tag.id)}
             className={`focus-ring min-h-11 rounded-2xl border px-3 py-2 text-left text-sm font-semibold transition ${
-              selectedTags.includes(tag)
+              selectedTags.includes(tag.id)
                 ? "border-leaf bg-leaf/10 text-leaf"
                 : "border-ink/10 bg-mist/60 text-ink hover:border-leaf/30"
             }`}
           >
-            {tag}
+            {tag.label}
           </button>
         ))}
       </div>

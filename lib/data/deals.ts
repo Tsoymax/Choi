@@ -64,6 +64,20 @@ export async function getDealForConversation(
   return data as RemoteDealRow | null;
 }
 
+export async function getDealById(supabase: SupabaseClient, dealId: string) {
+  const { data, error } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("id", dealId)
+    .maybeSingle();
+
+  if (error) {
+    return null;
+  }
+
+  return data as RemoteDealRow | null;
+}
+
 export async function reserveListingFromConversation(
   supabase: SupabaseClient,
   conversationId: string

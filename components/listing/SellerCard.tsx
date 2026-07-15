@@ -13,7 +13,7 @@ import { createConversation as createRemoteConversation } from "@/lib/data/conve
 import { createClient } from "@/utils/supabase/client";
 import { getUserById } from "@/utils/users";
 import { getConfirmedDealsCount } from "@/utils/deals";
-import { TrustBadge } from "@/components/trust/TrustBadge";
+import { TrustStatus } from "@/components/trust/TrustStatus";
 import { ReportModal } from "@/components/reports/ReportModal";
 
 type SellerCardProps = {
@@ -59,21 +59,24 @@ export function SellerCard({ listing }: SellerCardProps) {
       <Link href={`/profile/${sellerId}`} className="focus-ring mt-5 block rounded-2xl bg-mist p-4">
         <p className="inline-flex items-center gap-2 text-sm font-semibold text-leaf">
           <ShieldCheck size={18} />
-          Уровень доверия Choi
+          Статус доверия Choi
         </p>
         <div className="mt-3">
-          <TrustBadge confirmedDealsCount={confirmedDealsCount} />
+          <TrustStatus
+            addressType={sellerUser?.addressMode ?? "aka"}
+            signals={{
+              confirmedDealsCount,
+              complaints: sellerUser?.complaints ?? 0,
+              accountAgeMonths: sellerUser
+                ? Math.max(0, (new Date().getFullYear() - sellerUser.joinedAt) * 12)
+                : 0
+            }}
+          />
         </div>
-        <p className="mt-1 text-sm text-ink/58">{trust.since}</p>
+        <p className="mt-2 text-sm text-ink/58">{trust.since}</p>
       </Link>
 
-      <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-2xl border border-ink/10 p-4">
-          <dt className="text-ink/52">Сделок</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">
-            {confirmedDealsCount}
-          </dd>
-        </div>
+      <dl className="mt-5 grid gap-3 text-sm">
         <div className="rounded-2xl border border-ink/10 p-4">
           <dt className="text-ink/52">На Choi</dt>
           <dd className="mt-1 text-lg font-semibold text-ink">
@@ -104,7 +107,7 @@ export function SellerCard({ listing }: SellerCardProps) {
                 router.push(`/chat/${conversation.id}` as never);
                 return;
               } catch {
-                // Prototype listings still use local chat as a fallback.
+                // Локальные тестовые объявления продолжают работать через fallback-чат.
               }
             }
 
@@ -125,7 +128,7 @@ export function SellerCard({ listing }: SellerCardProps) {
               return;
             }
 
-            setFavorite(isFavorite(listing.id) ? false : true);
+            setFavorite(!isFavorite(listing.id));
             toggleFavorite(listing.id);
           }}
           className={`focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition ${

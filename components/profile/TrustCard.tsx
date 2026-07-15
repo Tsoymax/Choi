@@ -1,8 +1,6 @@
 import type { ChoiUser } from "@/utils/users";
 import { getConfirmedDealsCount } from "@/utils/deals";
-import { getTrustLevel } from "@/lib/trust/getTrustLevel";
-import { TrustBadge } from "@/components/trust/TrustBadge";
-import { TrustProgress } from "./TrustProgress";
+import { TrustStatus } from "@/components/trust/TrustStatus";
 import type { ReviewStats } from "@/lib/data/reviews";
 
 type TrustCardProps = {
@@ -13,70 +11,57 @@ type TrustCardProps = {
 
 export function TrustCard({ user, publicView, reviewStats }: TrustCardProps) {
   const confirmedDealsCount = getConfirmedDealsCount(user.id);
-  const reviewSignals = {
-    positiveReviewCount: reviewStats?.positive ?? 0,
-    negativeReviewCount: reviewStats?.negative ?? 0,
-    complaints: user.complaints,
-    accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
-  };
-  const trustSignals = {
-    confirmedDealsCount,
-    ...reviewSignals
-  };
-  const trustLevel = getTrustLevel(trustSignals);
 
   return (
     <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-leaf">
-            Доверие Choi
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-ink">Текущий уровень</h2>
-        </div>
-        <TrustBadge
-          confirmedDealsCount={confirmedDealsCount}
-          signals={reviewSignals}
-          compact
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-leaf">
+        Доверие Choi
+      </p>
+      <h2 className="mt-2 text-2xl font-semibold text-ink">Статус участника</h2>
+
+      <div className="mt-5">
+        <TrustStatus
+          variant="card"
+          addressType={user.addressMode}
+          signals={{
+            confirmedDealsCount,
+            positiveReviewCount: reviewStats?.positive ?? 0,
+            negativeReviewCount: reviewStats?.negative ?? 0,
+            complaints: user.complaints,
+            accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
+          }}
         />
       </div>
 
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="mt-5 grid gap-3 text-sm">
         <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">Текущий уровень</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">{trustLevel.name}</dd>
-        </div>
-        <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">Подтверждённых сделок</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">{confirmedDealsCount}</dd>
-        </div>
-        <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">Телефон подтвержден</dt>
+          <dt className="text-ink/52">Телефон</dt>
           <dd className="mt-1 text-lg font-semibold text-ink">
-            {user.phoneVerified ? "Да" : "Нет"}
+            {user.phoneVerified ? "Подтверждён" : "Не подтверждён"}
           </dd>
         </div>
         <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">{publicView ? "Статус" : "Жалоб"}</dt>
+          <dt className="text-ink/52">Проверки</dt>
           <dd className="mt-1 text-lg font-semibold text-ink">
             {publicView
               ? user.complaints === 0
                 ? "Нарушений не обнаружено"
                 : "Есть проверки"
-              : user.complaints}
+              : user.complaints === 0
+                ? "Нет жалоб"
+                : "Есть жалобы"}
           </dd>
         </div>
-        <div className="rounded-2xl bg-mist p-4 sm:col-span-2">
+        <div className="rounded-2xl bg-mist p-4">
           <dt className="text-ink/52">Дата регистрации</dt>
           <dd className="mt-1 text-lg font-semibold text-ink">{user.joinedAt}</dd>
         </div>
       </dl>
 
-      {!publicView ? (
-        <div className="mt-6">
-          <TrustProgress user={user} />
-        </div>
-      ) : null}
+      <p className="mt-5 text-sm leading-6 text-ink/62">
+        Статус учитывает завершённые сделки, отзывы после встреч, возраст аккаунта,
+        жалобы и отмены. Число сделок больше не является главным показателем доверия.
+      </p>
     </section>
   );
 }

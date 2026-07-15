@@ -2,7 +2,7 @@ import { MapPin, ShieldCheck } from "lucide-react";
 import type { ChoiUser } from "@/utils/users";
 import { getDistrictLabel } from "@/utils/listings";
 import { getConfirmedDealsCount } from "@/utils/deals";
-import { TrustBadge } from "@/components/trust/TrustBadge";
+import { TrustStatus } from "@/components/trust/TrustStatus";
 
 type ProfileHeaderProps = {
   user: ChoiUser;
@@ -30,7 +30,14 @@ export function ProfileHeader({
             <div>
               <h1 className="text-3xl font-semibold text-ink">{user.name}</h1>
               <div className="mt-3">
-                <TrustBadge confirmedDealsCount={confirmedDealsCount} />
+                <TrustStatus
+                  addressType={user.addressMode}
+                  signals={{
+                    confirmedDealsCount,
+                    complaints: user.complaints,
+                    accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
+                  }}
+                />
               </div>
             </div>
             {isCurrentUser ? (
@@ -54,7 +61,9 @@ export function ProfileHeader({
               На Choi с {user.joinedAt} года
             </p>
             <p className="font-semibold text-ink">{listingsCount} объявлений</p>
-            <p className="font-semibold text-ink">{confirmedDealsCount} подтверждённых сделок</p>
+            <p className="font-semibold text-ink">
+              {user.phoneVerified ? "Телефон подтверждён" : "Телефон не подтверждён"}
+            </p>
           </div>
         </div>
       </div>
