@@ -12,6 +12,7 @@ export type NotificationType =
   | "offer_accepted"
   | "offer_declined"
   | "listing_reserved"
+  | "review_received"
   | "system";
 
 export type NotificationRow = {

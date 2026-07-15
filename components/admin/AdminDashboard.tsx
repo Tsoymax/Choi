@@ -8,14 +8,20 @@ import {
   moderateReport,
   moderateUser
 } from "@/lib/data/reports";
+import { deleteReview, hideReview } from "@/lib/data/reviews";
 import { createClient } from "@/utils/supabase/client";
 import { AdminListingsTable, type ListingActionRequest } from "@/components/admin/AdminListingsTable";
 import { AdminSidebar, type AdminTab } from "@/components/admin/AdminSidebar";
 import { AdminUsersTable, type UserActionRequest } from "@/components/admin/AdminUsersTable";
 import { ModerationActionModal } from "@/components/admin/ModerationActionModal";
 import { ReportsTable, type ReportActionRequest } from "@/components/admin/ReportsTable";
+import { ReviewsTable, type ReviewActionRequest } from "@/components/admin/ReviewsTable";
 
-type AdminActionRequest = ReportActionRequest | ListingActionRequest | UserActionRequest;
+type AdminActionRequest =
+  | ReportActionRequest
+  | ListingActionRequest
+  | UserActionRequest
+  | ReviewActionRequest;
 
 type AdminDashboardProps = {
   data: AdminData;
@@ -33,7 +39,8 @@ export function AdminDashboard({ data, currentRole }: AdminDashboardProps) {
     () => ({
       reports: data.reports.filter((report) => report.status !== "resolved").length,
       listings: data.listings.length,
-      users: data.profiles.length
+      users: data.profiles.length,
+      reviews: data.reviews.length
     }),
     [data]
   );
@@ -62,12 +69,16 @@ export function AdminDashboard({ data, currentRole }: AdminDashboardProps) {
               actionRequest.action,
               note
             )
-          : await moderateUser(
-              supabase,
-              actionRequest.id,
-              actionRequest.action,
-              note
-            );
+          : actionRequest.type === "user"
+            ? await moderateUser(
+                supabase,
+                actionRequest.id,
+                actionRequest.action,
+                note
+              )
+            : actionRequest.action === "hide"
+              ? await hideReview(supabase, actionRequest.id, note)
+              : await deleteReview(supabase, actionRequest.id);
 
     setLoading(false);
 
@@ -129,6 +140,13 @@ export function AdminDashboard({ data, currentRole }: AdminDashboardProps) {
             {activeTab === "users" ? (
               <AdminUsersTable
                 profiles={data.profiles}
+                onAction={setActionRequest}
+              />
+            ) : null}
+
+            {activeTab === "reviews" ? (
+              <ReviewsTable
+                reviews={data.reviews}
                 onAction={setActionRequest}
               />
             ) : null}

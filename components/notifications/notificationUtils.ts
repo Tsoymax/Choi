@@ -22,6 +22,7 @@ export function getNotificationIcon(type: NotificationType): LucideIcon {
   if (type === "offer_accepted") return CheckCircle2;
   if (type === "offer_declined") return XCircle;
   if (type === "listing_reserved") return PackageCheck;
+  if (type === "review_received") return ShieldCheck;
   if (type === "system") return Sparkles;
   return Bell;
 }
@@ -52,7 +53,7 @@ export function getNotificationHref(notification: NotificationRow) {
       : "/notifications";
   }
 
-  if (notification.type === "trust_level") {
+  if (notification.type === "trust_level" || notification.type === "review_received") {
     return "/profile";
   }
 

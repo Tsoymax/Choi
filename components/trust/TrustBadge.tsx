@@ -1,13 +1,17 @@
 import { Coffee } from "lucide-react";
-import { getTrustLevel } from "@/lib/trust/getTrustLevel";
+import { getTrustLevel, type TrustSignals } from "@/lib/trust/getTrustLevel";
 
 type TrustBadgeProps = {
   confirmedDealsCount: number;
+  signals?: Partial<Omit<TrustSignals, "confirmedDealsCount">>;
   compact?: boolean;
 };
 
-export function TrustBadge({ confirmedDealsCount, compact }: TrustBadgeProps) {
-  const level = getTrustLevel(confirmedDealsCount);
+export function TrustBadge({ confirmedDealsCount, signals, compact }: TrustBadgeProps) {
+  const level = getTrustLevel({
+    confirmedDealsCount,
+    ...signals
+  });
 
   return (
     <span
@@ -20,4 +24,3 @@ export function TrustBadge({ confirmedDealsCount, compact }: TrustBadgeProps) {
     </span>
   );
 }
-

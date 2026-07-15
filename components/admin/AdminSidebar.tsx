@@ -1,8 +1,8 @@
 "use client";
 
-import { Flag, ShieldAlert, Store, Users } from "lucide-react";
+import { Flag, MessageSquareHeart, ShieldAlert, Store, Users } from "lucide-react";
 
-export type AdminTab = "reports" | "listings" | "users";
+export type AdminTab = "reports" | "listings" | "users" | "reviews";
 
 type AdminSidebarProps = {
   activeTab: AdminTab;
@@ -11,13 +11,15 @@ type AdminSidebarProps = {
     reports: number;
     listings: number;
     users: number;
+    reviews: number;
   };
 };
 
 const tabs = [
   { id: "reports", label: "Жалобы", icon: Flag },
   { id: "listings", label: "Объявления", icon: Store },
-  { id: "users", label: "Пользователи", icon: Users }
+  { id: "users", label: "Пользователи", icon: Users },
+  { id: "reviews", label: "Отзывы", icon: MessageSquareHeart }
 ] as const;
 
 export function AdminSidebar({ activeTab, onTabChange, counts }: AdminSidebarProps) {

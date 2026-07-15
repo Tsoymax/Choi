@@ -3,15 +3,27 @@ import { getConfirmedDealsCount } from "@/utils/deals";
 import { getTrustLevel } from "@/lib/trust/getTrustLevel";
 import { TrustBadge } from "@/components/trust/TrustBadge";
 import { TrustProgress } from "./TrustProgress";
+import type { ReviewStats } from "@/lib/data/reviews";
 
 type TrustCardProps = {
   user: ChoiUser;
   publicView?: boolean;
+  reviewStats?: ReviewStats;
 };
 
-export function TrustCard({ user, publicView }: TrustCardProps) {
+export function TrustCard({ user, publicView, reviewStats }: TrustCardProps) {
   const confirmedDealsCount = getConfirmedDealsCount(user.id);
-  const trustLevel = getTrustLevel(confirmedDealsCount);
+  const reviewSignals = {
+    positiveReviewCount: reviewStats?.positive ?? 0,
+    negativeReviewCount: reviewStats?.negative ?? 0,
+    complaints: user.complaints,
+    accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
+  };
+  const trustSignals = {
+    confirmedDealsCount,
+    ...reviewSignals
+  };
+  const trustLevel = getTrustLevel(trustSignals);
 
   return (
     <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -22,7 +34,11 @@ export function TrustCard({ user, publicView }: TrustCardProps) {
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-ink">Текущий уровень</h2>
         </div>
-        <TrustBadge confirmedDealsCount={confirmedDealsCount} compact />
+        <TrustBadge
+          confirmedDealsCount={confirmedDealsCount}
+          signals={reviewSignals}
+          compact
+        />
       </div>
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">

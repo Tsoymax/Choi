@@ -31,13 +31,16 @@ import {
 } from "@/lib/data/messages";
 import {
   createDealFromConversation,
+  getConfirmedDealForConversation,
   getPendingDealForConversation,
   reserveListingFromConversation,
   respondToDeal,
   type RemoteDealRow
 } from "@/lib/data/deals";
+import { getReviewByDealAndReviewer, type DealReviewRow } from "@/lib/data/reviews";
 import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
+import { DealReviewForm } from "@/components/reviews/DealReviewForm";
 import { ListingChatCard } from "./ListingChatCard";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
@@ -63,6 +66,8 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [currentUserId, setCurrentUserId] = useState("");
   const [isLoadingListing, setIsLoadingListing] = useState(true);
   const [pendingDeal, setPendingDeal] = useState<RemoteDealRow | null>(null);
+  const [confirmedDeal, setConfirmedDeal] = useState<RemoteDealRow | null>(null);
+  const [currentReview, setCurrentReview] = useState<DealReviewRow | null>(null);
   const [dealStatusText, setDealStatusText] = useState("");
   const [dealError, setDealError] = useState("");
   const [isDealBusy, setIsDealBusy] = useState(false);
@@ -166,8 +171,24 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
           mappedConversation.buyerId,
           mappedConversation.sellerId
         );
+        const completedDeal = await getConfirmedDealForConversation(
+          supabase,
+          mappedConversation.listingId,
+          mappedConversation.buyerId,
+          mappedConversation.sellerId
+        );
         if (mounted) {
           setPendingDeal(activeDeal);
+          setConfirmedDeal(completedDeal);
+        }
+
+        if (completedDeal) {
+          const review = await getReviewByDealAndReviewer(supabase, completedDeal.id, userId);
+          if (mounted) {
+            setCurrentReview(review);
+          }
+        } else if (mounted) {
+          setCurrentReview(null);
         }
       }
 
@@ -285,6 +306,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       setDealError("Не удалось отправить ответ по сделке.");
     } else {
       setPendingDeal(null);
+      setConfirmedDeal(confirmed ? deal : null);
       setListing((current) =>
         current ? { ...current, status: confirmed ? "sold" : "active" } : current
       );
@@ -331,8 +353,18 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const canCreateDeal =
     isSeller &&
     !pendingDeal &&
+    !confirmedDeal &&
     (listingStatus === "active" || listingStatus === "reserved");
   const canRespondToDeal = isBuyer && pendingDeal?.status === "pending";
+  const reviewedUserId = isSeller ? conversation.buyerId : conversation.sellerId;
+  const reviewedUserName = isSeller ? conversation.buyerName : conversation.sellerName;
+  const canReviewDeal = Boolean(
+    confirmedDeal &&
+      reviewedUserId &&
+      currentUserId &&
+      reviewedUserId !== currentUserId &&
+      !currentReview
+  );
 
   return (
     <section className="flex min-h-[calc(100vh-9rem)] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:min-h-[720px]">
@@ -433,6 +465,27 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
               )}
             </div>
           )}
+
+          {canReviewDeal && confirmedDeal && reviewedUserId ? (
+            <div className="mt-3">
+              <DealReviewForm
+                dealId={confirmedDeal.id}
+                reviewedUserId={reviewedUserId}
+                reviewedUserName={reviewedUserName || "участником сделки"}
+                onSubmitted={() => {
+                  setCurrentReview({
+                    id: "submitted",
+                    deal_id: confirmedDeal.id,
+                    reviewer_id: currentUserId,
+                    reviewed_user_id: reviewedUserId,
+                    rating_type: "positive",
+                    comment: null,
+                    created_at: new Date().toISOString()
+                  });
+                }}
+              />
+            </div>
+          ) : null}
         </header>
 
         <div className="flex-1 overflow-y-auto bg-[#f7f5ef] p-4">

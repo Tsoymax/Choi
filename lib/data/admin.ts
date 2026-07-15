@@ -3,6 +3,7 @@ import type { ListingRow } from "@/lib/data/listings";
 import type { ProfileRow } from "@/lib/data/profiles";
 import type { ReportRow, ReportStatus } from "@/lib/data/reports";
 import { getReports } from "@/lib/data/reports";
+import { getAdminReviews, type AdminReviewRow } from "@/lib/data/reviews";
 
 export type AdminListingRow = ListingRow & {
   listing_images?: {
@@ -17,6 +18,7 @@ export type AdminData = {
   reports: ReportRow[];
   listings: AdminListingRow[];
   profiles: ProfileRow[];
+  reviews: AdminReviewRow[];
 };
 
 export async function getAdminReports(
@@ -53,6 +55,8 @@ export async function getAdminData(supabase: SupabaseClient): Promise<AdminData>
     getAdminProfiles(supabase)
   ]);
 
+  const reviewsResult = await getAdminReviews(supabase);
+
   if (reportsResult.error) {
     console.error("[Choi admin] reports load failed", reportsResult.error);
   }
@@ -65,9 +69,14 @@ export async function getAdminData(supabase: SupabaseClient): Promise<AdminData>
     console.error("[Choi admin] profiles load failed", profilesResult.error);
   }
 
+  if (reviewsResult.error) {
+    console.error("[Choi admin] reviews load failed", reviewsResult.error);
+  }
+
   return {
     reports: reportsResult.reports,
     listings: listingsResult.listings,
-    profiles: profilesResult.profiles
+    profiles: profilesResult.profiles,
+    reviews: reviewsResult.reviews
   };
 }

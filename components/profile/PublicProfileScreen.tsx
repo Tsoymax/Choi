@@ -9,6 +9,10 @@ import { ListingCard } from "@/components/ListingCard";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { TrustCard } from "@/components/profile/TrustCard";
 import { ReportModal } from "@/components/reports/ReportModal";
+import { ReviewSummary } from "@/components/reviews/ReviewSummary";
+import { getReviewStatsForUser, type ReviewStats } from "@/lib/data/reviews";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { createClient } from "@/utils/supabase/client";
 import type { Listing } from "@/utils/listings";
 import { getAllListings } from "@/utils/listings";
 import type { ChoiUser } from "@/utils/users";
@@ -23,10 +27,40 @@ export function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
   const [query, setQuery] = useState("");
   const [user, setUser] = useState<ChoiUser | undefined>(() => getUserById(userId));
   const [listings, setListings] = useState<Listing[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStats>({
+    total: 0,
+    positive: 0,
+    negative: 0,
+    topTags: [],
+    recentComments: []
+  });
 
   useEffect(() => {
     setUser(getUserById(userId));
     setListings(getAllListings());
+  }, [userId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadReviewStats() {
+      if (!hasSupabaseBrowserEnv()) {
+        return;
+      }
+
+      const supabase = createClient();
+      const stats = await getReviewStatsForUser(supabase, userId);
+
+      if (mounted) {
+        setReviewStats(stats);
+      }
+    }
+
+    void loadReviewStats();
+
+    return () => {
+      mounted = false;
+    };
   }, [userId]);
 
   const activeListings = useMemo(
@@ -83,7 +117,8 @@ export function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
         <div className="grid items-start gap-8 lg:grid-cols-[420px_1fr]">
           <div className="space-y-6">
             <ProfileHeader user={user} listingsCount={activeListings.length} />
-            <TrustCard user={user} publicView />
+            <TrustCard user={user} publicView reviewStats={reviewStats} />
+            <ReviewSummary stats={reviewStats} />
             <div className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
               <ReportModal
                 targetType="user"

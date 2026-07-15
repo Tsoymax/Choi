@@ -18,17 +18,41 @@ export async function getPendingDealForConversation(
   buyerId?: string,
   sellerId?: string
 ) {
+  return getDealForConversation(supabase, listingId, buyerId, sellerId, "pending");
+}
+
+export async function getConfirmedDealForConversation(
+  supabase: SupabaseClient,
+  listingId: string,
+  buyerId?: string,
+  sellerId?: string
+) {
+  return getDealForConversation(supabase, listingId, buyerId, sellerId, "confirmed");
+}
+
+export async function getDealForConversation(
+  supabase: SupabaseClient,
+  listingId: string,
+  buyerId?: string,
+  sellerId?: string,
+  status?: RemoteDealStatus
+) {
   if (!buyerId || !sellerId) {
     return null;
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("deals")
     .select("*")
     .eq("listing_id", listingId)
     .eq("buyer_id", buyerId)
-    .eq("seller_id", sellerId)
-    .eq("status", "pending")
+    .eq("seller_id", sellerId);
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
