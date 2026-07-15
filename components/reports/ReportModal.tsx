@@ -114,36 +114,38 @@ export function ReportModal({
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-[70] bg-ink/35 p-4 backdrop-blur-sm">
-          <div className="mx-auto mt-10 max-w-lg rounded-[28px] bg-white p-6 shadow-[0_24px_90px_rgba(24,32,29,0.24)] sm:mt-20">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="inline-flex items-center gap-2 rounded-full bg-[#fff2ef] px-3 py-1 text-xs font-semibold text-coral">
-                  <AlertTriangle size={14} />
-                  Модерация Choi
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold text-ink">
-                  {targetType === "listing"
-                    ? "Пожаловаться на объявление"
-                    : "Пожаловаться на пользователя"}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-ink/58">
-                  Расскажите, что случилось. Мы проверим жалобу и при необходимости
-                  скроем объявление или ограничим профиль.
-                </p>
+        <div className="fixed inset-0 z-[70] overflow-y-auto bg-ink/35 p-4 backdrop-blur-sm">
+          <div className="mx-auto flex max-h-[calc(100vh-2rem)] max-w-lg flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_24px_90px_rgba(24,32,29,0.24)] sm:my-10">
+            <div className="shrink-0 px-6 pt-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="inline-flex items-center gap-2 rounded-full bg-[#fff2ef] px-3 py-1 text-xs font-semibold text-coral">
+                    <AlertTriangle size={14} />
+                    Модерация Choi
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold text-ink">
+                    {targetType === "listing"
+                      ? "Пожаловаться на объявление"
+                      : "Пожаловаться на пользователя"}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-ink/58">
+                    Расскажите, что случилось. Мы проверим жалобу и при необходимости
+                    скроем объявление или ограничим профиль.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={close}
+                  className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-full bg-mist text-ink"
+                  aria-label="Закрыть"
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={close}
-                className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-full bg-mist text-ink"
-                aria-label="Закрыть"
-              >
-                <X size={18} />
-              </button>
             </div>
 
             {success ? (
-              <div className="mt-6 rounded-[22px] bg-mist p-5 text-center">
+              <div className="m-6 rounded-[22px] bg-mist p-5 text-center">
                 <CheckCircle2 className="mx-auto text-leaf" size={34} />
                 <h3 className="mt-3 text-xl font-semibold text-ink">
                   Спасибо. Мы проверим информацию.
@@ -158,33 +160,33 @@ export function ReportModal({
               </div>
             ) : (
               <>
-                <div className="mt-6">
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-6">
                   <ReportReasonSelect
                     reasons={reasons}
                     value={reason}
                     onChange={setReason}
                   />
+
+                  <label className="mt-5 block">
+                    <span className="text-sm font-semibold text-ink">Комментарий</span>
+                    <textarea
+                      value={comment}
+                      onChange={(event) => setComment(event.target.value)}
+                      maxLength={500}
+                      rows={4}
+                      placeholder="Можно добавить детали. Например, что именно кажется подозрительным."
+                      className="mt-2 w-full resize-none rounded-2xl border border-ink/10 bg-white p-4 text-sm text-ink shadow-sm outline-none transition focus:border-leaf"
+                    />
+                  </label>
+
+                  {error ? (
+                    <p className="mt-4 rounded-2xl bg-[#fff2ef] p-3 text-sm font-semibold text-coral">
+                      {error}
+                    </p>
+                  ) : null}
                 </div>
 
-                <label className="mt-5 block">
-                  <span className="text-sm font-semibold text-ink">Комментарий</span>
-                  <textarea
-                    value={comment}
-                    onChange={(event) => setComment(event.target.value)}
-                    maxLength={500}
-                    rows={4}
-                    placeholder="Можно добавить детали. Например, что именно кажется подозрительным."
-                    className="mt-2 w-full resize-none rounded-2xl border border-ink/10 bg-white p-4 text-sm text-ink shadow-sm outline-none transition focus:border-leaf"
-                  />
-                </label>
-
-                {error ? (
-                  <p className="mt-4 rounded-2xl bg-[#fff2ef] p-3 text-sm font-semibold text-coral">
-                    {error}
-                  </p>
-                ) : null}
-
-                <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                <div className="grid shrink-0 gap-2 border-t border-ink/10 bg-white p-6 sm:grid-cols-2">
                   <button
                     type="button"
                     disabled={isSubmitting}
