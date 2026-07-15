@@ -30,6 +30,15 @@ export async function getConfirmedDealForConversation(
   return getDealForConversation(supabase, listingId, buyerId, sellerId, "confirmed");
 }
 
+export async function getLatestDealForConversation(
+  supabase: SupabaseClient,
+  listingId: string,
+  buyerId?: string,
+  sellerId?: string
+) {
+  return getDealForConversation(supabase, listingId, buyerId, sellerId);
+}
+
 export async function getDealForConversation(
   supabase: SupabaseClient,
   listingId: string,

@@ -33,6 +33,7 @@ import {
 import {
   createDealFromConversation,
   getConfirmedDealForConversation,
+  getLatestDealForConversation,
   getPendingDealForConversation,
   reserveListingFromConversation,
   respondToDeal,
@@ -69,6 +70,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [isLoadingListing, setIsLoadingListing] = useState(true);
   const [pendingDeal, setPendingDeal] = useState<RemoteDealRow | null>(null);
   const [confirmedDeal, setConfirmedDeal] = useState<RemoteDealRow | null>(null);
+  const [terminalDeal, setTerminalDeal] = useState<RemoteDealRow | null>(null);
   const [currentReview, setCurrentReview] = useState<DealReviewRow | null>(null);
   const [dealStatusText, setDealStatusText] = useState("");
   const [dealError, setDealError] = useState("");
@@ -181,9 +183,20 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
           mappedConversation.buyerId,
           mappedConversation.sellerId
         );
+        const latestDeal = await getLatestDealForConversation(
+          supabase,
+          mappedConversation.listingId,
+          mappedConversation.buyerId,
+          mappedConversation.sellerId
+        );
         if (mounted) {
           setPendingDeal(activeDeal);
           setConfirmedDeal(completedDeal);
+          setTerminalDeal(
+            latestDeal && (latestDeal.status === "confirmed" || latestDeal.status === "cancelled")
+              ? latestDeal
+              : null
+          );
         }
 
         if (completedDeal) {
@@ -311,6 +324,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     } else {
       setPendingDeal(null);
       setConfirmedDeal(confirmed ? deal : null);
+      setTerminalDeal(deal);
       setListing((current) =>
         current ? { ...current, status: confirmed ? "sold" : "active" } : current
       );
@@ -335,9 +349,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     return (
       <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
         <h1 className="text-2xl font-semibold text-ink">Диалог не найден</h1>
-        <p className="mt-2 text-ink/58">
-          Откройте объявление и напишите продавцу ещё раз.
-        </p>
+        <p className="mt-2 text-ink/58">Откройте объявление и напишите продавцу ещё раз.</p>
         <Link
           href="/"
           className="focus-ring mt-6 inline-flex h-12 items-center rounded-full bg-leaf px-6 text-sm font-semibold text-white"
@@ -353,11 +365,13 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const isSeller = isRemoteChat && currentUserId === conversation.sellerId;
   const isBuyer = isRemoteChat && currentUserId === conversation.buyerId;
   const listingStatus = listing.status ?? "active";
-  const canReserveListing = isSeller && listingStatus === "active";
+  const dealIsClosed = terminalDeal?.status === "confirmed" || terminalDeal?.status === "cancelled";
+  const canReserveListing = isSeller && listingStatus === "active" && !dealIsClosed;
   const canCreateDeal =
     isSeller &&
     !pendingDeal &&
     !confirmedDeal &&
+    !dealIsClosed &&
     (listingStatus === "active" || listingStatus === "reserved");
   const canRespondToDeal = isBuyer && pendingDeal?.status === "pending";
   const reviewedUserId = isSeller ? conversation.buyerId : conversation.sellerId;
@@ -403,9 +417,21 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
             <ListingChatCard listing={listing} />
           </div>
 
-          {(isSeller || canRespondToDeal || dealStatusText || dealError) && (
+          {(isSeller || canRespondToDeal || terminalDeal || dealStatusText || dealError) && (
             <div className="mt-3 rounded-[20px] border border-ink/10 bg-mist/70 p-3">
-              {isSeller && (
+              {terminalDeal ? (
+                <div className="mb-3 rounded-2xl bg-white p-3">
+                  <p className="text-sm font-semibold text-ink">
+                    {terminalDeal.status === "confirmed"
+                      ? "Сделка в истории: совершилась"
+                      : "Сделка в истории: сорвалась"}
+                  </p>
+                  <p className="mt-1 text-sm text-ink/58">
+                    Завершённую сделку нельзя вернуть или изменить. Для новой договорённости нужен новый сценарий.
+                  </p>
+                </div>
+              ) : null}
+              {isSeller && !dealIsClosed && (
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -515,3 +541,4 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     </section>
   );
 }
+
