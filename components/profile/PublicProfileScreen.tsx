@@ -31,9 +31,10 @@ export function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
 
   const activeListings = useMemo(
     () =>
-      listings.filter(
-        (listing) => listing.sellerId === userId && (listing.status ?? "active") === "active"
-      ),
+      listings.filter((listing) => {
+        const status = listing.status ?? "active";
+        return listing.sellerId === userId && (status === "active" || status === "reserved");
+      }),
     [listings, userId]
   );
 

@@ -75,7 +75,7 @@ export function ListingCard({ product, language }: ListingCardProps) {
               return;
             }
 
-            setFavorite(isFavorite(product.id) ? false : true);
+            setFavorite(!isFavorite(product.id));
             toggleFavorite(product.id);
           }}
           className={`focus-ring absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full shadow-sm transition sm:right-4 sm:top-4 sm:h-10 sm:w-10 ${
@@ -94,8 +94,8 @@ export function ListingCard({ product, language }: ListingCardProps) {
           {formatListingPrice(product)}
         </strong>
         {product.status === "reserved" ? (
-          <span className="mt-2 inline-flex rounded-full bg-mist px-3 py-1 text-xs font-semibold text-leaf">
-            Договорились
+          <span className="mt-2 inline-flex rounded-full bg-leaf/10 px-3 py-1 text-xs font-semibold text-leaf">
+            Забронировано
           </span>
         ) : null}
         <p className="mt-3 flex items-center gap-1 text-sm text-ink/58">

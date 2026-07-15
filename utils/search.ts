@@ -110,7 +110,8 @@ export function filterListings(
   const location = currentLocation ?? getLocationForDistrict(homeDistrict);
 
   const filteredListings = listings.filter((listing) => {
-    if ((listing.status ?? "active") !== "active") return false;
+    const status = listing.status ?? "active";
+    if (status !== "active" && status !== "reserved") return false;
     if (!matchesQuery(listing, filters.q)) return false;
     if (!matchesCategory(listing, filters.category)) return false;
     if (!matchesDistrict(listing, filters.district)) return false;

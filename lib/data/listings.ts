@@ -143,7 +143,7 @@ export async function getActiveListings(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("listings")
     .select("*, listing_images(*), profiles!listings_user_id_fkey(name)")
-    .eq("status", "active")
+    .in("status", ["active", "reserved"])
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -151,7 +151,7 @@ export async function getActiveListings(supabase: SupabaseClient) {
     const { data: fallbackData, error: fallbackError } = await supabase
       .from("listings")
       .select("*")
-      .eq("status", "active")
+      .in("status", ["active", "reserved"])
       .order("created_at", { ascending: false });
 
     if (fallbackError) {

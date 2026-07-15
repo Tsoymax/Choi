@@ -59,7 +59,10 @@ export function MarketplaceExperience({
   useEffect(() => {
     const syncLocalProducts = () =>
       setLocalProducts(
-        getStoredListings().filter((listing) => (listing.status ?? "active") === "active")
+        getStoredListings().filter((listing) => {
+          const status = listing.status ?? "active";
+          return status === "active" || status === "reserved";
+        })
       );
 
     syncLocalProducts();
@@ -138,7 +141,8 @@ export function MarketplaceExperience({
 
     return allProducts
       .filter((product) => {
-        if ((product.status ?? "active") !== "active") {
+        const status = product.status ?? "active";
+        if (status !== "active" && status !== "reserved") {
           return false;
         }
 
