@@ -157,6 +157,32 @@ export function ListingDetail({
   const title = listing.titleRu ?? listing.title;
   const images = listing.images?.length ? listing.images : [listing.image];
   const isOwner = listing.sellerId === currentUserId;
+  const isModeratedAway = listing.status === "hidden" || listing.status === "blocked";
+
+  if (isModeratedAway && !isOwner) {
+    return (
+      <main className="min-h-screen bg-[#f7f5ef]">
+        <Header
+          language={language}
+          onLanguageChange={setLanguage}
+          query={query}
+          onQueryChange={setQuery}
+        />
+        <div className="mx-auto mt-10 max-w-3xl rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+          <h1 className="text-3xl font-semibold text-ink">Объявление недоступно</h1>
+          <p className="mt-3 text-ink/62">
+            Оно скрыто модерацией или больше не опубликовано.
+          </p>
+          <Link
+            href="/"
+            className="focus-ring mt-6 inline-flex h-12 items-center justify-center rounded-full bg-leaf px-6 text-sm font-semibold text-white"
+          >
+            Вернуться на главную
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#f7f5ef]">

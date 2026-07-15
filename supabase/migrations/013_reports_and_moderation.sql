@@ -106,6 +106,15 @@ as $$
   select role from public.profiles where id = auth.uid();
 $$;
 
+create or replace function public.profile_role_for(p_user_id uuid)
+returns text
+language sql
+security definer
+set search_path = public
+as $$
+  select role from public.profiles where id = p_user_id;
+$$;
+
 create or replace function public.current_profile_is_blocked()
 returns boolean
 language sql
@@ -210,7 +219,35 @@ create policy profiles_update_moderator
 on public.profiles for update
 to authenticated
 using (public.is_moderator())
+with check (
+  public.is_moderator()
+  and (public.is_admin() or role = public.profile_role_for(id))
+);
+
+drop policy if exists listings_select_moderator on public.listings;
+create policy listings_select_moderator
+on public.listings for select
+to authenticated
+using (public.is_moderator());
+
+drop policy if exists listings_update_moderator on public.listings;
+create policy listings_update_moderator
+on public.listings for update
+to authenticated
+using (public.is_moderator())
 with check (public.is_moderator());
+
+drop policy if exists listings_delete_moderator on public.listings;
+create policy listings_delete_moderator
+on public.listings for delete
+to authenticated
+using (public.is_moderator());
+
+drop policy if exists listing_images_select_moderator on public.listing_images;
+create policy listing_images_select_moderator
+on public.listing_images for select
+to authenticated
+using (public.is_moderator());
 
 create or replace function public.submit_report(
   p_listing_id uuid,
@@ -555,6 +592,7 @@ grant execute on function public.moderate_user(uuid, text, text) to authenticate
 grant execute on function public.is_moderator() to authenticated;
 grant execute on function public.is_admin() to authenticated;
 grant execute on function public.current_profile_role() to authenticated;
+grant execute on function public.profile_role_for(uuid) to authenticated;
 grant execute on function public.current_profile_is_blocked() to authenticated;
 grant execute on function public.current_profile_blocked_until() to authenticated;
 grant execute on function public.current_profile_block_reason() to authenticated;

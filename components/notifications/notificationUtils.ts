@@ -41,7 +41,10 @@ export function getNotificationHref(notification: NotificationRow) {
   }
 
   if (
-    notification.type === "deal_confirmation" &&
+    (notification.type === "deal_confirmation" ||
+      notification.type === "deal_confirmed" ||
+      notification.type === "deal_cancelled" ||
+      notification.type === "listing_reserved") &&
     (notification.conversation_id || notification.deal_id)
   ) {
     return notification.conversation_id

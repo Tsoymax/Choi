@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Handshake, PackageCheck, XCircle } from "lucide-react";
 import type { Conversation, Message } from "@/utils/chat";
 import {
   CHAT_EVENT,
@@ -29,6 +29,13 @@ import {
   mapMessageRow,
   sendMessage as sendRemoteMessage
 } from "@/lib/data/messages";
+import {
+  createDealFromConversation,
+  getPendingDealForConversation,
+  reserveListingFromConversation,
+  respondToDeal,
+  type RemoteDealRow
+} from "@/lib/data/deals";
 import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
 import { ListingChatCard } from "./ListingChatCard";
@@ -55,6 +62,10 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   });
   const [currentUserId, setCurrentUserId] = useState("");
   const [isLoadingListing, setIsLoadingListing] = useState(true);
+  const [pendingDeal, setPendingDeal] = useState<RemoteDealRow | null>(null);
+  const [dealStatusText, setDealStatusText] = useState("");
+  const [dealError, setDealError] = useState("");
+  const [isDealBusy, setIsDealBusy] = useState(false);
   const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const confirmedDealsCount = listing?.sellerId ? getConfirmedDealsCount(listing.sellerId) : 0;
@@ -129,6 +140,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
         const mappedConversation = mapConversationRow(remoteConversation, userId);
         setConversation(mappedConversation);
+
         if (mappedConversation.listing) {
           setListing(mappedConversation.listing as Listing);
         } else {
@@ -146,6 +158,16 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
         if (mounted) {
           setMessages(remoteMessages.map((message) => mapMessageRow(message, userId)));
           setIsLoadingListing(false);
+        }
+
+        const activeDeal = await getPendingDealForConversation(
+          supabase,
+          mappedConversation.listingId,
+          mappedConversation.buyerId,
+          mappedConversation.sellerId
+        );
+        if (mounted) {
+          setPendingDeal(activeDeal);
         }
       }
 
@@ -202,6 +224,78 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     }
   }
 
+  async function handleReserveListing() {
+    if (!conversation?.remote || isDealBusy) {
+      return;
+    }
+
+    setIsDealBusy(true);
+    setDealError("");
+    setDealStatusText("");
+
+    const supabase = createClient();
+    const { error } = await reserveListingFromConversation(supabase, conversation.id);
+
+    if (error) {
+      setDealError("Не удалось забронировать объявление. Попробуйте ещё раз.");
+    } else {
+      setListing((current) => current ? { ...current, status: "reserved" } : current);
+      setDealStatusText("Объявление забронировано для покупателя.");
+    }
+
+    setIsDealBusy(false);
+  }
+
+  async function handleCreateDeal() {
+    if (!conversation?.remote || isDealBusy) {
+      return;
+    }
+
+    setIsDealBusy(true);
+    setDealError("");
+    setDealStatusText("");
+
+    const supabase = createClient();
+    const { deal, error } = await createDealFromConversation(supabase, conversation.id);
+
+    if (error || !deal) {
+      setDealError("Не удалось отправить подтверждение сделки.");
+    } else {
+      setPendingDeal(deal);
+      setListing((current) => current ? { ...current, status: "reserved" } : current);
+      setDealStatusText("Покупателю отправлено подтверждение сделки.");
+    }
+
+    setIsDealBusy(false);
+  }
+
+  async function handleRespondToDeal(confirmed: boolean) {
+    if (!pendingDeal || isDealBusy) {
+      return;
+    }
+
+    setIsDealBusy(true);
+    setDealError("");
+    setDealStatusText("");
+
+    const supabase = createClient();
+    const { deal, error } = await respondToDeal(supabase, pendingDeal.id, confirmed);
+
+    if (error || !deal) {
+      setDealError("Не удалось отправить ответ по сделке.");
+    } else {
+      setPendingDeal(null);
+      setListing((current) =>
+        current ? { ...current, status: confirmed ? "sold" : "active" } : current
+      );
+      setDealStatusText(
+        confirmed ? "Сделка подтверждена. Спасибо!" : "Сделка отменена."
+      );
+    }
+
+    setIsDealBusy(false);
+  }
+
   if (conversation && !listing && isLoadingListing) {
     return (
       <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -215,7 +309,9 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     return (
       <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
         <h1 className="text-2xl font-semibold text-ink">Диалог не найден</h1>
-        <p className="mt-2 text-ink/58">Откройте объявление и напишите продавцу ещё раз.</p>
+        <p className="mt-2 text-ink/58">
+          Откройте объявление и напишите продавцу ещё раз.
+        </p>
         <Link
           href="/"
           className="focus-ring mt-6 inline-flex h-12 items-center rounded-full bg-leaf px-6 text-sm font-semibold text-white"
@@ -227,6 +323,16 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   }
 
   const title = listing.titleRu ?? listing.title;
+  const isRemoteChat = Boolean(conversation.remote);
+  const isSeller = isRemoteChat && currentUserId === conversation.sellerId;
+  const isBuyer = isRemoteChat && currentUserId === conversation.buyerId;
+  const listingStatus = listing.status ?? "active";
+  const canReserveListing = isSeller && listingStatus === "active";
+  const canCreateDeal =
+    isSeller &&
+    !pendingDeal &&
+    (listingStatus === "active" || listingStatus === "reserved");
+  const canRespondToDeal = isBuyer && pendingDeal?.status === "pending";
 
   return (
     <section className="flex min-h-[calc(100vh-9rem)] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:min-h-[720px]">
@@ -256,9 +362,77 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
               <p className="truncate text-sm text-ink/52">{title}</p>
             </div>
           </div>
+
           <div className="mt-3">
             <ListingChatCard listing={listing} />
           </div>
+
+          {(isSeller || canRespondToDeal || dealStatusText || dealError) && (
+            <div className="mt-3 rounded-[20px] border border-ink/10 bg-mist/70 p-3">
+              {isSeller && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleReserveListing}
+                    disabled={!canReserveListing || isDealBusy}
+                    className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                  >
+                    <PackageCheck size={17} />
+                    Забронировать
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateDeal}
+                    disabled={!canCreateDeal || isDealBusy}
+                    className="focus-ring inline-flex h-10 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                  >
+                    <Handshake size={17} />
+                    Отправить сделку
+                  </button>
+                </div>
+              )}
+
+              {canRespondToDeal && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      Продавец отметил сделку
+                    </p>
+                    <p className="text-sm text-ink/58">
+                      Подтвердите, состоялась ли встреча и покупка.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleRespondToDeal(true)}
+                      disabled={isDealBusy}
+                      className="focus-ring inline-flex h-10 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-sm disabled:pointer-events-none disabled:opacity-45"
+                    >
+                      <CheckCircle2 size={17} />
+                      Подтвердить
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRespondToDeal(false)}
+                      disabled={isDealBusy}
+                      className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm disabled:pointer-events-none disabled:opacity-45"
+                    >
+                      <XCircle size={17} />
+                      Не состоялась
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {dealStatusText && (
+                <p className="mt-2 text-sm font-semibold text-leaf">{dealStatusText}</p>
+              )}
+              {dealError && (
+                <p className="mt-2 text-sm font-semibold text-red-600">{dealError}</p>
+              )}
+            </div>
+          )}
         </header>
 
         <div className="flex-1 overflow-y-auto bg-[#f7f5ef] p-4">

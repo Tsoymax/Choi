@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
-import type { StoredListing } from "@/utils/listings";
+import type { Listing, ListingStatus } from "@/utils/listings";
 import {
   LISTINGS_EVENT,
   deleteStoredListing,
@@ -12,24 +12,62 @@ import {
   updateStoredListingStatus
 } from "@/utils/listings";
 import { CURRENT_USER_ID } from "@/utils/users";
+import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import {
+  deleteListing as deleteRemoteListing,
+  getListingsByUserId,
+  mapListingRowToProduct,
+  updateListingStatus
+} from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 
 type ListingTab = "active" | "sold";
 
 export function MyListings() {
-  const [listings, setListings] = useState<StoredListing[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [activeTab, setActiveTab] = useState<ListingTab>("active");
 
   useEffect(() => {
-    const syncListings = () =>
-      setListings(
-        getStoredListings().filter((listing) => listing.sellerId === CURRENT_USER_ID)
+    let mounted = true;
+
+    async function syncListings() {
+      const localListings = getStoredListings().filter(
+        (listing) => listing.sellerId === CURRENT_USER_ID
       );
 
-    syncListings();
+      if (!hasSupabaseBrowserEnv()) {
+        setListings(localListings);
+        return;
+      }
+
+      const supabase = createClient();
+      const user = await getCurrentUser();
+
+      if (!user) {
+        if (mounted) {
+          setListings(localListings);
+        }
+        return;
+      }
+
+      const remoteListings = await getListingsByUserId(supabase, user.id);
+
+      if (!mounted) {
+        return;
+      }
+
+      setListings([
+        ...remoteListings.map((listing) => mapListingRowToProduct(listing) as Listing),
+        ...localListings
+      ]);
+    }
+
+    void syncListings();
     window.addEventListener(LISTINGS_EVENT, syncListings);
     window.addEventListener("storage", syncListings);
 
     return () => {
+      mounted = false;
       window.removeEventListener(LISTINGS_EVENT, syncListings);
       window.removeEventListener("storage", syncListings);
     };
@@ -39,6 +77,36 @@ export function MyListings() {
     () => listings.filter((listing) => (listing.status ?? "active") === activeTab),
     [activeTab, listings]
   );
+
+  async function changeListingStatus(listing: Listing, status: ListingStatus) {
+    if (hasSupabaseBrowserEnv() && !listing.id.startsWith("local-")) {
+      const supabase = createClient();
+      const result = await updateListingStatus(supabase, listing.id, status);
+
+      if (!result.error) {
+        window.dispatchEvent(new Event(LISTINGS_EVENT));
+      }
+
+      return;
+    }
+
+    updateStoredListingStatus(listing.id, status);
+  }
+
+  async function deleteListing(listing: Listing) {
+    if (hasSupabaseBrowserEnv() && !listing.id.startsWith("local-")) {
+      const supabase = createClient();
+      const result = await deleteRemoteListing(supabase, listing.id);
+
+      if (!result.error) {
+        window.dispatchEvent(new Event(LISTINGS_EVENT));
+      }
+
+      return;
+    }
+
+    deleteStoredListing(listing.id);
+  }
 
   return (
     <section className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-6">
@@ -81,8 +149,8 @@ export function MyListings() {
                 <button
                   type="button"
                   onClick={() =>
-                    updateStoredListingStatus(
-                      listing.id,
+                    void changeListingStatus(
+                      listing,
                       (listing.status ?? "active") === "active" ? "sold" : "active"
                     )
                   }
@@ -94,7 +162,7 @@ export function MyListings() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteStoredListing(listing.id)}
+                  onClick={() => void deleteListing(listing)}
                   className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#fff2ef] px-3 text-sm font-semibold text-coral transition hover:bg-[#ffe4dc]"
                 >
                   <Trash2 size={16} />
