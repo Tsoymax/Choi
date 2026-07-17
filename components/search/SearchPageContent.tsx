@@ -5,20 +5,26 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
 import { SearchBar } from "@/components/SearchBar";
+import { ActiveFilters } from "@/components/search/ActiveFilters";
 import { MobileFilters } from "@/components/search/MobileFilters";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
+import { SearchSuggestions } from "@/components/search/SearchSuggestions";
 import { SortSelect } from "@/components/search/SortSelect";
 import type { Listing } from "@/utils/listings";
 import { LISTINGS_EVENT, getAllListings } from "@/utils/listings";
-import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 import {
+  SEARCH_HISTORY_EVENT,
+  clearSearchHistory,
   defaultSearchFilters,
   filterListings,
   filtersFromSearchParams,
   filtersToSearchParams,
+  getSearchHistory,
+  saveSearchHistoryItem,
   type SearchFiltersState
 } from "@/utils/search";
 import type { Coordinates } from "@/lib/location/distance";
@@ -37,6 +43,8 @@ export function SearchPageContent() {
   const [currentLocation, setCurrentLocation] = useState<Coordinates>(
     getLocationForDistrict("yunusabad")
   );
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const filters = useMemo(
     () => filtersFromSearchParams(new URLSearchParams(searchParams.toString())),
     [searchParams]
@@ -46,6 +54,55 @@ export function SearchPageContent() {
   useEffect(() => {
     setDraftQuery(filters.q);
   }, [filters.q]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncUser() {
+      const user = await getCurrentUser();
+      if (!mounted) {
+        return;
+      }
+
+      setCurrentUserId(user?.id ?? null);
+      setSearchHistory(getSearchHistory(user?.id));
+    }
+
+    void syncUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncHistory = () => setSearchHistory(getSearchHistory(currentUserId));
+
+    syncHistory();
+    window.addEventListener(SEARCH_HISTORY_EVENT, syncHistory);
+    window.addEventListener("storage", syncHistory);
+
+    return () => {
+      window.removeEventListener(SEARCH_HISTORY_EVENT, syncHistory);
+      window.removeEventListener("storage", syncHistory);
+    };
+  }, [currentUserId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (draftQuery !== filters.q) {
+        updateFilters({ q: draftQuery });
+      }
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [draftQuery]);
+
+  useEffect(() => {
+    if (filters.q.trim()) {
+      saveSearchHistoryItem(currentUserId, filters.q);
+    }
+  }, [currentUserId, filters.q]);
 
   useEffect(() => {
     async function syncListings() {
@@ -108,16 +165,57 @@ export function SearchPageContent() {
   );
 
   function updateFilters(patch: Partial<SearchFiltersState>) {
-    const nextFilters = { ...filters, ...patch };
+    const dynamicReset: Partial<SearchFiltersState> =
+      patch.category !== undefined
+        ? {
+            subcategory: "",
+            brand: "",
+            model: "",
+            yearFrom: "",
+            yearTo: "",
+            mileageFrom: "",
+            mileageTo: "",
+            transmission: "",
+            fuel: "",
+            drive: "",
+            body: "",
+            engine: "",
+            color: "",
+            exchange: "",
+            dealType: "",
+            rooms: "",
+            areaFrom: "",
+            areaTo: "",
+            floor: "",
+            renovation: "",
+            furniture: "",
+            parking: "",
+            condition: "",
+            memory: "",
+            warranty: "",
+            gender: "",
+            size: ""
+          }
+        : {};
+    const nextFilters = { ...filters, ...dynamicReset, ...patch };
     const nextParams = filtersToSearchParams(nextFilters);
     router.replace(`/search${nextParams.toString() ? `?${nextParams}` : ""}` as never, {
       scroll: false
     });
   }
 
+  function removeFilter(key: keyof SearchFiltersState) {
+    updateFilters({ [key]: defaultSearchFilters[key] } as Partial<SearchFiltersState>);
+  }
+
   function resetFilters() {
     setDraftQuery("");
     router.replace("/search" as never, { scroll: false });
+  }
+
+  function selectSuggestedQuery(nextQuery: string) {
+    setDraftQuery(nextQuery);
+    updateFilters({ q: nextQuery });
   }
 
   return (
@@ -144,6 +242,20 @@ export function SearchPageContent() {
             onQueryChange={setDraftQuery}
             onSearch={() => updateFilters({ q: draftQuery })}
           />
+          {!filters.q ? (
+            <SearchSuggestions
+              history={searchHistory}
+              onSelect={selectSuggestedQuery}
+              onClearHistory={
+                currentUserId
+                  ? () => {
+                      clearSearchHistory(currentUserId);
+                      setSearchHistory([]);
+                    }
+                  : undefined
+              }
+            />
+          ) : null}
         </div>
 
         <div className="mb-6 flex flex-col gap-4 rounded-[24px] bg-white p-4 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:flex-row sm:items-end sm:justify-between">
@@ -169,6 +281,12 @@ export function SearchPageContent() {
             </div>
           </div>
         </div>
+
+        <ActiveFilters
+          filters={filters}
+          onRemove={removeFilter}
+          onReset={resetFilters}
+        />
 
         <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
           <SearchFilters
