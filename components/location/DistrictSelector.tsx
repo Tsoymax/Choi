@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, LocateFixed, MapPin, X } from "lucide-react";
 import { districtCoordinates } from "@/data/districtCoordinates";
 
@@ -23,6 +23,24 @@ export function DistrictSelector({
   const [gpsLoading, setGpsLoading] = useState(false);
   const currentDistrict =
     districtCoordinates.find((item) => item.id === district) ?? districtCoordinates[0];
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
 
   async function selectDistrict(nextDistrict: string) {
     await onDistrictChange(nextDistrict);
@@ -58,8 +76,14 @@ export function DistrictSelector({
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm">
-          <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-[0_-18px_60px_rgba(24,32,29,0.18)] sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
+        <div
+          className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-[0_-18px_60px_rgba(24,32,29,0.18)] sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[28px]"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold text-ink">Где вы находитесь?</h2>
