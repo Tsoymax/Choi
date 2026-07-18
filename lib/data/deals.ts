@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { mapListingRowToProduct, type ListingProduct, type ListingWithRelations } from "@/lib/data/listings";
+import type { ProfileRow } from "@/lib/data/profiles";
 
 export type RemoteDealStatus = "pending" | "confirmed" | "cancelled";
 
@@ -10,6 +12,14 @@ export type RemoteDealRow = {
   status: RemoteDealStatus;
   created_at: string | null;
   confirmed_at: string | null;
+};
+
+export type DealHistoryItem = {
+  deal: RemoteDealRow;
+  listing: ListingProduct | null;
+  seller: Pick<ProfileRow, "id" | "name" | "district"> | null;
+  buyer: Pick<ProfileRow, "id" | "name" | "district"> | null;
+  role: "seller" | "buyer";
 };
 
 export type ReservationStatus = "pending" | "accepted" | "declined" | "cancelled" | "expired";
@@ -102,6 +112,64 @@ export async function getDealById(supabase: SupabaseClient, dealId: string) {
   }
 
   return data as RemoteDealRow | null;
+}
+
+export async function getDealHistoryForUser(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<DealHistoryItem[]> {
+  const { data: deals, error } = await supabase
+    .from("deals")
+    .select("*")
+    .or(`seller_id.eq.${userId},buyer_id.eq.${userId}`)
+    .in("status", ["confirmed", "cancelled"])
+    .order("created_at", { ascending: false });
+
+  if (error || !deals?.length) {
+    return [];
+  }
+
+  const typedDeals = deals as RemoteDealRow[];
+  const listingIds = Array.from(new Set(typedDeals.map((deal) => deal.listing_id)));
+  const profileIds = Array.from(
+    new Set(
+      typedDeals
+        .flatMap((deal) => [deal.seller_id, deal.buyer_id])
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  const [{ data: listings }, { data: profiles }] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("*, listing_images(*), listing_attributes(*), profiles!listings_user_id_fkey(name)")
+      .in("id", listingIds),
+    supabase
+      .from("profiles")
+      .select("id,name,district")
+      .in("id", profileIds)
+  ]);
+
+  const listingById = new Map(
+    ((listings ?? []) as ListingWithRelations[]).map((listing) => [
+      listing.id,
+      mapListingRowToProduct(listing)
+    ])
+  );
+  const profileById = new Map(
+    ((profiles ?? []) as Pick<ProfileRow, "id" | "name" | "district">[]).map((profile) => [
+      profile.id,
+      profile
+    ])
+  );
+
+  return typedDeals.map((deal) => ({
+    deal,
+    listing: listingById.get(deal.listing_id) ?? null,
+    seller: profileById.get(deal.seller_id) ?? null,
+    buyer: deal.buyer_id ? profileById.get(deal.buyer_id) ?? null : null,
+    role: deal.seller_id === userId ? "seller" : "buyer"
+  }));
 }
 
 export async function reserveListingFromConversation(

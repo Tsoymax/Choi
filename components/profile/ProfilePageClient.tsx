@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
+import { DealHistory } from "@/components/profile/DealHistory";
 import { MyListings } from "@/components/profile/MyListings";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -164,7 +165,10 @@ export function ProfilePageClient({
               </button>
             ) : null}
           </div>
-          <MyListings />
+          <div className="space-y-6">
+            <MyListings />
+            <DealHistory userId={user.id} />
+          </div>
         </div>
       </section>
 
