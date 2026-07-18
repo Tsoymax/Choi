@@ -9,7 +9,7 @@ import { ListingCard } from "@/components/ListingCard";
 import type { Language } from "@/components/i18n";
 import type { Listing } from "@/utils/listings";
 import { getAllListings } from "@/utils/listings";
-import { FAVORITES_EVENT, getFavoriteIdsAsync } from "@/utils/favorites";
+import { FAVORITES_EVENT, getFavoriteIdsAsync, isUuid } from "@/utils/favorites";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import {
   getListingsByIds,
@@ -29,15 +29,17 @@ export default function FavoritesPage() {
     const syncFavorites = async () => {
       const ids = await getFavoriteIdsAsync();
       let nextListings = getAllListings();
+      const remoteIds = ids.filter(isUuid);
 
-      if (hasSupabaseBrowserEnv() && ids.length > 0) {
+      if (hasSupabaseBrowserEnv() && remoteIds.length > 0) {
         const supabase = createClient();
-        const remoteListings = await getListingsByIds(supabase, ids);
+        const remoteListings = await getListingsByIds(supabase, remoteIds);
         const mappedRemoteListings = remoteListings.map(
           (listing) => mapListingRowToProduct(listing) as Listing
         );
         const localOnlyListings = nextListings.filter(
-          (listing) => !mappedRemoteListings.some((remoteListing) => remoteListing.id === listing.id)
+          (listing) =>
+            !mappedRemoteListings.some((remoteListing) => remoteListing.id === listing.id)
         );
 
         nextListings = [...mappedRemoteListings, ...localOnlyListings];

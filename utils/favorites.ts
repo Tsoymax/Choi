@@ -2,12 +2,20 @@ export const FAVORITES_KEY = "choi_favorites";
 export const FAVORITES_EVENT = "choi:favorites-changed";
 
 type FavoriteRemoteApi = {
-  enabled: boolean;
-  userId: string;
   getIds: () => Promise<string[]>;
   add: (listingId: string) => Promise<void>;
   remove: (listingId: string) => Promise<void>;
 };
+
+export function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
+function uniqueIds(ids: string[]) {
+  return Array.from(new Set(ids.filter(Boolean)));
+}
 
 function notifyFavoritesChanged() {
   if (typeof window !== "undefined") {
@@ -93,8 +101,6 @@ async function getRemoteApi(): Promise<FavoriteRemoteApi | null> {
   const supabase = createClient();
 
   return {
-    enabled: true,
-    userId: user.id,
     getIds: () => remoteFavorites.getFavoriteListingIds(supabase, user.id),
     add: async (listingId: string) => {
       const { error } = await remoteFavorites.addFavorite(supabase, user.id, listingId);
@@ -108,13 +114,23 @@ async function getRemoteApi(): Promise<FavoriteRemoteApi | null> {
 }
 
 export async function getFavoriteIdsAsync() {
+  const localIds = getFavoriteIds();
   const remoteApi = await getRemoteApi();
 
   if (!remoteApi) {
-    return getFavoriteIds();
+    return localIds;
   }
 
-  return remoteApi.getIds();
+  try {
+    const remoteIds = await remoteApi.getIds();
+    return uniqueIds([...remoteIds, ...localIds]);
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Choi] favorites remote sync failed", error);
+    }
+
+    return localIds;
+  }
 }
 
 export async function isFavoriteAsync(id: string) {
@@ -122,29 +138,43 @@ export async function isFavoriteAsync(id: string) {
 }
 
 export async function toggleFavoriteAsync(id: string) {
+  if (!isUuid(id)) {
+    return toggleFavorite(id);
+  }
+
+  const localIds = getFavoriteIds();
   const remoteApi = await getRemoteApi();
 
   if (!remoteApi) {
     return toggleFavorite(id);
   }
 
-  const favoriteIds = await remoteApi.getIds();
-  const favorite = favoriteIds.includes(id);
+  try {
+    const remoteIds = await remoteApi.getIds();
+    const favoriteIds = uniqueIds([...remoteIds, ...localIds]);
+    const favorite = favoriteIds.includes(id);
 
-  if (favorite) {
-    await remoteApi.remove(id);
-  } else {
-    await remoteApi.add(id);
+    if (favorite) {
+      await remoteApi.remove(id);
+    } else {
+      await remoteApi.add(id);
+    }
+
+    const nextIds = favorite
+      ? favoriteIds.filter((favoriteId) => favoriteId !== id)
+      : uniqueIds([id, ...favoriteIds]);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(nextIds));
+    }
+
+    notifyFavoritesChanged();
+    return nextIds;
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Choi] favorites toggle fallback", error);
+    }
+
+    return toggleFavorite(id);
   }
-
-  const nextIds = favorite
-    ? favoriteIds.filter((favoriteId) => favoriteId !== id)
-    : [id, ...favoriteIds];
-
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(nextIds));
-  }
-
-  notifyFavoritesChanged();
-  return nextIds;
 }
