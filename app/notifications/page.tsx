@@ -22,13 +22,16 @@ export default function NotificationsPage() {
   const [userId, setUserId] = useState("");
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(
+    () => (hasSupabaseBrowserEnv() ? createClient() : null),
+    []
+  );
 
   useEffect(() => {
     let mounted = true;
 
     async function syncNotifications() {
-      if (!hasSupabaseBrowserEnv()) {
+      if (!supabase) {
         setLoading(false);
         return;
       }
@@ -60,7 +63,7 @@ export default function NotificationsPage() {
   }, [supabase]);
 
   async function readAll() {
-    if (!userId) {
+    if (!userId || !supabase) {
       return;
     }
 
@@ -112,7 +115,7 @@ export default function NotificationsPage() {
           </section>
         ) : null}
 
-        {userId && notifications.length > 0 ? (
+        {userId && supabase && notifications.length > 0 ? (
           <NotificationList
             notifications={notifications}
             supabase={supabase}
