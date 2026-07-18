@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Conversation, Message } from "@/utils/chat";
 import { hasUnreadConversation } from "@/utils/chat";
 import type { Listing } from "@/utils/listings";
+import { getMessagePreview } from "@/lib/chat/attachments";
 
 type ChatListItemProps = {
   conversation: Conversation;
@@ -66,7 +67,7 @@ export function ChatListItem({
         </div>
         <div className="mt-2 flex items-center gap-2">
           <p className="min-w-0 flex-1 truncate text-sm text-ink/58">
-            {lastMessage?.text ?? "Диалог создан"}
+            {getMessagePreview(lastMessage?.text)}
           </p>
           {unread ? <span className="h-2.5 w-2.5 rounded-full bg-leaf" /> : null}
         </div>

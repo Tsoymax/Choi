@@ -50,6 +50,7 @@ import { getReviewByDealAndReviewer, type DealReviewRow } from "@/lib/data/revie
 import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
 import { DealReviewForm } from "@/components/reviews/DealReviewForm";
+import { serializeMessageContent, type ChatAttachment } from "@/lib/chat/attachments";
 import { ListingChatCard } from "./ListingChatCard";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
@@ -271,15 +272,16 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length]);
 
-  function handleSend(text: string) {
+  function handleSend(text: string, attachments: ChatAttachment[] = []) {
+    const messageText = serializeMessageContent(text, attachments);
+
     if (conversation?.remote && currentUserId) {
-      const trimmedText = text.trim();
-      if (!trimmedText) {
+      if (!messageText) {
         return;
       }
 
       const supabase = createClient();
-      void sendRemoteMessage(supabase, conversationId, currentUserId, trimmedText).then(
+      void sendRemoteMessage(supabase, conversationId, currentUserId, messageText).then(
         async () => {
           const remoteMessages = await getMessagesByConversationId(supabase, conversationId);
           setMessages(remoteMessages.map((message) => mapMessageRow(message, currentUserId)));
@@ -293,7 +295,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       previousMessages.filter((message) => message.sender === "buyer").length === 0 &&
       previousMessages.filter((message) => message.sender === "seller").length === 0;
 
-    sendMessage(conversationId, "buyer", text);
+    sendMessage(conversationId, "buyer", messageText);
     setMessages(getMessages(conversationId));
 
     if (shouldAutoReply) {
