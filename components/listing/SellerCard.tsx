@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 import type { Listing } from "@/utils/listings";
 import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
-import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
+import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
 import { createConversation } from "@/utils/chat";
 import { hasSupabaseBrowserEnv, requireCurrentUser } from "@/lib/auth/client";
 import { createConversation as createRemoteConversation } from "@/lib/data/conversations";
@@ -29,7 +29,9 @@ export function SellerCard({ listing }: SellerCardProps) {
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
-    const syncFavorite = () => setFavorite(isFavorite(listing.id));
+    const syncFavorite = () => {
+      void isFavoriteAsync(listing.id).then(setFavorite);
+    };
 
     syncFavorite();
     window.addEventListener(FAVORITES_EVENT, syncFavorite);
@@ -128,8 +130,9 @@ export function SellerCard({ listing }: SellerCardProps) {
               return;
             }
 
-            setFavorite(!isFavorite(listing.id));
-            toggleFavorite(listing.id);
+            const nextFavorite = !favorite;
+            setFavorite(nextFavorite);
+            await toggleFavoriteAsync(listing.id);
           }}
           className={`focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition ${
             favorite ? "bg-leaf text-white" : "bg-mist text-ink hover:bg-[#e4eee7]"

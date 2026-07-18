@@ -9,7 +9,13 @@ import { ListingCard } from "@/components/ListingCard";
 import type { Language } from "@/components/i18n";
 import type { Listing } from "@/utils/listings";
 import { getAllListings } from "@/utils/listings";
-import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
+import { FAVORITES_EVENT, getFavoriteIdsAsync } from "@/utils/favorites";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import {
+  getListingsByIds,
+  mapListingRowToProduct
+} from "@/lib/data/listings";
+import { createClient } from "@/utils/supabase/client";
 
 export default function FavoritesPage() {
   const [language, setLanguage] = useState<Language>("ru");
@@ -18,16 +24,39 @@ export default function FavoritesPage() {
   const [listings, setListings] = useState<Listing[]>([]);
 
   useEffect(() => {
-    const syncFavorites = () => {
-      setFavoriteIds(getFavoriteIds());
-      setListings(getAllListings());
+    let mounted = true;
+
+    const syncFavorites = async () => {
+      const ids = await getFavoriteIdsAsync();
+      let nextListings = getAllListings();
+
+      if (hasSupabaseBrowserEnv() && ids.length > 0) {
+        const supabase = createClient();
+        const remoteListings = await getListingsByIds(supabase, ids);
+        const mappedRemoteListings = remoteListings.map(
+          (listing) => mapListingRowToProduct(listing) as Listing
+        );
+        const localOnlyListings = nextListings.filter(
+          (listing) => !mappedRemoteListings.some((remoteListing) => remoteListing.id === listing.id)
+        );
+
+        nextListings = [...mappedRemoteListings, ...localOnlyListings];
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setFavoriteIds(ids);
+      setListings(nextListings);
     };
 
-    syncFavorites();
+    void syncFavorites();
     window.addEventListener(FAVORITES_EVENT, syncFavorites);
     window.addEventListener("storage", syncFavorites);
 
     return () => {
+      mounted = false;
       window.removeEventListener(FAVORITES_EVENT, syncFavorites);
       window.removeEventListener("storage", syncFavorites);
     };

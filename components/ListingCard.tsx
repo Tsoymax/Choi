@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Heart, MapPin } from "lucide-react";
 import type { Product } from "./types";
 import type { Language } from "./i18n";
-import { FAVORITES_EVENT, isFavorite, toggleFavorite } from "@/utils/favorites";
+import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
 import { requireCurrentUser } from "@/lib/auth/client";
 import { formatDistanceKm } from "@/lib/location/distance";
@@ -24,7 +24,9 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const distanceLabel = formatDistanceKm(product.distanceKm);
 
   useEffect(() => {
-    const syncFavorite = () => setFavorite(isFavorite(product.id));
+    const syncFavorite = () => {
+      void isFavoriteAsync(product.id).then(setFavorite);
+    };
 
     syncFavorite();
     window.addEventListener(FAVORITES_EVENT, syncFavorite);
@@ -75,8 +77,9 @@ export function ListingCard({ product, language }: ListingCardProps) {
               return;
             }
 
-            setFavorite(!isFavorite(product.id));
-            toggleFavorite(product.id);
+            const nextFavorite = !favorite;
+            setFavorite(nextFavorite);
+            await toggleFavoriteAsync(product.id);
           }}
           className={`focus-ring absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full shadow-sm transition sm:right-4 sm:top-4 sm:h-10 sm:w-10 ${
             favorite ? "bg-leaf text-white" : "bg-white/88 text-ink hover:text-leaf"

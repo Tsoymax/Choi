@@ -279,6 +279,34 @@ export async function getListingById(supabase: SupabaseClient, id: string) {
   return data as ListingWithRelations | null;
 }
 
+export async function getListingsByIds(supabase: SupabaseClient, ids: string[]) {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*, listing_images(*), listing_attributes(*), profiles!listings_user_id_fkey(name)")
+    .in("id", ids);
+
+  if (error) {
+    logListingDebug("getListingsByIds_relation", { count: ids.length }, error);
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("listings")
+      .select("*")
+      .in("id", ids);
+
+    if (fallbackError) {
+      logListingDebug("getListingsByIds", { count: ids.length }, fallbackError);
+      return [];
+    }
+
+    return (fallbackData ?? []) as ListingWithRelations[];
+  }
+
+  return (data ?? []) as ListingWithRelations[];
+}
+
 export async function createListingWithImages(
   supabase: SupabaseClient,
   input: CreateListingInput

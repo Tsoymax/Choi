@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, Heart, MessageCircle, Plus, Search } from "lucide-react";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
-import { FAVORITES_EVENT, getFavoriteIds } from "@/utils/favorites";
+import { FAVORITES_EVENT, getFavoriteIdsAsync } from "@/utils/favorites";
 import { USER_EVENT, getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import { useUnreadChatCount } from "@/lib/chat/useUnreadChatCount";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
@@ -44,7 +44,9 @@ export function Header({
   const [currentProfile, setCurrentProfile] = useState<ProfileRow | null>(null);
 
   useEffect(() => {
-    const syncFavoriteCount = () => setFavoriteCount(getFavoriteIds().length);
+    const syncFavoriteCount = () => {
+      void getFavoriteIdsAsync().then((ids) => setFavoriteCount(ids.length));
+    };
 
     syncFavoriteCount();
     window.addEventListener(FAVORITES_EVENT, syncFavoriteCount);
