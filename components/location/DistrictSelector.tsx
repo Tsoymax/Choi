@@ -82,7 +82,6 @@ export function DistrictSelector({
         >
           <div
             className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-[0_-18px_60px_rgba(24,32,29,0.18)] sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[28px]"
-            onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
