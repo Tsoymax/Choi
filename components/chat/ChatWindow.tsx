@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, CheckCircle2, Handshake, PackageCheck, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarClock, CheckCircle2, Handshake, PackageCheck, XCircle } from "lucide-react";
 import type { Conversation, Message } from "@/utils/chat";
 import {
   CHAT_EVENT,
@@ -32,12 +32,18 @@ import {
 } from "@/lib/data/messages";
 import {
   createDealFromConversation,
+  acceptReservationRequest,
+  declineReservationRequest,
   getConfirmedDealForConversation,
   getLatestDealForConversation,
   getPendingDealForConversation,
-  reserveListingFromConversation,
+  getLatestReservationForConversation,
+  releaseExpiredReservations,
+  requestReservationFromConversation,
+  reserveListingForBuyer,
   respondToDeal,
-  type RemoteDealRow
+  type RemoteDealRow,
+  type ReservationRequestRow
 } from "@/lib/data/deals";
 import { markConversationMessageNotificationsRead } from "@/lib/data/notifications";
 import { getReviewByDealAndReviewer, type DealReviewRow } from "@/lib/data/reviews";
@@ -57,6 +63,24 @@ const sellerReplies = [
   "Здравствуйте! Да, ещё продаю."
 ];
 
+function toDatetimeLocalValue(date = new Date(Date.now() + 60 * 60 * 1000)) {
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return offsetDate.toISOString().slice(0, 16);
+}
+
+function formatReservationTime(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
 export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [conversation, setConversation] = useState<Conversation | undefined>(() =>
     getConversationById(conversationId)
@@ -71,6 +95,12 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [pendingDeal, setPendingDeal] = useState<RemoteDealRow | null>(null);
   const [confirmedDeal, setConfirmedDeal] = useState<RemoteDealRow | null>(null);
   const [terminalDeal, setTerminalDeal] = useState<RemoteDealRow | null>(null);
+  const [reservation, setReservation] = useState<ReservationRequestRow | null>(null);
+  const [reservationTime, setReservationTime] = useState(() => toDatetimeLocalValue());
+  const [reservationNote, setReservationNote] = useState("");
+  const [reservationStatusText, setReservationStatusText] = useState("");
+  const [reservationError, setReservationError] = useState("");
+  const [isReservationBusy, setIsReservationBusy] = useState(false);
   const [currentReview, setCurrentReview] = useState<DealReviewRow | null>(null);
   const [dealStatusText, setDealStatusText] = useState("");
   const [dealError, setDealError] = useState("");
@@ -127,10 +157,12 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
       const userId = user.id;
       setCurrentUserId(userId);
+      await releaseExpiredReservations(supabase);
       await markMessagesRead(supabase, conversationId, userId);
       await markConversationMessageNotificationsRead(supabase, userId, conversationId);
 
       async function syncRemoteChat() {
+        await releaseExpiredReservations(supabase);
         const remoteConversation = await getRemoteConversationById(supabase, conversationId);
 
         if (!mounted) {
@@ -199,6 +231,18 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
           );
         }
 
+        const latestReservation = await getLatestReservationForConversation(
+          supabase,
+          conversationId
+        );
+
+        if (mounted) {
+          setReservation(latestReservation);
+          if (latestReservation?.status === "accepted") {
+            setListing((current) => current ? { ...current, status: "reserved" } : current);
+          }
+        }
+
         if (completedDeal) {
           const review = await getReviewByDealAndReviewer(supabase, completedDeal.id, userId);
           if (mounted) {
@@ -262,26 +306,132 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     }
   }
 
-  async function handleReserveListing() {
-    if (!conversation?.remote || isDealBusy) {
+  function getReservationIso() {
+    const selectedDate = new Date(reservationTime);
+
+    if (Number.isNaN(selectedDate.getTime())) {
+      return null;
+    }
+
+    return selectedDate.toISOString();
+  }
+
+  async function handleRequestReservation() {
+    if (!conversation?.remote || isReservationBusy) {
       return;
     }
 
-    setIsDealBusy(true);
-    setDealError("");
-    setDealStatusText("");
-
-    const supabase = createClient();
-    const { error } = await reserveListingFromConversation(supabase, conversation.id);
-
-    if (error) {
-      setDealError("Не удалось забронировать объявление. Попробуйте ещё раз.");
-    } else {
-      setListing((current) => current ? { ...current, status: "reserved" } : current);
-      setDealStatusText("Объявление забронировано для покупателя.");
+    const requestedFor = getReservationIso();
+    if (!requestedFor) {
+      setReservationError("Выберите время встречи.");
+      return;
     }
 
-    setIsDealBusy(false);
+    setIsReservationBusy(true);
+    setReservationError("");
+    setReservationStatusText("");
+
+    const supabase = createClient();
+    const { reservation: nextReservation, error } = await requestReservationFromConversation(
+      supabase,
+      conversation.id,
+      requestedFor,
+      reservationNote
+    );
+
+    if (error || !nextReservation) {
+      setReservationError("Не удалось предложить бронь. Проверьте время и попробуйте ещё раз.");
+    } else {
+      setReservation(nextReservation);
+      setReservationStatusText("Заявка на бронь отправлена продавцу.");
+    }
+
+    setIsReservationBusy(false);
+  }
+
+  async function handleAcceptReservation() {
+    if (!reservation || isReservationBusy) {
+      return;
+    }
+
+    setIsReservationBusy(true);
+    setReservationError("");
+    setReservationStatusText("");
+
+    const supabase = createClient();
+    const { reservation: nextReservation, error } = await acceptReservationRequest(
+      supabase,
+      reservation.id
+    );
+
+    if (error || !nextReservation) {
+      setReservationError("Не удалось принять бронь. Попробуйте ещё раз.");
+    } else {
+      setReservation(nextReservation);
+      setListing((current) => current ? { ...current, status: "reserved" } : current);
+      setReservationStatusText("Бронь принята. Объявление отмечено как забронированное.");
+    }
+
+    setIsReservationBusy(false);
+  }
+
+  async function handleDeclineReservation() {
+    if (!reservation || isReservationBusy) {
+      return;
+    }
+
+    setIsReservationBusy(true);
+    setReservationError("");
+    setReservationStatusText("");
+
+    const supabase = createClient();
+    const { reservation: nextReservation, error } = await declineReservationRequest(
+      supabase,
+      reservation.id
+    );
+
+    if (error || !nextReservation) {
+      setReservationError("Не удалось отклонить бронь. Попробуйте ещё раз.");
+    } else {
+      setReservation(nextReservation);
+      setReservationStatusText("Бронь отклонена.");
+    }
+
+    setIsReservationBusy(false);
+  }
+
+  async function handleSellerReserveForBuyer() {
+    if (!conversation?.remote || isReservationBusy) {
+      return;
+    }
+
+    const requestedFor = getReservationIso();
+    if (!requestedFor) {
+      setReservationError("Выберите время встречи.");
+      return;
+    }
+
+    setIsReservationBusy(true);
+    setReservationError("");
+    setReservationStatusText("");
+
+    const supabase = createClient();
+    const { reservation: nextReservation, error } = await reserveListingForBuyer(
+      supabase,
+      conversation.id,
+      requestedFor,
+      reservationNote
+    );
+
+    if (error || !nextReservation) {
+      setReservationError("Не удалось поставить бронь для покупателя.");
+    } else {
+      setReservation(nextReservation);
+      setListing((current) => current ? { ...current, status: "reserved" } : current);
+      setReservationStatusText("Бронь поставлена для этого покупателя.");
+    }
+
+    setIsReservationBusy(false);
   }
 
   async function handleCreateDeal() {
@@ -366,7 +516,16 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const isBuyer = isRemoteChat && currentUserId === conversation.buyerId;
   const listingStatus = listing.status ?? "active";
   const dealIsClosed = terminalDeal?.status === "confirmed" || terminalDeal?.status === "cancelled";
-  const canReserveListing = isSeller && listingStatus === "active" && !dealIsClosed;
+  const pendingReservation = reservation?.status === "pending" ? reservation : null;
+  const acceptedReservation = reservation?.status === "accepted" ? reservation : null;
+  const reservationIsActive =
+    Boolean(acceptedReservation) &&
+    new Date(acceptedReservation?.expires_at ?? 0).getTime() > Date.now();
+  const canRequestReservation =
+    isBuyer && !pendingReservation && !reservationIsActive && !dealIsClosed;
+  const canAnswerReservation = isSeller && Boolean(pendingReservation) && !dealIsClosed;
+  const canSellerReserveForBuyer =
+    isSeller && !pendingReservation && !reservationIsActive && !dealIsClosed;
   const canCreateDeal =
     isSeller &&
     !pendingDeal &&
@@ -417,8 +576,120 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
             <ListingChatCard listing={listing} />
           </div>
 
-          {(isSeller || canRespondToDeal || terminalDeal || dealStatusText || dealError) && (
+          {(isSeller ||
+            isBuyer ||
+            canRespondToDeal ||
+            terminalDeal ||
+            dealStatusText ||
+            dealError ||
+            reservationStatusText ||
+            reservationError ||
+            reservation) && (
             <div className="mt-3 rounded-[20px] border border-ink/10 bg-mist/70 p-3">
+              {isRemoteChat && !dealIsClosed ? (
+                <div className="mb-3 rounded-2xl bg-white p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-leaf/10 text-leaf">
+                      <CalendarClock size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-ink">Бронь на время</p>
+                      {acceptedReservation ? (
+                        <p className="mt-1 text-sm text-ink/62">
+                          Забронировано до {formatReservationTime(acceptedReservation.expires_at)}.
+                        </p>
+                      ) : pendingReservation ? (
+                        <p className="mt-1 text-sm text-ink/62">
+                          Предложено время: {formatReservationTime(pendingReservation.requested_for)}.
+                          Бронь будет держаться до {formatReservationTime(pendingReservation.expires_at)} после принятия.
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-sm text-ink/62">
+                          Выберите время встречи. Бронь автоматически спадёт через 30 минут после этого времени.
+                        </p>
+                      )}
+
+                      {!acceptedReservation && !pendingReservation ? (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-[220px_1fr]">
+                          <input
+                            type="datetime-local"
+                            value={reservationTime}
+                            min={toDatetimeLocalValue(new Date(Date.now() + 5 * 60 * 1000))}
+                            onChange={(event) => setReservationTime(event.target.value)}
+                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-semibold text-ink"
+                          />
+                          <input
+                            value={reservationNote}
+                            maxLength={120}
+                            onChange={(event) => setReservationNote(event.target.value)}
+                            placeholder="Комментарий, например: возле метро"
+                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-medium text-ink placeholder:text-ink/40"
+                          />
+                        </div>
+                      ) : null}
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {canRequestReservation ? (
+                          <button
+                            type="button"
+                            onClick={handleRequestReservation}
+                            disabled={isReservationBusy}
+                            className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                          >
+                            <CalendarClock size={17} />
+                            Предложить бронь
+                          </button>
+                        ) : null}
+                        {canAnswerReservation ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={handleAcceptReservation}
+                              disabled={isReservationBusy}
+                              className="focus-ring inline-flex h-10 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                            >
+                              <CheckCircle2 size={17} />
+                              Принять бронь
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleDeclineReservation}
+                              disabled={isReservationBusy}
+                              className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                            >
+                              <XCircle size={17} />
+                              Отклонить
+                            </button>
+                          </>
+                        ) : null}
+                        {canSellerReserveForBuyer ? (
+                          <button
+                            type="button"
+                            onClick={handleSellerReserveForBuyer}
+                            disabled={isReservationBusy}
+                            className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                          >
+                            <PackageCheck size={17} />
+                            Поставить бронь
+                          </button>
+                        ) : null}
+                      </div>
+
+                      {reservationStatusText ? (
+                        <p className="mt-2 text-sm font-semibold text-leaf">
+                          {reservationStatusText}
+                        </p>
+                      ) : null}
+                      {reservationError ? (
+                        <p className="mt-2 text-sm font-semibold text-red-600">
+                          {reservationError}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {terminalDeal ? (
                 <div className="mb-3 rounded-2xl bg-white p-3">
                   <p className="text-sm font-semibold text-ink">
@@ -433,15 +704,6 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
               ) : null}
               {isSeller && !dealIsClosed && (
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={handleReserveListing}
-                    disabled={!canReserveListing || isDealBusy}
-                    className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
-                  >
-                    <PackageCheck size={17} />
-                    Забронировать
-                  </button>
                   <button
                     type="button"
                     onClick={handleCreateDeal}

@@ -157,6 +157,8 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
 }
 
 export async function getActiveListings(supabase: SupabaseClient) {
+  await supabase.rpc("release_expired_reservations");
+
   const { data, error } = await supabase
     .from("listings")
     .select("*, listing_images(*), listing_attributes(*), profiles!listings_user_id_fkey(name)")
@@ -221,6 +223,8 @@ export async function getListingsByUserId(supabase: SupabaseClient, userId: stri
 }
 
 export async function getListingById(supabase: SupabaseClient, id: string) {
+  await supabase.rpc("release_expired_reservations");
+
   const { data, error } = await supabase
     .from("listings")
     .select("*, listing_images(*), listing_attributes(*), profiles!listings_user_id_fkey(name)")
