@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LocateFixed, MapPin, X } from "lucide-react";
 import { districtCoordinates } from "@/data/districtCoordinates";
 
@@ -21,6 +21,7 @@ export function DistrictSelector({
 }: DistrictSelectorProps) {
   const [open, setOpen] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const currentDistrict =
     districtCoordinates.find((item) => item.id === district) ?? districtCoordinates[0];
 
@@ -35,10 +36,30 @@ export function DistrictSelector({
       }
     }
 
+    function closeOnPageClick(event: PointerEvent) {
+      const target = event.target as HTMLElement | null;
+
+      if (!target) {
+        return;
+      }
+
+      if (triggerRef.current?.contains(target)) {
+        return;
+      }
+
+      if (target.closest("[data-district-selector-control='true']")) {
+        return;
+      }
+
+      setOpen(false);
+    }
+
     window.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnPageClick, true);
 
     return () => {
       window.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnPageClick, true);
     };
   }, [open]);
 
@@ -64,6 +85,7 @@ export function DistrictSelector({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         className={`focus-ring inline-flex shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white font-semibold text-ink shadow-sm transition hover:border-leaf/30 ${
@@ -90,6 +112,7 @@ export function DistrictSelector({
               </div>
               <button
                 type="button"
+                data-district-selector-control="true"
                 onClick={() => setOpen(false)}
                 className="focus-ring grid h-10 w-10 place-items-center rounded-full bg-mist text-ink"
                 aria-label="Закрыть выбор района"
@@ -101,6 +124,7 @@ export function DistrictSelector({
             {onUseGps ? (
               <button
                 type="button"
+                data-district-selector-control="true"
                 onClick={useGps}
                 disabled={gpsLoading}
                 className="focus-ring mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70"
@@ -119,6 +143,7 @@ export function DistrictSelector({
                 <button
                   type="button"
                   key={item.id}
+                  data-district-selector-control="true"
                   onClick={() => void selectDistrict(item.id)}
                   className={`focus-ring flex h-12 items-center justify-between rounded-2xl border px-4 text-left text-sm font-semibold transition ${
                     item.id === district
