@@ -65,6 +65,61 @@ export function PWAController() {
   }, []);
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== "production") {
+      return;
+    }
+
+    const reloadKey = "choi_chunk_reload_attempted";
+
+    async function recoverFromStaleChunk(error: unknown) {
+      const message =
+        error instanceof Error
+          ? `${error.name} ${error.message}`
+          : typeof error === "string"
+            ? error
+            : "";
+
+      const isChunkError =
+        message.includes("ChunkLoadError") ||
+        message.includes("Loading chunk") ||
+        message.includes("failed to fetch dynamically imported module");
+
+      if (!isChunkError || window.sessionStorage.getItem(reloadKey)) {
+        return;
+      }
+
+      window.sessionStorage.setItem(reloadKey, "1");
+
+      if ("caches" in window) {
+        const keys = await window.caches.keys();
+        await Promise.all(
+          keys
+            .filter((key) => key.startsWith("choi-"))
+            .map((key) => window.caches.delete(key))
+        );
+      }
+
+      window.location.reload();
+    }
+
+    const handleError = (event: ErrorEvent) => {
+      void recoverFromStaleChunk(event.error ?? event.message);
+    };
+
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      void recoverFromStaleChunk(event.reason);
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleRejection);
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleRejection);
+    };
+  }, []);
+
+  useEffect(() => {
     if (previousOnline.current === null) {
       previousOnline.current = isOnline;
       return;

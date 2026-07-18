@@ -1,4 +1,4 @@
-const CACHE_NAME = "choi-app-shell-v1";
+const CACHE_NAME = "choi-app-shell-v2";
 const PRECACHE_URLS = [
   "/",
   "/search",
@@ -42,6 +42,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -84,7 +85,7 @@ self.addEventListener("fetch", (event) => {
   const isSameOrigin = url.origin === self.location.origin;
   const isCacheableAsset =
     isSameOrigin &&
-    ["image", "style", "script", "font", "manifest"].includes(request.destination);
+    ["image", "font", "manifest"].includes(request.destination);
 
   if (!isCacheableAsset) {
     return;
