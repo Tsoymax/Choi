@@ -40,7 +40,7 @@ function FieldControl({
           className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm disabled:bg-mist disabled:text-ink/40"
         >
           <option value="">
-            {isSelectDisabled ? "РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РјР°СЂРєСѓ" : "Р’С‹Р±РµСЂРёС‚Рµ"}
+            {isSelectDisabled ? "Сначала выберите марку" : "Выберите"}
           </option>
           {(options ?? []).map((option) => (
             <option key={option.value} value={option.value}>
@@ -84,9 +84,9 @@ export function ListingAttributesFields({
   return (
     <div className="space-y-5 rounded-[20px] border border-ink/10 bg-mist/55 p-4 sm:p-5">
       <div>
-        <h2 className="text-xl font-semibold text-ink">РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё</h2>
+        <h2 className="text-xl font-semibold text-ink">Характеристики</h2>
         <p className="mt-1 text-sm text-ink/58">
-          РџРѕР»СЏ РјРµРЅСЏСЋС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РєР°С‚РµРіРѕСЂРёРё.
+          Поля меняются автоматически в зависимости от категории.
         </p>
       </div>
 

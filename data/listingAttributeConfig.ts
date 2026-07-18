@@ -134,7 +134,7 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           type: "select",
           options: toOptions(["Передний", "Задний", "Полный"])
         },
-        { key: "engine", label: "Объём двигателя", type: "text", placeholder: "2.5" },
+        { key: "engine", label: "Объем двигателя", type: "text", placeholder: "2.5" },
         {
           key: "body",
           label: "Тип кузова",
