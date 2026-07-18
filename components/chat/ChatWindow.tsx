@@ -102,6 +102,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [reservationStatusText, setReservationStatusText] = useState("");
   const [reservationError, setReservationError] = useState("");
   const [isReservationBusy, setIsReservationBusy] = useState(false);
+  const [reservationEditorOpen, setReservationEditorOpen] = useState(false);
   const [currentReview, setCurrentReview] = useState<DealReviewRow | null>(null);
   const [dealStatusText, setDealStatusText] = useState("");
   const [dealError, setDealError] = useState("");
@@ -323,6 +324,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       return;
     }
 
+    if (!reservationEditorOpen) {
+      setReservationEditorOpen(true);
+      return;
+    }
+
     const requestedFor = getReservationIso();
     if (!requestedFor) {
       setReservationError("Выберите время встречи.");
@@ -345,6 +351,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       setReservationError("Не удалось предложить бронь. Проверьте время и попробуйте ещё раз.");
     } else {
       setReservation(nextReservation);
+      setReservationEditorOpen(false);
       setReservationStatusText("Заявка на бронь отправлена продавцу.");
     }
 
@@ -407,6 +414,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       return;
     }
 
+    if (!reservationEditorOpen) {
+      setReservationEditorOpen(true);
+      return;
+    }
+
     const requestedFor = getReservationIso();
     if (!requestedFor) {
       setReservationError("Выберите время встречи.");
@@ -429,6 +441,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       setReservationError("Не удалось поставить бронь для покупателя.");
     } else {
       setReservation(nextReservation);
+      setReservationEditorOpen(false);
       setListing((current) => current ? { ...current, status: "reserved" } : current);
       setReservationStatusText("Бронь поставлена для этого покупателя.");
     }
@@ -528,6 +541,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const canAnswerReservation = isSeller && Boolean(pendingReservation) && !dealIsClosed;
   const canSellerReserveForBuyer =
     isSeller && !pendingReservation && !reservationIsActive && !dealIsClosed;
+  const canOpenReservationEditor =
+    !acceptedReservation &&
+    !pendingReservation &&
+    (canRequestReservation || canSellerReserveForBuyer);
+  const showReservationEditor = reservationEditorOpen && canOpenReservationEditor;
   const canCreateDeal =
     isSeller &&
     !pendingDeal &&
@@ -594,8 +612,10 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                     <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-leaf/10 text-leaf">
                       <CalendarClock size={18} />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-ink">Бронь на время</p>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      {(acceptedReservation || pendingReservation || showReservationEditor) ? (
+                        <p className="text-sm font-semibold text-ink">Бронь на время</p>
+                      ) : null}
                       {acceptedReservation ? (
                         <p className="mt-1 text-sm text-ink/62">
                           Забронировано до {formatReservationTime(acceptedReservation.expires_at)}.
@@ -605,32 +625,13 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                           Предложено время: {formatReservationTime(pendingReservation.requested_for)}.
                           Бронь будет держаться до {formatReservationTime(pendingReservation.expires_at)} после принятия.
                         </p>
-                      ) : (
+                      ) : showReservationEditor ? (
                         <p className="mt-1 text-sm text-ink/62">
                           Выберите время встречи. Бронь автоматически спадёт через 30 минут после этого времени.
                         </p>
-                      )}
-
-                      {!acceptedReservation && !pendingReservation ? (
-                        <div className="mt-3 grid gap-2 sm:grid-cols-[220px_1fr]">
-                          <input
-                            type="datetime-local"
-                            value={reservationTime}
-                            min={toDatetimeLocalValue(new Date(Date.now() + 5 * 60 * 1000))}
-                            onChange={(event) => setReservationTime(event.target.value)}
-                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-semibold text-ink"
-                          />
-                          <input
-                            value={reservationNote}
-                            maxLength={120}
-                            onChange={(event) => setReservationNote(event.target.value)}
-                            placeholder="Комментарий, например: возле метро"
-                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-medium text-ink placeholder:text-ink/40"
-                          />
-                        </div>
                       ) : null}
 
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="order-1 flex flex-wrap gap-2">
                         {canRequestReservation ? (
                           <button
                             type="button"
@@ -676,6 +677,25 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                           </button>
                         ) : null}
                       </div>
+
+                      {!acceptedReservation && !pendingReservation && showReservationEditor ? (
+                        <div className="order-2 mt-3 grid gap-2 sm:grid-cols-[220px_1fr]">
+                          <input
+                            type="datetime-local"
+                            value={reservationTime}
+                            min={toDatetimeLocalValue(new Date(Date.now() + 5 * 60 * 1000))}
+                            onChange={(event) => setReservationTime(event.target.value)}
+                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-semibold text-ink"
+                          />
+                          <input
+                            value={reservationNote}
+                            maxLength={120}
+                            onChange={(event) => setReservationNote(event.target.value)}
+                            placeholder="Комментарий, например: возле метро"
+                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-medium text-ink placeholder:text-ink/40"
+                          />
+                        </div>
+                      ) : null}
 
                       {reservationStatusText ? (
                         <p className="mt-2 text-sm font-semibold text-leaf">
