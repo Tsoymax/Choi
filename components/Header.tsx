@@ -10,7 +10,7 @@ import { translations } from "./i18n";
 import { FAVORITES_EVENT, getFavoriteIdsAsync } from "@/utils/favorites";
 import { USER_EVENT, getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import { useUnreadChatCount } from "@/lib/chat/useUnreadChatCount";
-import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { clearCachedAuthUser, getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { ensureProfileForUser, type ProfileRow } from "@/lib/data/profiles";
 import { createClient } from "@/utils/supabase/client";
 import { DistrictSelector } from "@/components/location/DistrictSelector";
@@ -68,18 +68,18 @@ export function Header({
       }
 
       const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
+      const user = await getCurrentUser();
 
       if (!mounted) {
         return;
       }
 
-      if (!data.user) {
+      if (!user) {
         setCurrentUser(null);
         return;
       }
 
-      const { profile, error } = await ensureProfileForUser(supabase, data.user);
+      const { profile, error } = await ensureProfileForUser(supabase, user);
 
       if (!mounted) {
         return;
@@ -88,9 +88,9 @@ export function Header({
       if (error) {
         setCurrentUser({
           name:
-            data.user.user_metadata?.name ??
-            data.user.user_metadata?.full_name ??
-            data.user.email?.split("@")[0] ??
+            user.user_metadata?.name ??
+            user.user_metadata?.full_name ??
+            user.email?.split("@")[0] ??
             "Choi"
         });
         return;
@@ -99,14 +99,15 @@ export function Header({
       setCurrentUser({
         name:
           profile?.name ??
-          data.user.user_metadata?.name ??
-          data.user.email?.split("@")[0] ??
+          user.user_metadata?.name ??
+          user.email?.split("@")[0] ??
           "Choi"
       });
     };
 
     const supabase = hasSupabaseBrowserEnv() ? createClient() : null;
     const authSubscription = supabase?.auth.onAuthStateChange(() => {
+      clearCachedAuthUser();
       void syncCurrentUser();
     });
 

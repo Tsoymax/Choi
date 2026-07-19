@@ -1,30 +1,22 @@
 "use client";
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { createClient } from "@/utils/supabase/client";
 import { logProfileDebug } from "@/lib/data/profiles";
+import { getCachedAuthUser, hasSupabaseBrowserEnv } from "./clientUser";
 
-export function hasSupabaseBrowserEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  );
-}
+export { clearCachedAuthUser, hasSupabaseBrowserEnv } from "./clientUser";
 
 export async function getCurrentUser() {
   if (!hasSupabaseBrowserEnv()) {
     return null;
   }
 
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error) {
+  try {
+    return await getCachedAuthUser();
+  } catch (error) {
     logProfileDebug("client_auth_get_user", null, error);
     return null;
   }
-
-  return data.user ?? null;
 }
 
 export async function requireCurrentUser(

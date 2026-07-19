@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ChoiUser } from "@/utils/users";
 import { createClient } from "@/utils/supabase/client";
+import { getCachedAuthUser } from "@/lib/auth/clientUser";
 
 type AuthUserLike = {
   id: string;
@@ -232,41 +233,39 @@ export async function updateProfile(
 
 export async function getCurrentProfile() {
   const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const user = await getCachedAuthUser();
 
-  if (error || !data.user) {
-    logProfileError(error, "client_get_user", null);
-    return { profile: null, error };
+  if (!user) {
+    return { profile: null, error: null };
   }
 
-  return ensureProfileForUser(supabase, data.user);
+  return ensureProfileForUser(supabase, user);
 }
 
 export async function ensureCurrentProfile() {
   const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const user = await getCachedAuthUser();
 
-  if (error || !data.user) {
-    logProfileError(error, "client_get_user", null);
-    return { profile: null, error };
+  if (!user) {
+    return { profile: null, error: null };
   }
 
-  return ensureProfileForUser(supabase, data.user);
+  return ensureProfileForUser(supabase, user);
 }
 
 export async function updateCurrentProfile(input: ProfileUpdateInput) {
   const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const user = await getCachedAuthUser();
 
-  if (error || !data.user) {
+  if (!user) {
     return {
       profile: null,
-      error: error ?? new Error("Пользователь не авторизован")
+      error: new Error("Пользователь не авторизован")
     };
   }
 
   try {
-    const profile = await updateProfile(supabase, data.user.id, input);
+    const profile = await updateProfile(supabase, user.id, input);
     return { profile, error: null };
   } catch (updateError) {
     return { profile: null, error: updateError };
