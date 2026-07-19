@@ -116,7 +116,11 @@ export function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
 
         <div className="grid items-start gap-8 lg:grid-cols-[420px_1fr]">
           <div className="space-y-6">
-            <ProfileHeader user={user} listingsCount={activeListings.length} />
+            <ProfileHeader
+              user={user}
+              listingsCount={activeListings.length}
+              reviewStats={reviewStats}
+            />
             <TrustCard user={user} publicView reviewStats={reviewStats} />
             <ReviewSummary stats={reviewStats} />
             <div className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">

@@ -3,11 +3,13 @@ import type { ChoiUser } from "@/utils/users";
 import { getDistrictLabel } from "@/utils/listings";
 import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustStatus } from "@/components/trust/TrustStatus";
+import type { ReviewStats } from "@/lib/data/reviews";
 
 type ProfileHeaderProps = {
   user: ChoiUser;
   listingsCount: number;
   isCurrentUser?: boolean;
+  reviewStats?: ReviewStats;
   onEdit?: () => void;
 };
 
@@ -15,6 +17,7 @@ export function ProfileHeader({
   user,
   listingsCount,
   isCurrentUser,
+  reviewStats,
   onEdit
 }: ProfileHeaderProps) {
   const confirmedDealsCount = getConfirmedDealsCount(user.id);
@@ -34,6 +37,8 @@ export function ProfileHeader({
                   addressType={user.addressMode}
                   signals={{
                     confirmedDealsCount,
+                    positiveReviewCount: reviewStats?.positive ?? 0,
+                    negativeReviewCount: reviewStats?.negative ?? 0,
                     complaints: user.complaints,
                     accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
                   }}

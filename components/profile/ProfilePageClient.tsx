@@ -151,6 +151,7 @@ export function ProfilePageClient({
               user={user}
               listingsCount={listingsCount}
               isCurrentUser
+              reviewStats={reviewStats}
               onEdit={() => setIsEditing(true)}
             />
             <TrustCard user={user} reviewStats={reviewStats} />
