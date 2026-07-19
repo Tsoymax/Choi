@@ -17,7 +17,7 @@ export const tashkentDistricts = [
   { id: "shaykhantakhur", label: "Шайхантахур" },
   { id: "yakkasaray", label: "Яккасарай" },
   { id: "almazar", label: "Алмазар" },
-  { id: "sergeli", label: "Сергелийский район" },
+  { id: "sergeli", label: "Сергели" },
   { id: "uchtepa", label: "Учтепа" },
   { id: "yashnabad", label: "Яшнабад" },
   { id: "bektemir", label: "Бектемир" }

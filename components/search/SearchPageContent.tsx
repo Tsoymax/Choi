@@ -4,12 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
-import { SearchBar } from "@/components/SearchBar";
 import { ActiveFilters } from "@/components/search/ActiveFilters";
 import { MobileFilters } from "@/components/search/MobileFilters";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
-import { SearchSuggestions } from "@/components/search/SearchSuggestions";
 import { SortSelect } from "@/components/search/SortSelect";
 import type { Listing } from "@/utils/listings";
 import { LISTINGS_EVENT, getAllListings } from "@/utils/listings";
@@ -17,13 +15,10 @@ import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 import {
-  SEARCH_HISTORY_EVENT,
-  clearSearchHistory,
   defaultSearchFilters,
   filterListings,
   filtersFromSearchParams,
   filtersToSearchParams,
-  getSearchHistory,
   saveSearchHistoryItem,
   type SearchFiltersState
 } from "@/utils/search";
@@ -44,7 +39,6 @@ export function SearchPageContent() {
     getLocationForDistrict("yunusabad")
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const filters = useMemo(
     () => filtersFromSearchParams(new URLSearchParams(searchParams.toString())),
     [searchParams]
@@ -65,7 +59,6 @@ export function SearchPageContent() {
       }
 
       setCurrentUserId(user?.id ?? null);
-      setSearchHistory(getSearchHistory(user?.id));
     }
 
     void syncUser();
@@ -74,19 +67,6 @@ export function SearchPageContent() {
       mounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    const syncHistory = () => setSearchHistory(getSearchHistory(currentUserId));
-
-    syncHistory();
-    window.addEventListener(SEARCH_HISTORY_EVENT, syncHistory);
-    window.addEventListener("storage", syncHistory);
-
-    return () => {
-      window.removeEventListener(SEARCH_HISTORY_EVENT, syncHistory);
-      window.removeEventListener("storage", syncHistory);
-    };
-  }, [currentUserId]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -213,11 +193,6 @@ export function SearchPageContent() {
     router.replace("/search" as never, { scroll: false });
   }
 
-  function selectSuggestedQuery(nextQuery: string) {
-    setDraftQuery(nextQuery);
-    updateFilters({ q: nextQuery });
-  }
-
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
       <Header
@@ -235,50 +210,19 @@ export function SearchPageContent() {
           <p className="mt-3 text-lg text-ink/62">
             Найдите товары, услуги и предложения рядом
           </p>
-          <SearchBar
-            query={draftQuery}
-            districtLabel="Ташкент - все районы"
-            placeholder="Что вы ищете?"
-            onQueryChange={setDraftQuery}
-            onSearch={() => updateFilters({ q: draftQuery })}
-          />
-          {!filters.q ? (
-            <SearchSuggestions
-              history={searchHistory}
-              onSelect={selectSuggestedQuery}
-              onClearHistory={
-                currentUserId
-                  ? () => {
-                      clearSearchHistory(currentUserId);
-                      setSearchHistory([]);
-                    }
-                  : undefined
-              }
-            />
-          ) : null}
         </div>
 
-        <div className="mb-6 flex flex-col gap-4 rounded-[24px] bg-white p-4 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-leaf">
-              Результаты
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold text-ink">
-              Найдено {results.length} объявлений
-            </h2>
-          </div>
-          <div className="flex items-end gap-3">
-            <MobileFilters
-              filters={filters}
-              onChange={updateFilters}
-              onReset={resetFilters}
+        <div className="mb-6 flex items-end justify-between gap-3">
+          <MobileFilters
+            filters={filters}
+            onChange={updateFilters}
+            onReset={resetFilters}
+          />
+          <div className="ml-auto w-full max-w-[240px]">
+            <SortSelect
+              value={filters.sort}
+              onChange={(sort) => updateFilters({ sort })}
             />
-            <div className="min-w-[220px]">
-              <SortSelect
-                value={filters.sort}
-                onChange={(sort) => updateFilters({ sort })}
-              />
-            </div>
           </div>
         </div>
 

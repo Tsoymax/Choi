@@ -110,7 +110,7 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
         >
           <option value="">Весь Ташкент</option>
           {tashkentDistricts.map((district) => (
-            <option key={district.id} value={district.label}>
+            <option key={district.id} value={district.id}>
               {district.label}
             </option>
           ))}

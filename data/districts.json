@@ -46,5 +46,17 @@
     "label": "Uchtepa",
     "labelRu": "Учтепа",
     "labelUz": "Uchtepa"
+  },
+  {
+    "id": "yashnabad",
+    "label": "Yashnabad",
+    "labelRu": "Яшнабад",
+    "labelUz": "Yashnobod"
+  },
+  {
+    "id": "bektemir",
+    "label": "Bektemir",
+    "labelRu": "Бектемир",
+    "labelUz": "Bektemir"
   }
 ]

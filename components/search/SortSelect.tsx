@@ -16,7 +16,7 @@ export function SortSelect({ value, onChange }: SortSelectProps) {
       >
         <option value="default">По умолчанию</option>
         <option value="newest">Сначала новые</option>
-        <option value="cheap">Сначала дешевые</option>
+        <option value="cheap">Сначала дешёвые</option>
         <option value="expensive">Сначала дорогие</option>
         <option value="nearby">Ближе к вам</option>
       </select>

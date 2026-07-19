@@ -178,7 +178,7 @@ export function MarketplaceExperience({
     const params = new URLSearchParams();
     const category = sellCategories.find((item) => item.id === categoryId);
     if (category) {
-      params.set("category", category.label);
+      params.set("category", category.id);
     }
     params.set("district", homeDistrict);
     params.set("distanceRadius", radius);
