@@ -58,8 +58,12 @@ export function useUnreadChatCount() {
       }
 
       const supabase = createClient();
+      const channelId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random()}`;
       const channel = supabase
-        .channel(`chat-unread:${user.id}`)
+        .channel(`chat-unread:${user.id}:${channelId}`)
         .on(
           "postgres_changes",
           {

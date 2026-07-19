@@ -59,8 +59,12 @@ export function NotificationBell() {
       }
 
       const supabase = createClient();
+      const channelId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random()}`;
       const channel = supabase
-        .channel(`notifications:${user.id}`)
+        .channel(`notifications:${user.id}:${channelId}`)
         .on(
           "postgres_changes",
           {
