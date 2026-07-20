@@ -4,18 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
-import { ActiveFilters } from "@/components/search/ActiveFilters";
-import { MobileFilters } from "@/components/search/MobileFilters";
-import { SearchFilters } from "@/components/search/SearchFilters";
+import { CompactSearchFilters } from "@/components/search/CompactSearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
-import { SortSelect } from "@/components/search/SortSelect";
 import type { Listing } from "@/utils/listings";
 import { LISTINGS_EVENT, getAllListings } from "@/utils/listings";
 import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 import {
-  defaultSearchFilters,
   filterListings,
   filtersFromSearchParams,
   filtersToSearchParams,
@@ -40,7 +36,10 @@ export function SearchPageContent() {
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const filters = useMemo(
-    () => filtersFromSearchParams(new URLSearchParams(searchParams.toString())),
+    () => ({
+      ...filtersFromSearchParams(new URLSearchParams(searchParams.toString())),
+      sort: "default" as const
+    }),
     [searchParams]
   );
   const [draftQuery, setDraftQuery] = useState(filters.q);
@@ -184,10 +183,6 @@ export function SearchPageContent() {
     });
   }
 
-  function removeFilter(key: keyof SearchFiltersState) {
-    updateFilters({ [key]: defaultSearchFilters[key] } as Partial<SearchFiltersState>);
-  }
-
   function resetFilters() {
     setDraftQuery("");
     router.replace("/search" as never, { scroll: false });
@@ -202,44 +197,23 @@ export function SearchPageContent() {
         onQueryChange={setDraftQuery}
       />
 
-      <section className="mx-auto max-w-[1504px] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-semibold tracking-normal text-ink sm:text-5xl">
+      <section className="mx-auto max-w-[1504px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-5">
+          <h1 className="text-3xl font-semibold tracking-normal text-ink sm:text-4xl">
             Поиск объявлений
           </h1>
-          <p className="mt-3 text-lg text-ink/62">
+          <p className="mt-2 text-base text-ink/62">
             Найдите товары, услуги и предложения рядом
           </p>
         </div>
 
-        <div className="mb-6 flex items-end justify-between gap-3">
-          <MobileFilters
-            filters={filters}
-            onChange={updateFilters}
-            onReset={resetFilters}
-          />
-          <div className="ml-auto w-full max-w-[240px]">
-            <SortSelect
-              value={filters.sort}
-              onChange={(sort) => updateFilters({ sort })}
-            />
-          </div>
-        </div>
-
-        <ActiveFilters
+        <CompactSearchFilters
           filters={filters}
-          onRemove={removeFilter}
+          onChange={updateFilters}
           onReset={resetFilters}
         />
 
-        <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
-          <SearchFilters
-            filters={filters}
-            onChange={updateFilters}
-            onReset={resetFilters}
-          />
-          <SearchResults listings={results} onReset={resetFilters} />
-        </div>
+        <SearchResults listings={results} onReset={resetFilters} />
       </section>
     </main>
   );
