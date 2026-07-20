@@ -15,6 +15,7 @@ import { getUserById } from "@/utils/users";
 import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustStatus } from "@/components/trust/TrustStatus";
 import { ReportModal } from "@/components/reports/ReportModal";
+import { getReviewStatsForUser, type ReviewStats } from "@/lib/data/reviews";
 
 type SellerCardProps = {
   listing: Listing;
@@ -27,6 +28,13 @@ export function SellerCard({ listing }: SellerCardProps) {
   const sellerUser = getUserById(sellerId);
   const confirmedDealsCount = getConfirmedDealsCount(sellerId);
   const [favorite, setFavorite] = useState(false);
+  const [reviewStats, setReviewStats] = useState<ReviewStats>({
+    total: 0,
+    positive: 0,
+    negative: 0,
+    topTags: [],
+    recentComments: []
+  });
 
   useEffect(() => {
     const syncFavorite = () => {
@@ -42,6 +50,29 @@ export function SellerCard({ listing }: SellerCardProps) {
       window.removeEventListener("storage", syncFavorite);
     };
   }, [listing.id]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadReviewStats() {
+      if (!hasSupabaseBrowserEnv() || !sellerId) {
+        return;
+      }
+
+      const supabase = createClient();
+      const stats = await getReviewStatsForUser(supabase, sellerId);
+
+      if (mounted) {
+        setReviewStats(stats);
+      }
+    }
+
+    void loadReviewStats();
+
+    return () => {
+      mounted = false;
+    };
+  }, [sellerId]);
 
   return (
     <aside className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -68,6 +99,8 @@ export function SellerCard({ listing }: SellerCardProps) {
             addressType={sellerUser?.addressMode ?? "aka"}
             signals={{
               confirmedDealsCount,
+              positiveReviewCount: reviewStats.positive,
+              negativeReviewCount: reviewStats.negative,
               complaints: sellerUser?.complaints ?? 0,
               accountAgeMonths: sellerUser
                 ? Math.max(0, (new Date().getFullYear() - sellerUser.joinedAt) * 12)
