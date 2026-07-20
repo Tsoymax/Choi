@@ -1,5 +1,6 @@
 "use client";
 
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -45,7 +46,10 @@ import {
   type RemoteDealRow,
   type ReservationRequestRow
 } from "@/lib/data/deals";
-import { markConversationMessageNotificationsRead } from "@/lib/data/notifications";
+import {
+  NOTIFICATION_EVENT,
+  markConversationMessageNotificationsRead
+} from "@/lib/data/notifications";
 import { getReviewByDealAndReviewer, type DealReviewRow } from "@/lib/data/reviews";
 import { createClient } from "@/utils/supabase/client";
 import { TrustBadge } from "@/components/trust/TrustBadge";
@@ -137,7 +141,8 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
   useEffect(() => {
     let mounted = true;
-    let intervalId: ReturnType<typeof setInterval> | undefined;
+    const channels: RealtimeChannel[] = [];
+    let refreshRemoteChat: (() => void) | undefined;
 
     async function syncRemoteListing() {
       if (!hasSupabaseBrowserEnv()) {
@@ -256,16 +261,69 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       }
 
       await syncRemoteChat();
-      intervalId = setInterval(syncRemoteChat, 3500);
+      refreshRemoteChat = () => {
+        void syncRemoteChat();
+      };
+      window.addEventListener(NOTIFICATION_EVENT, refreshRemoteChat);
+
+      channels.push(
+        supabase
+          .channel(`chat-window:${conversationId}:${userId}:messages`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "messages",
+              filter: `conversation_id=eq.${conversationId}`
+            },
+            refreshRemoteChat
+          )
+          .subscribe()
+      );
+
+      channels.push(
+        supabase
+          .channel(`chat-window:${conversationId}:${userId}:reservations`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "reservation_requests",
+              filter: `conversation_id=eq.${conversationId}`
+            },
+            refreshRemoteChat
+          )
+          .subscribe()
+      );
+
+      channels.push(
+        supabase
+          .channel(`chat-window:${conversationId}:${userId}:deals`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "deals"
+            },
+            refreshRemoteChat
+          )
+          .subscribe()
+      );
     }
 
     void syncRemoteListing();
 
     return () => {
       mounted = false;
-      if (intervalId) {
-        clearInterval(intervalId);
+      if (refreshRemoteChat) {
+        window.removeEventListener(NOTIFICATION_EVENT, refreshRemoteChat);
       }
+      channels.forEach((channel) => {
+        void createClient().removeChannel(channel);
+      });
     };
   }, [conversationId]);
 

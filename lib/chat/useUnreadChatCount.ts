@@ -9,88 +9,76 @@ import {
 } from "@/lib/data/notifications";
 import { createClient } from "@/utils/supabase/client";
 
-export function useUnreadChatCount() {
-  const [unreadCount, setUnreadCount] = useState(0);
+const UNREAD_COUNT_CACHE_TTL_MS = 2_000;
 
-  const syncUnreadCount = useCallback(async () => {
-    const localUnreadCount = getUnreadConversationCount();
+let cachedUnreadCount = 0;
+let cachedAt = 0;
+let unreadCountRequest: Promise<number> | null = null;
 
-    if (!hasSupabaseBrowserEnv()) {
-      setUnreadCount(localUnreadCount);
-      return;
-    }
+async function getUnreadChatCountSnapshot() {
+  const localUnreadCount = getUnreadConversationCount();
 
+  if (!hasSupabaseBrowserEnv()) {
+    cachedUnreadCount = localUnreadCount;
+    cachedAt = Date.now();
+    return cachedUnreadCount;
+  }
+
+  const now = Date.now();
+  if (now - cachedAt < UNREAD_COUNT_CACHE_TTL_MS) {
+    return cachedUnreadCount;
+  }
+
+  if (unreadCountRequest) {
+    return unreadCountRequest;
+  }
+
+  unreadCountRequest = (async () => {
     const user = await getCurrentUser();
     if (!user) {
-      setUnreadCount(localUnreadCount);
-      return;
+      return localUnreadCount;
     }
 
     const supabase = createClient();
     const remoteUnreadCount = await getUnreadMessageNotificationsCount(supabase, user.id);
-    setUnreadCount(localUnreadCount + remoteUnreadCount);
+    return localUnreadCount + remoteUnreadCount;
+  })()
+    .then((count) => {
+      cachedUnreadCount = count;
+      cachedAt = Date.now();
+      return count;
+    })
+    .finally(() => {
+      unreadCountRequest = null;
+    });
+
+  return unreadCountRequest;
+}
+
+export function useUnreadChatCount() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const syncUnreadCount = useCallback(async (force = false) => {
+    if (force) {
+      cachedAt = 0;
+    }
+
+    setUnreadCount(await getUnreadChatCountSnapshot());
   }, []);
 
   useEffect(() => {
     void syncUnreadCount();
-    window.addEventListener(CHAT_EVENT, syncUnreadCount);
-    window.addEventListener(NOTIFICATION_EVENT, syncUnreadCount);
-    window.addEventListener("storage", syncUnreadCount);
-
-    return () => {
-      window.removeEventListener(CHAT_EVENT, syncUnreadCount);
-      window.removeEventListener(NOTIFICATION_EVENT, syncUnreadCount);
-      window.removeEventListener("storage", syncUnreadCount);
+    const forceSync = () => {
+      void syncUnreadCount(true);
     };
-  }, [syncUnreadCount]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function subscribeToMessageNotifications() {
-      if (!hasSupabaseBrowserEnv()) {
-        return undefined;
-      }
-
-      const user = await getCurrentUser();
-      if (!user || !mounted) {
-        return undefined;
-      }
-
-      const supabase = createClient();
-      const channelId =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random()}`;
-      const channel = supabase
-        .channel(`chat-unread:${user.id}:${channelId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-            filter: `user_id=eq.${user.id}`
-          },
-          () => {
-            void syncUnreadCount();
-          }
-        )
-        .subscribe();
-
-      return channel;
-    }
-
-    let subscription: Awaited<ReturnType<typeof subscribeToMessageNotifications>>;
-    void subscribeToMessageNotifications().then((channel) => {
-      subscription = channel;
-    });
+    window.addEventListener(CHAT_EVENT, forceSync);
+    window.addEventListener(NOTIFICATION_EVENT, forceSync);
+    window.addEventListener("storage", forceSync);
 
     return () => {
-      mounted = false;
-      if (subscription) {
-        void createClient().removeChannel(subscription);
-      }
+      window.removeEventListener(CHAT_EVENT, forceSync);
+      window.removeEventListener(NOTIFICATION_EVENT, forceSync);
+      window.removeEventListener("storage", forceSync);
     };
   }, [syncUnreadCount]);
 

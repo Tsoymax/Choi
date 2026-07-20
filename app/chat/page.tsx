@@ -10,6 +10,7 @@ import type { Conversation } from "@/utils/chat";
 import { CHAT_EVENT, getConversations } from "@/utils/chat";
 import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { getConversationsByUserId } from "@/lib/data/conversations";
+import { NOTIFICATION_EVENT } from "@/lib/data/notifications";
 import { createClient } from "@/utils/supabase/client";
 
 export default function ChatPage() {
@@ -38,13 +39,13 @@ export default function ChatPage() {
     }
 
     void syncConversations();
-    const intervalId = setInterval(syncConversations, 5000);
     window.addEventListener(CHAT_EVENT, syncConversations);
+    window.addEventListener(NOTIFICATION_EVENT, syncConversations);
     window.addEventListener("storage", syncConversations);
 
     return () => {
-      clearInterval(intervalId);
       window.removeEventListener(CHAT_EVENT, syncConversations);
+      window.removeEventListener(NOTIFICATION_EVENT, syncConversations);
       window.removeEventListener("storage", syncConversations);
     };
   }, []);

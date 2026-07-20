@@ -3,7 +3,7 @@
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
 
-const USER_CACHE_TTL_MS = 10_000;
+const USER_CACHE_TTL_MS = 60_000;
 
 let cachedUser: User | null = null;
 let cachedAt = 0;

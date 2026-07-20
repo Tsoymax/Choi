@@ -73,7 +73,7 @@ export function NotificationBell() {
             table: "notifications",
             filter: `user_id=eq.${user.id}`
           },
-          (payload) => {
+          (payload: { new: Record<string, unknown> }) => {
             const notification = payload.new as NotificationRow;
             if (process.env.NODE_ENV !== "production") {
               console.info("[Choi notifications:realtime_insert]", {
@@ -87,7 +87,7 @@ export function NotificationBell() {
             emitNotificationChanged();
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: string) => {
           if (process.env.NODE_ENV !== "production") {
             console.info("[Choi notifications:realtime_status]", { status });
           }
