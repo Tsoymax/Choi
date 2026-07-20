@@ -157,7 +157,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
             className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#6fa17a] px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/14 transition hover:bg-[#5f946b] disabled:opacity-60"
           >
             <CheckCircle2 size={17} />
-            Продано
+            Продать
           </button>
         ) : null}
 
