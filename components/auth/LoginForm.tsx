@@ -19,6 +19,7 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const nextPath = getSafeNext(searchParams.get("next"));
   const confirmationError = searchParams.get("error") === "email_confirmation_failed";
+  const emailConfirmed = searchParams.get("confirmed") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -91,6 +92,11 @@ export function LoginForm() {
       </label>
 
       {error ? <p className="text-sm font-semibold text-coral">{error}</p> : null}
+      {emailConfirmed ? (
+        <p className="rounded-2xl bg-mist p-4 text-sm font-semibold text-leaf">
+          Email подтверждён. Теперь войдите в Choi с вашим email и паролем.
+        </p>
+      ) : null}
       {confirmationError ? (
         <p className="rounded-2xl bg-[#fff2ef] p-4 text-sm font-semibold text-coral">
           Не удалось подтвердить email. Попробуйте войти еще раз или запросите новое письмо.

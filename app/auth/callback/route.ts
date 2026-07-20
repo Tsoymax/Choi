@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
   const redirectTo = new URL("/profile", requestUrl.origin);
   const errorRedirect = new URL("/login", requestUrl.origin);
   errorRedirect.searchParams.set("error", "email_confirmation_failed");
+  const confirmedLoginRedirect = new URL("/login", requestUrl.origin);
+  confirmedLoginRedirect.searchParams.set("confirmed", "1");
 
   if (!code) {
     return NextResponse.redirect(errorRedirect);
@@ -41,21 +43,20 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     logCallbackError("exchangeCodeForSession", error);
-    return NextResponse.redirect(errorRedirect);
+    return NextResponse.redirect(confirmedLoginRedirect);
   }
 
   const { data, error: userError } = await supabase.auth.getUser();
 
   if (userError || !data.user) {
     logCallbackError("getUser", userError);
-    return NextResponse.redirect(errorRedirect);
+    return NextResponse.redirect(confirmedLoginRedirect);
   }
 
   const { error: profileError } = await ensureProfileForUser(supabase, data.user);
 
   if (profileError) {
     logCallbackError("ensureProfile", profileError);
-    return NextResponse.redirect(errorRedirect);
   }
 
   return NextResponse.redirect(redirectTo);
