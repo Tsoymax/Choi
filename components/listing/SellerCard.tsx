@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 import type { Listing } from "@/utils/listings";
-import { getDistrictLabel, getSellerTrust } from "@/utils/listings";
-import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
+import { getDistrictLabel } from "@/utils/listings";
+import { FAVORITES_EVENT, isFavoriteAsync, isUuid, toggleFavoriteAsync } from "@/utils/favorites";
 import { createConversation } from "@/utils/chat";
 import { hasSupabaseBrowserEnv, requireCurrentUser } from "@/lib/auth/client";
 import { createConversation as createRemoteConversation } from "@/lib/data/conversations";
@@ -16,18 +16,60 @@ import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustStatus } from "@/components/trust/TrustStatus";
 import { ReportModal } from "@/components/reports/ReportModal";
 import { getReviewStatsForUser, type ReviewStats } from "@/lib/data/reviews";
+import { getProfileById, type ProfileRow } from "@/lib/data/profiles";
 
 type SellerCardProps = {
   listing: Listing;
 };
 
+const monthNames = [
+  "января",
+  "февраля",
+  "марта",
+  "апреля",
+  "мая",
+  "июня",
+  "июля",
+  "августа",
+  "сентября",
+  "октября",
+  "ноября",
+  "декабря"
+];
+
+function formatJoinedDate(createdAt?: string | null, fallbackYear = 2026) {
+  if (createdAt) {
+    const date = new Date(createdAt);
+
+    if (!Number.isNaN(date.getTime())) {
+      return `На Choi с ${monthNames[date.getMonth()]} ${date.getFullYear()} года`;
+    }
+  }
+
+  return `На Choi с ${fallbackYear} года`;
+}
+
+function getAccountAgeMonths(createdAt?: string | null, fallbackYear = 2026) {
+  const start = createdAt ? new Date(createdAt) : new Date(fallbackYear, 0, 1);
+
+  if (Number.isNaN(start.getTime())) {
+    return 0;
+  }
+
+  const now = new Date();
+  return Math.max(
+    0,
+    (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth()
+  );
+}
+
 export function SellerCard({ listing }: SellerCardProps) {
   const router = useRouter();
-  const trust = getSellerTrust(listing.seller);
   const sellerId = listing.sellerId ?? "seller-akmal";
   const sellerUser = getUserById(sellerId);
   const confirmedDealsCount = getConfirmedDealsCount(sellerId);
   const [favorite, setFavorite] = useState(false);
+  const [sellerProfile, setSellerProfile] = useState<ProfileRow | null>(null);
   const [reviewStats, setReviewStats] = useState<ReviewStats>({
     total: 0,
     positive: 0,
@@ -55,14 +97,18 @@ export function SellerCard({ listing }: SellerCardProps) {
     let mounted = true;
 
     async function loadReviewStats() {
-      if (!hasSupabaseBrowserEnv() || !sellerId) {
+      if (!hasSupabaseBrowserEnv() || !sellerId || !isUuid(sellerId)) {
         return;
       }
 
       const supabase = createClient();
-      const stats = await getReviewStatsForUser(supabase, sellerId);
+      const [profile, stats] = await Promise.all([
+        getProfileById(supabase, sellerId),
+        getReviewStatsForUser(supabase, sellerId)
+      ]);
 
       if (mounted) {
+        setSellerProfile(profile);
         setReviewStats(stats);
       }
     }
@@ -73,6 +119,19 @@ export function SellerCard({ listing }: SellerCardProps) {
       mounted = false;
     };
   }, [sellerId]);
+
+  const sellerAddressType =
+    sellerProfile?.address_type === "opa" || sellerProfile?.address_type === "aka"
+      ? sellerProfile.address_type
+      : sellerUser?.addressMode ?? "aka";
+  const sellerJoinedText = formatJoinedDate(
+    sellerProfile?.created_at,
+    sellerUser?.joinedAt ?? 2026
+  );
+  const accountAgeMonths = getAccountAgeMonths(
+    sellerProfile?.created_at,
+    sellerUser?.joinedAt ?? 2026
+  );
 
   return (
     <aside className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -96,29 +155,18 @@ export function SellerCard({ listing }: SellerCardProps) {
         </p>
         <div className="mt-3">
           <TrustStatus
-            addressType={sellerUser?.addressMode ?? "aka"}
+            addressType={sellerAddressType}
             signals={{
               confirmedDealsCount,
               positiveReviewCount: reviewStats.positive,
               negativeReviewCount: reviewStats.negative,
               complaints: sellerUser?.complaints ?? 0,
-              accountAgeMonths: sellerUser
-                ? Math.max(0, (new Date().getFullYear() - sellerUser.joinedAt) * 12)
-                : 0
+              accountAgeMonths
             }}
           />
         </div>
-        <p className="mt-2 text-sm text-ink/58">{trust.since}</p>
+        <p className="mt-2 text-sm text-ink/58">{sellerJoinedText}</p>
       </Link>
-
-      <dl className="mt-5 grid gap-3 text-sm">
-        <div className="rounded-2xl border border-ink/10 p-4">
-          <dt className="text-ink/52">На Choi</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">
-            {sellerUser?.joinedAt ?? 2026}
-          </dd>
-        </div>
-      </dl>
 
       <div className="mt-6 grid gap-3">
         <button
