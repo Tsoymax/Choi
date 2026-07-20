@@ -45,7 +45,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
             <button
               type="button"
               onClick={showPreviousImage}
-              className="focus-ring absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/92 text-ink shadow-md transition hover:bg-white sm:grid"
+              className="focus-ring absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-leaf text-white shadow-lg shadow-leaf/25 transition hover:bg-[#3f6d4d] sm:grid"
               aria-label="Предыдущее фото"
             >
               <ChevronLeft size={22} />
@@ -53,7 +53,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
             <button
               type="button"
               onClick={showNextImage}
-              className="focus-ring absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/92 text-ink shadow-md transition hover:bg-white sm:grid"
+              className="focus-ring absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-leaf text-white shadow-lg shadow-leaf/25 transition hover:bg-[#3f6d4d] sm:grid"
               aria-label="Следующее фото"
             >
               <ChevronRight size={22} />
