@@ -142,10 +142,10 @@ export function ListingManagement({ listing }: ListingManagementProps) {
             type="button"
             disabled={isBusy}
             onClick={() => changeStatus("reserved")}
-            className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink transition hover:border-leaf/30 disabled:opacity-60"
+            className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:opacity-60"
           >
             <ShieldCheck size={16} />
-            Забронировать
+            Назначить время
           </button>
         ) : null}
 
@@ -154,7 +154,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
             type="button"
             disabled={isBusy}
             onClick={() => changeStatus("archived")}
-            className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:opacity-60"
+            className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#6fa17a] px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/14 transition hover:bg-[#5f946b] disabled:opacity-60"
           >
             <CheckCircle2 size={17} />
             Продано
@@ -169,7 +169,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
             className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#fff2ef] px-4 text-sm font-semibold text-coral transition hover:bg-[#ffe4dc] disabled:opacity-60"
           >
             <Archive size={16} />
-            Снять с публикации
+            Архивировать
           </button>
         ) : null}
 
@@ -177,7 +177,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
           type="button"
           disabled={isBusy}
           onClick={() => setDeleteModalOpen(true)}
-          className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full border border-coral/20 bg-white px-4 text-sm font-semibold text-coral transition hover:bg-[#fff2ef] disabled:opacity-60"
+          className="focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#ef2b18] px-4 text-sm font-semibold text-white shadow-lg shadow-[#ef2b18]/18 transition hover:bg-[#d91f10] disabled:opacity-60"
         >
           <Trash2 size={16} />
           Удалить
