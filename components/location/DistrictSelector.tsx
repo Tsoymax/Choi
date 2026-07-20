@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LocateFixed, MapPin, X } from "lucide-react";
+import { ChevronDown, LocateFixed, MapPin } from "lucide-react";
 import { districtCoordinates } from "@/data/districtCoordinates";
 
 type DistrictSelectorProps = {
@@ -21,7 +21,7 @@ export function DistrictSelector({
 }: DistrictSelectorProps) {
   const [open, setOpen] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const currentDistrict =
     districtCoordinates.find((item) => item.id === district) ?? districtCoordinates[0];
 
@@ -37,17 +37,9 @@ export function DistrictSelector({
     }
 
     function closeOnPageClick(event: PointerEvent) {
-      const target = event.target as HTMLElement | null;
+      const target = event.target as Node | null;
 
-      if (!target) {
-        return;
-      }
-
-      if (triggerRef.current?.contains(target)) {
-        return;
-      }
-
-      if (target.closest("[data-district-selector-control='true']")) {
+      if (!target || rootRef.current?.contains(target)) {
         return;
       }
 
@@ -83,82 +75,60 @@ export function DistrictSelector({
   }
 
   return (
-    <>
+    <div ref={rootRef} className="relative inline-flex">
       <button
-        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((value) => !value)}
         className={`focus-ring inline-flex shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white font-semibold text-ink shadow-sm transition hover:border-leaf/30 ${
           compact ? "h-10 px-3 text-sm" : "h-12 px-4 text-base"
         }`}
+        aria-expanded={open}
       >
         <MapPin size={compact ? 16 : 19} className="text-leaf" />
-        {currentDistrict.name}
-        <ChevronDown size={16} className="text-ink/45" />
+        <span className="max-w-[180px] truncate">{currentDistrict.name}</span>
+        <ChevronDown
+          size={16}
+          className={`text-ink/45 transition ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open ? (
-        <div
-          className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-[0_-18px_60px_rgba(24,32,29,0.18)] sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[28px]"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold text-ink">Где вы находитесь?</h2>
-                <p className="mt-1 text-sm text-ink/58">Покажем объявления рядом</p>
-              </div>
+        <div className="absolute left-0 top-[calc(100%+10px)] z-50 w-[min(92vw,360px)] rounded-[24px] border border-ink/10 bg-white p-3 shadow-[0_18px_60px_rgba(24,32,29,0.16)]">
+          {onUseGps ? (
+            <button
+              type="button"
+              onClick={useGps}
+              disabled={gpsLoading}
+              className="focus-ring mb-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70"
+            >
+              <LocateFixed size={17} />
+              {gpsLoading
+                ? "Определяем..."
+                : gpsActive
+                  ? "Моё местоположение включено"
+                  : "Использовать моё местоположение"}
+            </button>
+          ) : null}
+
+          <div className="grid max-h-[360px] gap-2 overflow-y-auto pr-1">
+            {districtCoordinates.map((item) => (
               <button
                 type="button"
-                data-district-selector-control="true"
-                onClick={() => setOpen(false)}
-                className="focus-ring grid h-10 w-10 place-items-center rounded-full bg-mist text-ink"
-                aria-label="Закрыть выбор района"
+                key={item.id}
+                onClick={() => void selectDistrict(item.id)}
+                className={`focus-ring flex min-h-11 items-center justify-between rounded-2xl border px-4 text-left text-sm font-semibold transition ${
+                  item.id === district
+                    ? "border-leaf bg-mist text-leaf"
+                    : "border-ink/10 bg-white text-ink hover:border-leaf/30 hover:bg-mist/60"
+                }`}
               >
-                <X size={18} />
+                <span className="min-w-0 truncate">{item.name}</span>
+                {item.id === district ? <span className="h-2 w-2 rounded-full bg-leaf" /> : null}
               </button>
-            </div>
-
-            {onUseGps ? (
-              <button
-                type="button"
-                data-district-selector-control="true"
-                onClick={useGps}
-                disabled={gpsLoading}
-                className="focus-ring mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70"
-              >
-                <LocateFixed size={18} />
-                {gpsLoading
-                  ? "Определяем..."
-                  : gpsActive
-                    ? "Используется моё местоположение"
-                    : "Использовать моё местоположение"}
-              </button>
-            ) : null}
-
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              {districtCoordinates.map((item) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  data-district-selector-control="true"
-                  onClick={() => void selectDistrict(item.id)}
-                  className={`focus-ring flex h-12 items-center justify-between rounded-2xl border px-4 text-left text-sm font-semibold transition ${
-                    item.id === district
-                      ? "border-leaf bg-mist text-leaf"
-                      : "border-ink/10 bg-white text-ink hover:border-leaf/30"
-                  }`}
-                >
-                  {item.name}
-                  {item.id === district ? <span className="h-2 w-2 rounded-full bg-leaf" /> : null}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

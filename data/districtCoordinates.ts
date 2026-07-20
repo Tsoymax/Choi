@@ -26,4 +26,3 @@ export function getDistrictCoordinate(districtId?: string | null) {
     districtCoordinates.find((district) => district.id === defaultDistrictId)!
   );
 }
-
