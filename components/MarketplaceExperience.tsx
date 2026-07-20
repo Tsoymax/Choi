@@ -47,6 +47,7 @@ export function MarketplaceExperience({
     getLocationForDistrict("yunusabad")
   );
   const [radius, setRadius] = useState<DistanceRadius>("5");
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   useEffect(() => {
     const syncLocalProducts = () =>
@@ -72,6 +73,7 @@ export function MarketplaceExperience({
 
     async function syncRemoteProducts() {
       if (!hasSupabaseBrowserEnv()) {
+        setIsLoadingProducts(false);
         return;
       }
 
@@ -83,6 +85,7 @@ export function MarketplaceExperience({
       }
 
       setRemoteProducts(listings.map(mapListingRowToProduct));
+      setIsLoadingProducts(false);
     }
 
     void syncRemoteProducts();
@@ -212,6 +215,7 @@ export function MarketplaceExperience({
           products={filteredProducts}
           language={language}
           onExpandRadius={radius === "all" ? undefined : expandRadius}
+          isLoading={isLoadingProducts}
         />
       </section>
       <Footer language={language} />

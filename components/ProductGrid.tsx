@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ChoiTeaLoader } from "./ChoiTeaLoader";
 import type { Product } from "./types";
 import { ListingCard } from "./ListingCard";
 import type { Language } from "./i18n";
@@ -7,9 +8,15 @@ type ProductGridProps = {
   products: Product[];
   language: Language;
   onExpandRadius?: () => void;
+  isLoading?: boolean;
 };
 
-export function ProductGrid({ products, language, onExpandRadius }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  language,
+  onExpandRadius,
+  isLoading = false
+}: ProductGridProps) {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -23,7 +30,9 @@ export function ProductGrid({ products, language, onExpandRadius }: ProductGridP
         </div>
       </div>
 
-      {products.length === 0 ? (
+      {isLoading ? (
+        <ChoiTeaLoader label="Загружаем объявления рядом" />
+      ) : products.length === 0 ? (
         <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
           <Image
             src="/mascot.svg"

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Handshake, ShoppingBag, Store } from "lucide-react";
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import { createClient } from "@/utils/supabase/client";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import { getDealHistoryForUser, type DealHistoryItem } from "@/lib/data/deals";
@@ -114,9 +115,15 @@ export function DealHistory({ userId }: DealHistoryProps) {
       </div>
 
       {loading ? (
-        <div className="mt-6 rounded-[22px] bg-mist p-6 text-center text-sm font-semibold text-ink/58">
+        <>
+          <ChoiTeaLoader
+            label="Загружаем историю сделок"
+            className="mt-6 shadow-none"
+          />
+          <div className="hidden">
           Загружаем историю...
-        </div>
+          </div>
+        </>
       ) : filteredItems.length > 0 ? (
         <div className="mt-6 space-y-3">
           {filteredItems.map((item) => {

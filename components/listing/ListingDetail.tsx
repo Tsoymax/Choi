@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CalendarDays, MapPin, Tag } from "lucide-react";
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
 import { ListingCard } from "@/components/ListingCard";
@@ -120,7 +121,10 @@ export function ListingDetail({
           query={query}
           onQueryChange={setQuery}
         />
-        <div className="mx-auto mt-10 max-w-3xl rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+        <div className="mx-auto mt-10 max-w-3xl px-4">
+          <ChoiTeaLoader label="Загружаем объявление" />
+        </div>
+        <div className="hidden">
           <h1 className="text-3xl font-semibold text-ink">Загружаем объявление</h1>
           <p className="mt-3 text-ink/62">
             Проверяем публикацию в Choi.

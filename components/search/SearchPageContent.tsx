@@ -30,6 +30,7 @@ export function SearchPageContent() {
   const searchParams = useSearchParams();
   const [language, setLanguage] = useState<Language>("ru");
   const [listings, setListings] = useState<Listing[]>([]);
+  const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [homeDistrict, setHomeDistrict] = useState("yunusabad");
   const [currentLocation, setCurrentLocation] = useState<Coordinates>(
     getLocationForDistrict("yunusabad")
@@ -84,23 +85,31 @@ export function SearchPageContent() {
   }, [currentUserId, filters.q]);
 
   useEffect(() => {
+    let mounted = true;
+
     async function syncListings() {
       const localListings = getAllListings();
 
       if (!hasSupabaseBrowserEnv()) {
-        setListings(localListings);
+        if (mounted) {
+          setListings(localListings);
+          setIsLoadingListings(false);
+        }
         return;
       }
 
       const supabase = createClient();
       const remoteListings = await getActiveListings(supabase);
-      setListings([
-        ...remoteListings.map((listing) => ({
-          ...mapListingRowToProduct(listing),
-          description: listing.description
-        })),
-        ...localListings
-      ]);
+      if (mounted) {
+        setListings([
+          ...remoteListings.map((listing) => ({
+            ...mapListingRowToProduct(listing),
+            description: listing.description
+          })),
+          ...localListings
+        ]);
+        setIsLoadingListings(false);
+      }
     }
 
     void syncListings();
@@ -108,6 +117,7 @@ export function SearchPageContent() {
     window.addEventListener("storage", syncListings);
 
     return () => {
+      mounted = false;
       window.removeEventListener(LISTINGS_EVENT, syncListings);
       window.removeEventListener("storage", syncListings);
     };
@@ -213,7 +223,11 @@ export function SearchPageContent() {
           onReset={resetFilters}
         />
 
-        <SearchResults listings={results} onReset={resetFilters} />
+        <SearchResults
+          listings={results}
+          onReset={resetFilters}
+          isLoading={isLoadingListings}
+        />
       </section>
     </main>
   );

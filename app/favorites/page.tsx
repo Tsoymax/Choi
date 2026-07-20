@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Heart } from "lucide-react";
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import { Header } from "@/components/Header";
 import { ListingCard } from "@/components/ListingCard";
 import type { Language } from "@/components/i18n";
@@ -22,6 +23,7 @@ export default function FavoritesPage() {
   const [query, setQuery] = useState("");
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +53,7 @@ export default function FavoritesPage() {
 
       setFavoriteIds(ids);
       setListings(nextListings);
+      setLoading(false);
     };
 
     void syncFavorites();
@@ -99,7 +102,9 @@ export default function FavoritesPage() {
           </p>
         </div>
 
-        {favoriteListings.length > 0 ? (
+        {loading ? (
+          <ChoiTeaLoader label="Загружаем избранное" />
+        ) : favoriteListings.length > 0 ? (
           <div className="grid gap-5 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {favoriteListings.map((listing) => (
               <ListingCard key={listing.id} product={listing} language="ru" />

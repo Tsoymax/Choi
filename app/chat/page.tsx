@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
 import { ChatList } from "@/components/chat/ChatList";
@@ -17,6 +18,7 @@ export default function ChatPage() {
   const [language, setLanguage] = useState<Language>("ru");
   const [query, setQuery] = useState("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function syncConversations() {
@@ -24,18 +26,21 @@ export default function ChatPage() {
 
       if (!hasSupabaseBrowserEnv()) {
         setConversations(localConversations);
+        setLoading(false);
         return;
       }
 
       const user = await getCurrentUser();
       if (!user) {
         setConversations(localConversations);
+        setLoading(false);
         return;
       }
 
       const supabase = createClient();
       const remoteConversations = await getConversationsByUserId(supabase, user.id);
       setConversations([...remoteConversations, ...localConversations]);
+      setLoading(false);
     }
 
     void syncConversations();
@@ -66,7 +71,9 @@ export default function ChatPage() {
           </h1>
         </div>
 
-        {conversations.length > 0 ? (
+        {loading ? (
+          <ChoiTeaLoader label="Загружаем сообщения" />
+        ) : conversations.length > 0 ? (
           <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
             <ChatList conversations={conversations} />
             <section className="hidden rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:grid lg:place-items-center">

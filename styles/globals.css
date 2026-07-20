@@ -48,3 +48,74 @@ select {
 .focus-ring {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf focus-visible:ring-offset-2;
 }
+
+.choi-tea-loader {
+  transform-origin: 92px 76px;
+}
+
+.choi-teapot {
+  animation: choi-teapot-pour 1.8s ease-in-out infinite;
+  transform-origin: 92px 76px;
+}
+
+.choi-tea-stream {
+  animation: choi-tea-stream 1.8s ease-in-out infinite;
+}
+
+.choi-cup-fill {
+  animation: choi-cup-fill 1.8s ease-in-out infinite;
+}
+
+.choi-cup {
+  animation: choi-cup-settle 1.8s ease-in-out infinite;
+  transform-origin: 156px 138px;
+}
+
+@keyframes choi-teapot-pour {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  38%,
+  68% {
+    transform: rotate(-9deg) translate(-2px, -2px);
+  }
+}
+
+@keyframes choi-tea-stream {
+  0%,
+  18%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 70;
+  }
+  34%,
+  78% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes choi-cup-fill {
+  0%,
+  35%,
+  100% {
+    opacity: 0.35;
+    stroke-dasharray: 12 38;
+  }
+  64%,
+  82% {
+    opacity: 1;
+    stroke-dasharray: 38 38;
+  }
+}
+
+@keyframes choi-cup-settle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  62% {
+    transform: translateY(1px);
+  }
+}

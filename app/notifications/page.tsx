@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
 import { NotificationList } from "@/components/notifications/NotificationList";
@@ -101,6 +102,8 @@ export default function NotificationsPage() {
             </button>
           ) : null}
         </div>
+
+        {loading ? <ChoiTeaLoader label="Загружаем уведомления" /> : null}
 
         {!userId && !loading ? (
           <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">

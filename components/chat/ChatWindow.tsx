@@ -46,6 +46,7 @@ import {
   type RemoteDealRow,
   type ReservationRequestRow
 } from "@/lib/data/deals";
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import {
   NOTIFICATION_EVENT,
   markConversationMessageNotificationsRead
@@ -561,10 +562,13 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
   if (conversation && !listing && isLoadingListing) {
     return (
-      <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+      <>
+        <ChoiTeaLoader label="Загружаем диалог" />
+        <section className="hidden">
         <h1 className="text-2xl font-semibold text-ink">Загружаем диалог</h1>
         <p className="mt-2 text-ink/58">Подтягиваем объявление из Choi.</p>
-      </section>
+        </section>
+      </>
     );
   }
 

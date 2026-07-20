@@ -1,3 +1,4 @@
+import { ChoiTeaLoader } from "@/components/ChoiTeaLoader";
 import { ListingCard } from "@/components/ListingCard";
 import type { Listing } from "@/utils/listings";
 import { SearchEmptyState } from "./SearchEmptyState";
@@ -5,9 +6,18 @@ import { SearchEmptyState } from "./SearchEmptyState";
 type SearchResultsProps = {
   listings: Listing[];
   onReset: () => void;
+  isLoading?: boolean;
 };
 
-export function SearchResults({ listings, onReset }: SearchResultsProps) {
+export function SearchResults({
+  listings,
+  onReset,
+  isLoading = false
+}: SearchResultsProps) {
+  if (isLoading) {
+    return <ChoiTeaLoader label="Ищем объявления рядом" />;
+  }
+
   if (listings.length === 0) {
     return <SearchEmptyState onReset={onReset} />;
   }
