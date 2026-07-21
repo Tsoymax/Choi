@@ -304,6 +304,36 @@ export async function updateCurrentProfile(input: ProfileUpdateInput) {
   }
 }
 
+export async function setCurrentProfilePhoneVerification(phone: string, phoneVerified: boolean) {
+  const supabase = createClient();
+  const user = await getCachedAuthUser();
+
+  if (!user) {
+    return {
+      profile: null,
+      error: new Error("Пользователь не авторизован")
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      phone,
+      phone_verified: phoneVerified,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", user.id)
+    .select()
+    .single<ProfileRow>();
+
+  if (error) {
+    logProfileError(error, "update_profile_phone_verification", user.id);
+    return { profile: null, error };
+  }
+
+  return { profile: data, error: null };
+}
+
 export function profileToChoiUser(profile: ProfileRow): ChoiUser {
   return {
     id: profile.id,

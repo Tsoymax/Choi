@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { MapPin, ShieldCheck } from "lucide-react";
 import type { ChoiUser } from "@/utils/users";
 import { getDistrictLabel } from "@/utils/listings";
@@ -32,7 +33,18 @@ export function ProfileHeader({
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold text-ink">{user.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-semibold text-ink">{user.name}</h1>
+                {user.phoneVerified ? (
+                  <span
+                    className="inline-grid h-9 w-9 place-items-center rounded-full bg-mist ring-1 ring-leaf/15"
+                    title="Телефон подтверждён"
+                    aria-label="Телефон подтверждён"
+                  >
+                    <Image src="/images/choi-teapot.png" alt="" width={25} height={25} />
+                  </span>
+                ) : null}
+              </div>
               <div className="mt-3">
                 <TrustStatus
                   addressType={user.addressMode}

@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
 import { DealHistory } from "@/components/profile/DealHistory";
 import { MyListings } from "@/components/profile/MyListings";
+import { PhoneVerificationCard } from "@/components/profile/PhoneVerificationCard";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { TrustCard } from "@/components/profile/TrustCard";
@@ -154,6 +155,9 @@ export function ProfilePageClient({
               reviewStats={reviewStats}
               onEdit={() => setIsEditing(true)}
             />
+            {isSupabaseUser ? (
+              <PhoneVerificationCard user={user} onVerified={setUser} />
+            ) : null}
             <TrustCard user={user} reviewStats={reviewStats} />
             {isSupabaseUser ? (
               <button
