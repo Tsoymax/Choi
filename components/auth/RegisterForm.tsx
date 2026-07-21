@@ -27,7 +27,6 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate() {
@@ -50,7 +49,6 @@ export function RegisterForm() {
   async function submitRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setMessage("");
 
     const validationError = validate();
     if (validationError) {
@@ -96,7 +94,12 @@ export function RegisterForm() {
       return;
     }
 
-    setMessage("Проверьте почту и подтвердите регистрацию");
+    const loginParams = new URLSearchParams({
+      pending: "1",
+      next: nextPath,
+      email: email.trim()
+    });
+    router.replace(`/login?${loginParams.toString()}` as never);
   }
 
   return (
@@ -149,10 +152,6 @@ export function RegisterForm() {
       </label>
 
       {error ? <p className="text-sm font-semibold text-coral">{error}</p> : null}
-      {message ? (
-        <p className="rounded-2xl bg-mist p-4 text-sm font-semibold text-leaf">{message}</p>
-      ) : null}
-
       <button
         type="submit"
         disabled={isSubmitting}

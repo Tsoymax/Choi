@@ -24,6 +24,8 @@ export function LoginForm() {
   const nextPath = getSafeNext(searchParams.get("next"));
   const confirmationError = searchParams.get("error") === "email_confirmation_failed";
   const emailConfirmed = searchParams.get("confirmed") === "1";
+  const registrationPending = searchParams.get("pending") === "1";
+  const pendingEmail = searchParams.get("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -101,6 +103,12 @@ export function LoginForm() {
       {emailConfirmed ? (
         <p className="rounded-2xl bg-mist p-4 text-sm font-semibold text-leaf">
           Email подтверждён. Теперь войдите в Choi с вашим email и паролем.
+        </p>
+      ) : null}
+      {registrationPending ? (
+        <p className="rounded-2xl bg-mist p-4 text-sm font-semibold leading-6 text-leaf">
+          Аккаунт создан. Проверьте почту
+          {pendingEmail ? ` ${pendingEmail}` : ""} и подтвердите регистрацию, затем войдите.
         </p>
       ) : null}
       {confirmationError ? (
