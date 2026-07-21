@@ -18,8 +18,10 @@ export function PriceField({
   onNegotiableChange
 }: PriceFieldProps) {
   return (
-    <div>
-      <span className="text-sm font-semibold text-ink">Цена</span>
+    <div id="sell-field-price" className="scroll-mt-28">
+      <span className="text-sm font-semibold text-ink">
+        Цена {!negotiable ? <span className="text-coral">*</span> : null}
+      </span>
       <div className="mt-2 grid gap-3 sm:grid-cols-[1fr_auto]">
         <input
           value={price}

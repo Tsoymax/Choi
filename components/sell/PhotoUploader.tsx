@@ -29,10 +29,15 @@ export function PhotoUploader({
   onMovePhoto
 }: PhotoUploaderProps) {
   return (
-    <section className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
+    <section
+      id="sell-field-photos"
+      className="scroll-mt-28 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7"
+    >
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-ink">Добавьте фотографии</h2>
+          <h2 className="text-xl font-semibold text-ink">
+            Добавьте фотографии <span className="text-coral">*</span>
+          </h2>
           <p className="mt-1 text-sm text-ink/58">
             До 10 фото. Первая фотография считается главной.
           </p>

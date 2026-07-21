@@ -68,6 +68,16 @@ type SellFormProps = {
   cancelHref?: string;
 };
 
+const fieldScrollIds: Record<keyof FormErrors, string> = {
+  photos: "sell-field-photos",
+  category: "sell-field-category",
+  title: "sell-field-title",
+  description: "sell-field-description",
+  price: "sell-field-price",
+  district: "sell-field-district",
+  profile: "sell-field-profile"
+};
+
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -267,18 +277,44 @@ export function SellForm({
     }
   }
 
+  function scrollToFirstError(
+    nextErrors: FormErrors,
+    nextAttributeErrors: Record<string, string>
+  ) {
+    window.requestAnimationFrame(() => {
+      const firstFieldKey = (
+        ["photos", "title", "category", "price", "description", "district", "profile"] as const
+      ).find((key) => nextErrors[key]);
+      const firstAttributeKey = Object.keys(nextAttributeErrors)[0];
+      const targetId = firstFieldKey
+        ? fieldScrollIds[firstFieldKey]
+        : firstAttributeKey
+          ? `sell-field-attribute-${firstAttributeKey}`
+          : "";
+
+      if (!targetId) {
+        return;
+      }
+
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
   function validateForm() {
     const nextErrors: FormErrors = {};
 
     if (isProfileLoading) {
       nextErrors.profile = "Подождите, профиль ещё загружается.";
       setErrors(nextErrors);
+      scrollToFirstError(nextErrors, {});
       return false;
     }
 
     if (profileLoadError) {
       nextErrors.profile = "Не удалось загрузить профиль.";
       setErrors(nextErrors);
+      scrollToFirstError(nextErrors, {});
       return false;
     }
 
@@ -315,7 +351,14 @@ export function SellForm({
     });
 
     setAttributeErrors(nextAttributeErrors);
-    return Object.keys(nextErrors).length === 0 && Object.keys(nextAttributeErrors).length === 0;
+    const isValid =
+      Object.keys(nextErrors).length === 0 && Object.keys(nextAttributeErrors).length === 0;
+
+    if (!isValid) {
+      scrollToFirstError(nextErrors, nextAttributeErrors);
+    }
+
+    return isValid;
   }
 
   async function submitListing(event: FormEvent<HTMLFormElement>) {
@@ -538,8 +581,10 @@ export function SellForm({
         />
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          <label className="block">
-            <span className="text-sm font-semibold text-ink">Название объявления</span>
+          <label id="sell-field-title" className="block scroll-mt-28">
+            <span className="text-sm font-semibold text-ink">
+              Название объявления <span className="text-coral">*</span>
+            </span>
             <input
               value={title}
               maxLength={70}
@@ -611,8 +656,10 @@ export function SellForm({
             }}
           />
 
-          <label className="block">
-            <span className="text-sm font-semibold text-ink">Описание</span>
+          <label id="sell-field-description" className="block scroll-mt-28">
+            <span className="text-sm font-semibold text-ink">
+              Описание <span className="text-coral">*</span>
+            </span>
             <textarea
               value={description}
               maxLength={3000}
@@ -641,7 +688,10 @@ export function SellForm({
           />
         </section>
 
-        <section className="space-y-5 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
+        <section
+          id="sell-field-profile"
+          className="scroll-mt-28 space-y-5 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7"
+        >
           <h2 className="text-xl font-semibold text-ink">Продавец</h2>
           <div className="rounded-2xl border border-ink/10 bg-mist p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

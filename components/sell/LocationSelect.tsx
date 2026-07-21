@@ -9,8 +9,10 @@ type LocationSelectProps = {
 
 export function LocationSelect({ value, error, onChange }: LocationSelectProps) {
   return (
-    <label className="block">
-      <span className="text-sm font-semibold text-ink">Район</span>
+    <label id="sell-field-district" className="block scroll-mt-28">
+      <span className="text-sm font-semibold text-ink">
+        Район <span className="text-coral">*</span>
+      </span>
       <span className="relative mt-2 block">
         <select
           value={value}

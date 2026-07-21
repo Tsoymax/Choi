@@ -27,7 +27,7 @@ function FieldControl({
   const isSelectDisabled = field.type === "select" && field.dependsOn && !values[field.dependsOn];
 
   return (
-    <label className="block">
+    <label id={`sell-field-attribute-${field.key}`} className="block scroll-mt-28">
       <span className="text-sm font-semibold text-ink">
         {field.label}
         {field.required ? <span className="text-coral"> *</span> : null}
