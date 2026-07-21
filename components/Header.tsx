@@ -167,7 +167,7 @@ export function Header({
   return (
     <header className="sticky top-0 z-40 border-b border-ink/5 bg-white/92 backdrop-blur-xl">
       <DealNotificationModal />
-      <div className="mx-auto flex h-24 w-full max-w-[1504px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-24 w-full max-w-[1504px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:px-8 xl:flex-nowrap">
         <Link
           href="/"
           className="flex shrink-0 cursor-pointer items-center transition hover:opacity-85"
@@ -196,7 +196,7 @@ export function Header({
             event.preventDefault();
             openSearch();
           }}
-          className="hidden h-14 min-w-0 flex-1 items-center gap-3 rounded-full border border-ink/10 bg-white px-6 shadow-sm lg:flex"
+          className="order-last hidden h-12 w-full min-w-0 items-center gap-3 rounded-full border border-ink/10 bg-white px-5 shadow-sm md:flex xl:order-none xl:h-14 xl:w-auto xl:flex-1 xl:px-6"
         >
           <Search size={22} className="text-ink/45" />
           <input
@@ -235,24 +235,24 @@ export function Header({
           <NotificationBell />
           <Link
             href={(currentUser ? "/profile" : "/login") as never}
-            className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-mist px-3 text-base font-semibold text-ink transition hover:bg-[#e4eee7] md:flex"
+            className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-mist px-2 text-base font-semibold text-ink transition hover:bg-[#e4eee7] md:flex xl:px-3"
           >
             <span className="grid h-8 w-8 place-items-center rounded-full bg-leaf text-sm font-semibold text-white">
               {(currentUser?.name ?? "В").slice(0, 1).toUpperCase()}
             </span>
-            {currentUser?.name ?? "Вход"}
+            <span className="hidden lg:inline">{currentUser?.name ?? "Вход"}</span>
           </Link>
           <Link
             href="/sell"
-            className="focus-ring hidden h-14 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] md:inline-flex sm:px-6 sm:text-base"
+            className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] md:inline-flex xl:h-14 xl:px-6 xl:text-base"
           >
             <Plus size={20} />
-            <span className="hidden sm:inline">{t.postListing}</span>
-            <span className="sm:hidden">{t.sell}</span>
+            <span className="hidden xl:inline">{t.postListing}</span>
+            <span className="xl:hidden">{t.sell}</span>
           </Link>
           <button
             onClick={() => onLanguageChange(language === "ru" ? "uz" : "ru")}
-            className="focus-ring hidden h-14 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold uppercase text-ink shadow-sm md:inline-flex sm:px-5"
+            className="focus-ring hidden h-12 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold uppercase text-ink shadow-sm lg:inline-flex xl:h-14 xl:px-5"
           >
             {language === "ru" ? "РУ" : "UZ"}
             <ChevronDown size={16} />
