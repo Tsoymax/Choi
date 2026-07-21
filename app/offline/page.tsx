@@ -7,7 +7,7 @@ export default function OfflinePage() {
     <main className="min-h-screen bg-cream px-4 py-12 text-ink">
       <section className="mx-auto flex max-w-xl flex-col items-center rounded-[28px] border border-ink/5 bg-white px-6 py-12 text-center shadow-xl shadow-ink/5">
         <Image
-          src="/mascot.svg"
+          src="/images/choi-teapot.png"
           alt="Choi"
           width={132}
           height={132}

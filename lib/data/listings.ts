@@ -113,7 +113,7 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
   const primaryImage =
     images.find((image) => image.is_primary)?.image_url ??
     images[0]?.image_url ??
-    "/mascot.svg";
+    "/images/choi-teapot.png";
 
   return {
     id: listing.id,

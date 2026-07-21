@@ -1,10 +1,9 @@
-const CACHE_NAME = "choi-app-shell-v2";
+const CACHE_NAME = "choi-app-shell-v3";
 const PRECACHE_URLS = [
   "/",
   "/search",
   "/offline",
   "/logo.svg",
-  "/mascot.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/maskable-512.png",

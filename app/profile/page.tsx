@@ -22,7 +22,7 @@ function ProfileErrorScreen({ error }: { error: unknown }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#f7f5ef] px-4">
       <section className="max-w-lg rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
-        <Image src="/mascot.svg" alt="Choi" width={80} height={80} className="mx-auto mb-5" />
+        <Image src="/images/choi-teapot.png" alt="Choi" width={80} height={80} className="mx-auto mb-5" />
         <h1 className="text-3xl font-semibold text-ink">Не удалось загрузить профиль</h1>
         <p className="mt-3 text-ink/62">
           Попробуйте обновить страницу или войти снова.

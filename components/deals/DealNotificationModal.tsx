@@ -61,7 +61,7 @@ export function DealNotificationModal() {
   return (
     <div className="fixed inset-0 z-[70] bg-ink/30 backdrop-blur-sm">
       <div className="absolute inset-x-4 top-1/2 mx-auto max-w-[440px] -translate-y-1/2 rounded-[28px] bg-white p-6 text-center shadow-[0_24px_80px_rgba(24,32,29,0.18)]">
-        <Image src="/mascot.svg" alt="Choi" width={76} height={76} className="mx-auto mb-4" />
+        <Image src="/images/choi-teapot.png" alt="Choi" width={76} height={76} className="mx-auto mb-4" />
         <h2 className="text-2xl font-semibold text-ink">{notification.title}</h2>
         {notification.body ? (
           <p className="mt-2 text-base text-ink/62">{notification.body}</p>

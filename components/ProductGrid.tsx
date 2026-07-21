@@ -35,7 +35,7 @@ export function ProductGrid({
       ) : products.length === 0 ? (
         <section className="rounded-[24px] bg-white p-8 text-center shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
           <Image
-            src="/mascot.svg"
+            src="/images/choi-teapot.png"
             alt="Choi"
             width={92}
             height={92}

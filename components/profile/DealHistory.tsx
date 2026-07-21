@@ -141,7 +141,7 @@ export function DealHistory({ userId }: DealHistoryProps) {
                   className="relative block aspect-square overflow-hidden rounded-2xl bg-[#f7f5ef]"
                 >
                   <Image
-                    src={listing?.image ?? "/mascot.svg"}
+                    src={listing?.image ?? "/images/choi-teapot.png"}
                     alt={listing?.title ?? "Объявление Choi"}
                     fill
                     unoptimized={Boolean(listing?.image?.startsWith("data:"))}
