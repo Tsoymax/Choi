@@ -51,6 +51,38 @@ export type ProfileResult = {
   error: unknown | null;
 };
 
+export function isProfileOnboardingComplete(
+  profile: Pick<ProfileRow, "name" | "district" | "address_type"> | null | undefined
+) {
+  return Boolean(
+    profile?.name?.trim() &&
+      profile.district &&
+      (profile.address_type === "aka" || profile.address_type === "opa")
+  );
+}
+
+export function getSafeProfileNext(value: string | null | undefined, fallback = "/profile") {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return fallback;
+  }
+
+  if (value.startsWith("/login") || value.startsWith("/register") || value.startsWith("/auth")) {
+    return fallback;
+  }
+
+  return value;
+}
+
+export function getOnboardingPath(nextPath = "/profile") {
+  const safeNext = getSafeProfileNext(nextPath);
+
+  if (safeNext.startsWith("/onboarding")) {
+    return safeNext;
+  }
+
+  return `/onboarding?next=${encodeURIComponent(safeNext)}`;
+}
+
 export function getSupabaseErrorInfo(error: unknown): ProfileDebugError {
   if (!error) {
     return null;

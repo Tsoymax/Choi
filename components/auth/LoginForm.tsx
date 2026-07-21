@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { ensureProfileForUser } from "@/lib/data/profiles";
+import {
+  ensureProfileForUser,
+  getOnboardingPath,
+  isProfileOnboardingComplete
+} from "@/lib/data/profiles";
 
 function getSafeNext(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -53,7 +57,7 @@ export function LoginForm() {
       return;
     }
 
-    const { error: profileError } = await ensureProfileForUser(supabase, data.user);
+    const { profile, error: profileError } = await ensureProfileForUser(supabase, data.user);
 
     if (profileError) {
       setIsSubmitting(false);
@@ -62,7 +66,9 @@ export function LoginForm() {
     }
 
     router.refresh();
-    router.push(nextPath as never);
+    router.push(
+      (isProfileOnboardingComplete(profile) ? nextPath : getOnboardingPath(nextPath)) as never
+    );
   }
 
   return (

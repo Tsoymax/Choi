@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
-import { ensureProfileForUser } from "@/lib/data/profiles";
+import {
+  ensureProfileForUser,
+  getOnboardingPath,
+  getSafeProfileNext,
+  isProfileOnboardingComplete
+} from "@/lib/data/profiles";
 
 type SupabaseErrorLike = {
   message?: string;
@@ -27,7 +32,8 @@ function logCallbackError(scope: string, error: unknown) {
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const redirectTo = new URL("/profile", requestUrl.origin);
+  const nextPath = getSafeProfileNext(requestUrl.searchParams.get("next"));
+  const redirectTo = new URL(nextPath, requestUrl.origin);
   const errorRedirect = new URL("/login", requestUrl.origin);
   errorRedirect.searchParams.set("error", "email_confirmation_failed");
   const confirmedLoginRedirect = new URL("/login", requestUrl.origin);
@@ -53,10 +59,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(confirmedLoginRedirect);
   }
 
-  const { error: profileError } = await ensureProfileForUser(supabase, data.user);
+  const { profile, error: profileError } = await ensureProfileForUser(supabase, data.user);
 
   if (profileError) {
     logCallbackError("ensureProfile", profileError);
+  }
+
+  if (!isProfileOnboardingComplete(profile)) {
+    return NextResponse.redirect(new URL(getOnboardingPath(nextPath), requestUrl.origin));
   }
 
   return NextResponse.redirect(redirectTo);

@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { ensureProfileForUser } from "@/lib/data/profiles";
+import {
+  ensureProfileForUser,
+  getOnboardingPath,
+  isProfileOnboardingComplete
+} from "@/lib/data/profiles";
 
 function getSafeNext(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -56,6 +60,9 @@ export function RegisterForm() {
 
     setIsSubmitting(true);
     const supabase = createClient();
+    const callbackUrl = new URL(`${window.location.origin}/auth/callback`);
+    callbackUrl.searchParams.set("next", nextPath);
+
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -63,7 +70,7 @@ export function RegisterForm() {
         data: {
           name: name.trim()
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: callbackUrl.toString()
       }
     });
 
@@ -75,7 +82,7 @@ export function RegisterForm() {
     }
 
     if (data.session && data.user) {
-      const { error: profileError } = await ensureProfileForUser(supabase, data.user);
+      const { profile, error: profileError } = await ensureProfileForUser(supabase, data.user);
 
       if (profileError) {
         setError("Аккаунт создан, но профиль не загрузился. Попробуйте войти ещё раз.");
@@ -83,7 +90,9 @@ export function RegisterForm() {
       }
 
       router.refresh();
-      router.push(nextPath as never);
+      router.push(
+        (isProfileOnboardingComplete(profile) ? nextPath : getOnboardingPath(nextPath)) as never
+      );
       return;
     }
 

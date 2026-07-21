@@ -3,7 +3,11 @@ import Image from "next/image";
 import { ProfileErrorActions } from "@/components/profile/ProfileErrorActions";
 import { ProfilePageClient } from "@/components/profile/ProfilePageClient";
 import { getCurrentProfileResult, getCurrentUser } from "@/lib/auth/server";
-import { getSupabaseErrorInfo } from "@/lib/data/profiles";
+import {
+  getOnboardingPath,
+  getSupabaseErrorInfo,
+  isProfileOnboardingComplete
+} from "@/lib/data/profiles";
 import { profileToChoiUser } from "@/lib/data/profiles";
 import { defaultCurrentUser, type ChoiUser } from "@/utils/users";
 
@@ -56,6 +60,10 @@ export default async function ProfilePage() {
 
   if (profileResult.status === "profile_error") {
     return <ProfileErrorScreen error={profileResult.error} />;
+  }
+
+  if (!isProfileOnboardingComplete(profileResult.profile)) {
+    redirect(getOnboardingPath("/profile") as never);
   }
 
   const initialUser = profileToChoiUser(profileResult.profile);
