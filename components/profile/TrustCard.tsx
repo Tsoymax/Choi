@@ -2,6 +2,7 @@ import type { ChoiUser } from "@/utils/users";
 import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustStatus } from "@/components/trust/TrustStatus";
 import type { ReviewStats } from "@/lib/data/reviews";
+import { getAccountAgeMonths } from "@/utils/profileDate";
 
 type TrustCardProps = {
   user: ChoiUser;
@@ -28,7 +29,7 @@ export function TrustCard({ user, publicView, reviewStats }: TrustCardProps) {
             positiveReviewCount: reviewStats?.positive ?? 0,
             negativeReviewCount: reviewStats?.negative ?? 0,
             complaints: user.complaints,
-            accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
+            accountAgeMonths: getAccountAgeMonths(user)
           }}
         />
       </div>
@@ -51,10 +52,6 @@ export function TrustCard({ user, publicView, reviewStats }: TrustCardProps) {
                 ? "Нет жалоб"
                 : "Есть жалобы"}
           </dd>
-        </div>
-        <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">Дата регистрации</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">{user.joinedAt}</dd>
         </div>
       </dl>
 

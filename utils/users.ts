@@ -13,6 +13,7 @@ export type ChoiUser = {
   phone?: string;
   avatar?: string;
   joinedAt: number;
+  joinedAtDate?: string;
   phoneVerified: boolean;
   successfulDeals: number;
   complaints: number;
@@ -26,6 +27,7 @@ export const defaultCurrentUser: ChoiUser = {
   district: "yunusabad",
   phone: "+998901234567",
   joinedAt: 2026,
+  joinedAtDate: "2026-01-01T00:00:00.000Z",
   phoneVerified: true,
   successfulDeals: 7,
   complaints: 0,

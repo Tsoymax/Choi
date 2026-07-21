@@ -4,6 +4,7 @@ import { getDistrictLabel } from "@/utils/listings";
 import { getConfirmedDealsCount } from "@/utils/deals";
 import { TrustStatus } from "@/components/trust/TrustStatus";
 import type { ReviewStats } from "@/lib/data/reviews";
+import { formatJoinedDate, getAccountAgeMonths } from "@/utils/profileDate";
 
 type ProfileHeaderProps = {
   user: ChoiUser;
@@ -40,7 +41,7 @@ export function ProfileHeader({
                     positiveReviewCount: reviewStats?.positive ?? 0,
                     negativeReviewCount: reviewStats?.negative ?? 0,
                     complaints: user.complaints,
-                    accountAgeMonths: Math.max(0, (new Date().getFullYear() - user.joinedAt) * 12)
+                    accountAgeMonths: getAccountAgeMonths(user)
                   }}
                 />
               </div>
@@ -63,7 +64,7 @@ export function ProfileHeader({
             </p>
             <p className="inline-flex items-center gap-2">
               <ShieldCheck size={17} className="text-leaf" />
-              На Choi с {user.joinedAt} года
+              {formatJoinedDate(user)}
             </p>
             <p className="font-semibold text-ink">{listingsCount} объявлений</p>
             <p className="font-semibold text-ink">

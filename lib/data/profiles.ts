@@ -313,6 +313,7 @@ export function profileToChoiUser(profile: ProfileRow): ChoiUser {
     phone: profile.phone ?? undefined,
     avatar: profile.avatar_url ?? undefined,
     joinedAt: profile.created_at ? new Date(profile.created_at).getFullYear() : 2026,
+    joinedAtDate: profile.created_at ?? undefined,
     phoneVerified: Boolean(profile.phone_verified),
     successfulDeals: profile.successful_deals ?? 0,
     complaints: profile.complaints ?? 0,
