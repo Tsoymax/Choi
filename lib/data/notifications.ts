@@ -29,6 +29,10 @@ export type NotificationRow = {
   created_at: string;
 };
 
+function isVisibleNotification(notification: NotificationRow) {
+  return notification.type !== "review_received";
+}
+
 function logNotificationDebug(scope: string, payload: Record<string, unknown>) {
   if (process.env.NODE_ENV === "production") {
     return;
@@ -67,7 +71,7 @@ export async function getNotifications(
     count: data?.length ?? 0
   });
 
-  return (data ?? []) as NotificationRow[];
+  return ((data ?? []) as NotificationRow[]).filter(isVisibleNotification);
 }
 
 export async function getUnreadNotificationsCount(
@@ -78,6 +82,7 @@ export async function getUnreadNotificationsCount(
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
+    .neq("type", "review_received")
     .eq("is_read", false);
 
   if (error) {
@@ -153,6 +158,7 @@ export async function markAllNotificationsRead(
     .from("notifications")
     .update({ is_read: true })
     .eq("user_id", userId)
+    .neq("type", "review_received")
     .eq("is_read", false);
 
   emitNotificationChanged();

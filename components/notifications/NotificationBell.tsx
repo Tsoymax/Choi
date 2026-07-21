@@ -75,6 +75,10 @@ export function NotificationBell() {
           },
           (payload: { new: Record<string, unknown> }) => {
             const notification = payload.new as NotificationRow;
+            if (notification.type === "review_received") {
+              return;
+            }
+
             if (process.env.NODE_ENV !== "production") {
               console.info("[Choi notifications:realtime_insert]", {
                 id: notification.id,

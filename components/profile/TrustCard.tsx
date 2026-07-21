@@ -63,18 +63,6 @@ export function TrustCard({ user, publicView, reviewStats }: TrustCardProps) {
             {user.phoneVerified ? "Подтверждён" : "Не подтверждён"}
           </dd>
         </div>
-        <div className="rounded-2xl bg-mist p-4">
-          <dt className="text-ink/52">Жалобы</dt>
-          <dd className="mt-1 text-lg font-semibold text-ink">
-            {publicView
-              ? user.complaints === 0
-                ? "Нарушений не обнаружено"
-                : "Есть проверки"
-              : user.complaints === 0
-                ? "0 подтверждённых"
-                : `${user.complaints} подтверждённых`}
-          </dd>
-        </div>
       </dl>
 
       <p className="mt-5 text-sm leading-6 text-ink/62">
