@@ -74,14 +74,14 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={submitLogin} className="space-y-5">
+    <form onSubmit={submitLogin} className="space-y-4 sm:space-y-5">
       <label className="block">
         <span className="text-sm font-semibold text-ink">Email</span>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
+          className="focus-ring mt-2 h-12 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm sm:h-14"
           placeholder="you@example.com"
           autoComplete="email"
         />
@@ -93,7 +93,7 @@ export function LoginForm() {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
+          className="focus-ring mt-2 h-12 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm sm:h-14"
           placeholder="Введите пароль"
           autoComplete="current-password"
         />
@@ -120,7 +120,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="focus-ring h-14 w-full rounded-full bg-leaf px-6 text-base font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70"
+        className="focus-ring h-12 w-full rounded-full bg-leaf px-6 text-base font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:cursor-wait disabled:opacity-70 sm:h-14"
       >
         {isSubmitting ? "Входим..." : "Войти"}
       </button>
