@@ -15,12 +15,21 @@ import { createClient } from "@/utils/supabase/client";
 import { NotificationBadge } from "./NotificationBadge";
 import { NotificationToast } from "./NotificationToast";
 
+const UNREAD_NOTIFICATION_CACHE_TTL_MS = 15_000;
+
+let cachedUnreadNotifications: {
+  userId: string;
+  count: number;
+  cachedAt: number;
+} | null = null;
+let unreadNotificationsRequest: Promise<number> | null = null;
+
 export function NotificationBell() {
   const router = useRouter();
   const [count, setCount] = useState(0);
   const [toast, setToast] = useState<NotificationRow | null>(null);
 
-  const syncCount = useCallback(async () => {
+  const syncCount = useCallback(async (force = false) => {
     if (!hasSupabaseBrowserEnv()) {
       setCount(0);
       return;
@@ -32,16 +41,51 @@ export function NotificationBell() {
       return;
     }
 
+    if (
+      !force &&
+      cachedUnreadNotifications?.userId === user.id &&
+      Date.now() - cachedUnreadNotifications.cachedAt < UNREAD_NOTIFICATION_CACHE_TTL_MS
+    ) {
+      setCount(cachedUnreadNotifications.count);
+      return;
+    }
+
+    if (force) {
+      cachedUnreadNotifications = null;
+      unreadNotificationsRequest = null;
+    }
+
+    if (unreadNotificationsRequest) {
+      setCount(await unreadNotificationsRequest);
+      return;
+    }
+
     const supabase = createClient();
-    setCount(await getUnreadNotificationsCount(supabase, user.id));
+    unreadNotificationsRequest = getUnreadNotificationsCount(supabase, user.id)
+      .then((nextCount) => {
+        cachedUnreadNotifications = {
+          userId: user.id,
+          count: nextCount,
+          cachedAt: Date.now()
+        };
+        return nextCount;
+      })
+      .finally(() => {
+        unreadNotificationsRequest = null;
+      });
+
+    setCount(await unreadNotificationsRequest);
   }, []);
 
   useEffect(() => {
     void syncCount();
-    window.addEventListener(NOTIFICATION_EVENT, syncCount);
+    const handleNotificationChange = () => {
+      void syncCount(true);
+    };
+    window.addEventListener(NOTIFICATION_EVENT, handleNotificationChange);
 
     return () => {
-      window.removeEventListener(NOTIFICATION_EVENT, syncCount);
+      window.removeEventListener(NOTIFICATION_EVENT, handleNotificationChange);
     };
   }, [syncCount]);
 
@@ -87,7 +131,7 @@ export function NotificationBell() {
               });
             }
             setToast(notification);
-            void syncCount();
+            void syncCount(true);
             emitNotificationChanged();
           }
         )

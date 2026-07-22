@@ -9,7 +9,7 @@ import {
 } from "@/lib/data/notifications";
 import { createClient } from "@/utils/supabase/client";
 
-const UNREAD_COUNT_CACHE_TTL_MS = 2_000;
+const UNREAD_COUNT_CACHE_TTL_MS = 15_000;
 
 let cachedUnreadCount = 0;
 let cachedAt = 0;
