@@ -15,7 +15,6 @@ import {
 } from "@/utils/chat";
 import type { Listing } from "@/utils/listings";
 import { getListingById as getLocalListingById } from "@/utils/listings";
-import { getConfirmedDealsCount } from "@/utils/deals";
 import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import {
   getConversationById as getRemoteConversationById,
@@ -53,7 +52,6 @@ import {
 } from "@/lib/data/notifications";
 import { getReviewByDealAndReviewer, type DealReviewRow } from "@/lib/data/reviews";
 import { createClient } from "@/utils/supabase/client";
-import { TrustBadge } from "@/components/trust/TrustBadge";
 import { DealReviewForm } from "@/components/reviews/DealReviewForm";
 import { serializeMessageContent, type ChatAttachment } from "@/lib/chat/attachments";
 import { ListingChatCard } from "./ListingChatCard";
@@ -114,7 +112,6 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [isDealBusy, setIsDealBusy] = useState(false);
   const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
-  const confirmedDealsCount = listing?.sellerId ? getConfirmedDealsCount(listing.sellerId) : 0;
 
   useEffect(() => {
     const syncChat = () => {
@@ -596,7 +593,6 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     );
   }
 
-  const title = listing.titleRu ?? listing.title;
   const isRemoteChat = Boolean(conversation.remote);
   const isSeller = isRemoteChat && currentUserId === conversation.sellerId;
   const isBuyer = isRemoteChat && currentUserId === conversation.buyerId;
@@ -635,9 +631,9 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   );
 
   return (
-    <section className="flex h-[calc(100dvh-7.5rem)] min-h-[560px] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:h-[calc(100dvh-9rem)] lg:min-h-[640px]">
+    <section className="flex h-[calc(100dvh-6rem)] min-h-[600px] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:h-[calc(100dvh-7.5rem)] lg:min-h-[680px]">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="shrink-0 border-b border-ink/8 bg-white p-4">
+        <header className="max-h-[46dvh] shrink-0 overflow-y-auto border-b border-ink/8 bg-white p-3">
           <div className="flex items-center gap-3">
             <Link
               href="/chat"
@@ -646,24 +642,16 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
             >
               <ArrowLeft size={19} />
             </Link>
-            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-mist">
-              <Image
-                src={listing.image}
-                alt={title}
-                fill
-                unoptimized={listing.image.startsWith("data:")}
-                className="object-cover"
-                sizes="48px"
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-ink">{conversation.sellerName}</p>
-              <TrustBadge confirmedDealsCount={confirmedDealsCount} compact />
-              <p className="truncate text-sm text-ink/52">{title}</p>
-            </div>
+            <Link
+              href={`/profile/${conversation.sellerId}`}
+              className="focus-ring min-w-0 rounded-2xl px-2 py-1 transition hover:bg-mist"
+              title="Открыть профиль продавца"
+            >
+              <p className="truncate font-semibold text-ink">{conversation.sellerName}</p>
+            </Link>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-2">
             <ListingChatCard listing={listing} />
           </div>
 
@@ -676,28 +664,28 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
             reservationStatusText ||
             reservationError ||
             reservation) && (
-            <div className="mt-3 rounded-[20px] border border-ink/10 bg-mist/70 p-3">
+            <div className="mt-2 rounded-[20px] border border-ink/10 bg-mist/70 p-2">
               {isRemoteChat && !dealIsClosed ? (
-                <div className="mb-3 rounded-2xl bg-white p-3">
-                  <div className="flex items-start gap-3">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-leaf/10 text-leaf">
-                      <CalendarClock size={18} />
+                <div className="mb-2 rounded-2xl bg-white p-2">
+                  <div className="flex items-start gap-2">
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-leaf/10 text-leaf">
+                      <CalendarClock size={16} />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       {(acceptedReservation || pendingReservation || showReservationEditor) ? (
                         <p className="text-sm font-semibold text-ink">Бронь на время</p>
                       ) : null}
                       {acceptedReservation ? (
-                        <p className="mt-1 text-sm text-ink/62">
+                        <p className="mt-0.5 text-xs text-ink/62">
                           Забронировано до {formatReservationTime(acceptedReservation.expires_at)}.
                         </p>
                       ) : pendingReservation ? (
-                        <p className="mt-1 text-sm text-ink/62">
+                        <p className="mt-0.5 text-xs text-ink/62">
                           Предложено время: {formatReservationTime(pendingReservation.requested_for)}.
                           Бронь будет держаться до {formatReservationTime(pendingReservation.expires_at)} после принятия.
                         </p>
                       ) : showReservationEditor ? (
-                        <p className="mt-1 text-sm text-ink/62">
+                        <p className="mt-0.5 text-xs text-ink/62">
                           Выберите время встречи. Бронь автоматически спадёт через 30 минут после этого времени.
                         </p>
                       ) : null}
@@ -708,7 +696,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                             type="button"
                             onClick={handleRequestReservation}
                             disabled={isReservationBusy}
-                            className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                            className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-leaf/20 bg-white px-3 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                           >
                             <CalendarClock size={17} />
                             Предложить бронь
@@ -720,7 +708,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                               type="button"
                               onClick={handleAcceptReservation}
                               disabled={isReservationBusy}
-                              className="focus-ring inline-flex h-10 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                              className="focus-ring inline-flex h-9 items-center gap-2 rounded-full bg-leaf px-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                             >
                               <CheckCircle2 size={17} />
                               Принять бронь
@@ -729,7 +717,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                               type="button"
                               onClick={handleDeclineReservation}
                               disabled={isReservationBusy}
-                              className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                              className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                             >
                               <XCircle size={17} />
                               Отклонить
@@ -741,7 +729,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                             type="button"
                             onClick={handleSellerReserveForBuyer}
                             disabled={isReservationBusy}
-                            className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                            className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-leaf/20 bg-white px-3 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                           >
                             <PackageCheck size={17} />
                             Назначить время
@@ -750,31 +738,31 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                       </div>
 
                       {!acceptedReservation && !pendingReservation && showReservationEditor ? (
-                        <div className="order-2 mt-3 grid gap-2 sm:grid-cols-[220px_1fr]">
+                        <div className="order-2 mt-2 grid gap-2 sm:grid-cols-[220px_1fr]">
                           <input
                             type="datetime-local"
                             value={reservationTime}
                             min={toDatetimeLocalValue(new Date(Date.now() + 5 * 60 * 1000))}
                             onChange={(event) => setReservationTime(event.target.value)}
-                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-semibold text-ink"
+                            className="focus-ring h-10 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-semibold text-ink"
                           />
                           <input
                             value={reservationNote}
                             maxLength={120}
                             onChange={(event) => setReservationNote(event.target.value)}
                             placeholder="Комментарий, например: возле метро"
-                            className="focus-ring h-11 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-medium text-ink placeholder:text-ink/40"
+                            className="focus-ring h-10 rounded-2xl border border-ink/10 bg-mist px-3 text-sm font-medium text-ink placeholder:text-ink/40"
                           />
                         </div>
                       ) : null}
 
                       {reservationStatusText ? (
-                        <p className="mt-2 text-sm font-semibold text-leaf">
+                        <p className="mt-1 text-xs font-semibold text-leaf">
                           {reservationStatusText}
                         </p>
                       ) : null}
                       {reservationError ? (
-                        <p className="mt-2 text-sm font-semibold text-red-600">
+                        <p className="mt-1 text-xs font-semibold text-red-600">
                           {reservationError}
                         </p>
                       ) : null}
@@ -784,13 +772,13 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
               ) : null}
 
               {terminalDeal ? (
-                <div className="mb-3 rounded-2xl bg-white p-3">
+                <div className="mb-2 rounded-2xl bg-white p-2">
                   <p className="text-sm font-semibold text-ink">
                     {terminalDeal.status === "confirmed"
                       ? "Сделка в истории: совершилась"
                       : "Сделка в истории: сорвалась"}
                   </p>
-                  <p className="mt-1 text-sm text-ink/58">
+                  <p className="mt-0.5 text-xs text-ink/58">
                     Завершённую сделку нельзя вернуть или изменить. Для новой договорённости нужен новый сценарий.
                   </p>
                 </div>
@@ -801,7 +789,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                     type="button"
                     onClick={handleCreateDeal}
                     disabled={!canCreateDeal || isDealBusy}
-                    className="focus-ring inline-flex h-10 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
+                    className="focus-ring inline-flex h-9 items-center gap-2 rounded-full bg-leaf px-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                   >
                     <Handshake size={17} />
                     Отправить сделку
@@ -810,12 +798,12 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
               )}
 
               {canRespondToDeal && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div>
                     <p className="text-sm font-semibold text-ink">
                       Продавец отметил сделку
                     </p>
-                    <p className="text-sm text-ink/58">
+                    <p className="text-xs text-ink/58">
                       Подтвердите, состоялась ли встреча и покупка.
                     </p>
                   </div>
@@ -824,7 +812,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                       type="button"
                       onClick={() => handleRespondToDeal(true)}
                       disabled={isDealBusy}
-                      className="focus-ring inline-flex h-10 items-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-sm disabled:pointer-events-none disabled:opacity-45"
+                      className="focus-ring inline-flex h-9 items-center gap-2 rounded-full bg-leaf px-3 text-sm font-semibold text-white shadow-sm disabled:pointer-events-none disabled:opacity-45"
                     >
                       <CheckCircle2 size={17} />
                       Подтвердить
@@ -833,7 +821,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                       type="button"
                       onClick={() => handleRespondToDeal(false)}
                       disabled={isDealBusy}
-                      className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm disabled:pointer-events-none disabled:opacity-45"
+                      className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink shadow-sm disabled:pointer-events-none disabled:opacity-45"
                     >
                       <XCircle size={17} />
                       Не состоялась
@@ -843,10 +831,10 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
               )}
 
               {dealStatusText && (
-                <p className="mt-2 text-sm font-semibold text-leaf">{dealStatusText}</p>
+                <p className="mt-1 text-xs font-semibold text-leaf">{dealStatusText}</p>
               )}
               {dealError && (
-                <p className="mt-2 text-sm font-semibold text-red-600">{dealError}</p>
+                <p className="mt-1 text-xs font-semibold text-red-600">{dealError}</p>
               )}
             </div>
           )}
