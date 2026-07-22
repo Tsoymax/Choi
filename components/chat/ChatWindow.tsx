@@ -1,10 +1,9 @@
 "use client";
 
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, CalendarClock, CheckCircle2, Handshake, PackageCheck, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarClock, CheckCircle2, Handshake, PackageCheck, X, XCircle } from "lucide-react";
 import type { Conversation, Message } from "@/utils/chat";
 import {
   CHAT_EVENT,
@@ -107,6 +106,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [isReservationBusy, setIsReservationBusy] = useState(false);
   const [reservationEditorOpen, setReservationEditorOpen] = useState(false);
   const [currentReview, setCurrentReview] = useState<DealReviewRow | null>(null);
+  const [dismissedReviewDealId, setDismissedReviewDealId] = useState<string | null>(null);
   const [dealStatusText, setDealStatusText] = useState("");
   const [dealError, setDealError] = useState("");
   const [isDealBusy, setIsDealBusy] = useState(false);
@@ -507,8 +507,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     } else {
       setReservation(nextReservation);
       setReservationEditorOpen(false);
-      setListing((current) => current ? { ...current, status: "reserved" } : current);
-      setReservationStatusText("Бронь поставлена для этого покупателя.");
+      setReservationStatusText("Время отправлено покупателю. Ждём подтверждения.");
     }
 
     setIsReservationBusy(false);
@@ -566,7 +565,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     setIsDealBusy(false);
   }
 
-  if (conversation && !listing && isLoadingListing) {
+  if (isLoadingListing && (!conversation || !listing)) {
     return (
       <>
         <ChoiTeaLoader label="Загружаем диалог" />
@@ -605,7 +604,13 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     new Date(acceptedReservation?.expires_at ?? 0).getTime() > Date.now();
   const canRequestReservation =
     isBuyer && !pendingReservation && !reservationIsActive && !dealIsClosed;
-  const canAnswerReservation = isSeller && Boolean(pendingReservation) && !dealIsClosed;
+  const canAnswerReservation = Boolean(
+    pendingReservation &&
+      currentUserId &&
+      pendingReservation.requested_by !== currentUserId &&
+      (isSeller || isBuyer) &&
+      !dealIsClosed
+  );
   const canSellerReserveForBuyer =
     isSeller && !pendingReservation && !reservationIsActive && !dealIsClosed;
   const canOpenReservationEditor =
@@ -628,6 +633,12 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
       currentUserId &&
       reviewedUserId !== currentUserId &&
       !currentReview
+  );
+  const reviewModalOpen = Boolean(
+    canReviewDeal &&
+      confirmedDeal &&
+      reviewedUserId &&
+      dismissedReviewDealId !== confirmedDeal.id
   );
 
   return (
@@ -681,8 +692,15 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                         </p>
                       ) : pendingReservation ? (
                         <p className="mt-0.5 text-xs text-ink/62">
-                          Предложено время: {formatReservationTime(pendingReservation.requested_for)}.
-                          Бронь будет держаться до {formatReservationTime(pendingReservation.expires_at)} после принятия.
+                          {pendingReservation.requested_by === currentUserId
+                            ? "Вы предложили время"
+                            : isBuyer
+                              ? "Продавец назначил время"
+                              : "Покупатель предложил время"}
+                          : {formatReservationTime(pendingReservation.requested_for)}.
+                          {pendingReservation.requested_by === currentUserId
+                            ? " Ждём подтверждения."
+                            : " Подтвердите, подходит ли оно вам."}
                         </p>
                       ) : showReservationEditor ? (
                         <p className="mt-0.5 text-xs text-ink/62">
@@ -711,7 +729,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                               className="focus-ring inline-flex h-9 items-center gap-2 rounded-full bg-leaf px-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                             >
                               <CheckCircle2 size={17} />
-                              Принять бронь
+                              Подтвердить время
                             </button>
                             <button
                               type="button"
@@ -720,7 +738,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                               className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                             >
                               <XCircle size={17} />
-                              Отклонить
+                              Не подходит
                             </button>
                           </>
                         ) : null}
@@ -839,24 +857,37 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
             </div>
           )}
 
-          {canReviewDeal && confirmedDeal && reviewedUserId ? (
-            <div className="mt-3">
-              <DealReviewForm
-                dealId={confirmedDeal.id}
-                reviewedUserId={reviewedUserId}
-                reviewedUserName={reviewedUserName || "участником сделки"}
-                onSubmitted={() => {
-                  setCurrentReview({
-                    id: "submitted",
-                    deal_id: confirmedDeal.id,
-                    reviewer_id: currentUserId,
-                    reviewed_user_id: reviewedUserId,
-                    rating_type: "positive",
-                    comment: null,
-                    created_at: new Date().toISOString()
-                  });
-                }}
-              />
+          {reviewModalOpen && confirmedDeal && reviewedUserId ? (
+            <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 p-4 backdrop-blur-sm sm:items-center">
+              <div className="relative max-h-[88dvh] w-full max-w-2xl overflow-y-auto rounded-[28px] bg-white p-4 shadow-[0_24px_80px_rgba(24,32,29,0.24)] sm:p-5">
+                <button
+                  type="button"
+                  onClick={() => setDismissedReviewDealId(confirmedDeal.id)}
+                  className="focus-ring absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-mist text-ink transition hover:bg-leaf/10 hover:text-leaf"
+                  aria-label="Закрыть отзыв"
+                >
+                  <X size={20} />
+                </button>
+                <DealReviewForm
+                  dealId={confirmedDeal.id}
+                  reviewedUserId={reviewedUserId}
+                  reviewedUserName={reviewedUserName || "участником сделки"}
+                  onSubmitted={() => {
+                    window.setTimeout(() => {
+                      setCurrentReview({
+                        id: "submitted",
+                        deal_id: confirmedDeal.id,
+                        reviewer_id: currentUserId,
+                        reviewed_user_id: reviewedUserId,
+                        rating_type: "positive",
+                        comment: null,
+                        created_at: new Date().toISOString()
+                      });
+                      setDismissedReviewDealId(confirmedDeal.id);
+                    }, 900);
+                  }}
+                />
+              </div>
             </div>
           ) : null}
         </header>
