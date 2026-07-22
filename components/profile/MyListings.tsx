@@ -1,77 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
 import type { Listing, ListingStatus } from "@/utils/listings";
 import {
   LISTINGS_EVENT,
   deleteStoredListing,
-  getStoredListings,
   updateStoredListingStatus
 } from "@/utils/listings";
-import { CURRENT_USER_ID } from "@/utils/users";
-import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import {
   deleteListing as deleteRemoteListing,
-  getListingsByUserId,
-  mapListingRowToProduct,
   updateListingStatus
 } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 
 type ListingTab = "active" | "sold";
 
-export function MyListings() {
-  const [listings, setListings] = useState<Listing[]>([]);
+type MyListingsProps = {
+  listings: Listing[];
+};
+
+export function MyListings({ listings }: MyListingsProps) {
   const [activeTab, setActiveTab] = useState<ListingTab>("active");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function syncListings() {
-      const localListings = getStoredListings().filter(
-        (listing) => listing.sellerId === CURRENT_USER_ID
-      );
-
-      if (!hasSupabaseBrowserEnv()) {
-        setListings(localListings);
-        return;
-      }
-
-      const supabase = createClient();
-      const user = await getCurrentUser();
-
-      if (!user) {
-        if (mounted) {
-          setListings(localListings);
-        }
-        return;
-      }
-
-      const remoteListings = await getListingsByUserId(supabase, user.id);
-
-      if (!mounted) {
-        return;
-      }
-
-      setListings([
-        ...remoteListings.map((listing) => mapListingRowToProduct(listing) as Listing),
-        ...localListings
-      ]);
-    }
-
-    void syncListings();
-    window.addEventListener(LISTINGS_EVENT, syncListings);
-    window.addEventListener("storage", syncListings);
-
-    return () => {
-      mounted = false;
-      window.removeEventListener(LISTINGS_EVENT, syncListings);
-      window.removeEventListener("storage", syncListings);
-    };
-  }, []);
 
   const filteredListings = useMemo(
     () =>

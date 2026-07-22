@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
@@ -11,14 +11,16 @@ import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { TrustCard } from "@/components/profile/TrustCard";
 import { createClient } from "@/utils/supabase/client";
-import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { LISTINGS_EVENT } from "@/utils/listings";
+import { getCurrentUser as getAuthUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
+import type { Listing } from "@/utils/listings";
+import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
 import {
+  CURRENT_USER_ID,
   USER_EVENT,
   type ChoiUser,
-  getCurrentUser,
-  getCurrentUserListingsCount
+  getCurrentUser
 } from "@/utils/users";
+import { getListingsByUserId, mapListingRowToProduct } from "@/lib/data/listings";
 import { profileToChoiUser, updateCurrentProfile } from "@/lib/data/profiles";
 import { getReviewStatsForUser, type ReviewStats } from "@/lib/data/reviews";
 
@@ -35,7 +37,7 @@ export function ProfilePageClient({
   const [language, setLanguage] = useState<Language>("ru");
   const [query, setQuery] = useState("");
   const [user, setUser] = useState<ChoiUser>(initialUser);
-  const [listingsCount, setListingsCount] = useState(0);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
@@ -46,25 +48,68 @@ export function ProfilePageClient({
     topTags: [],
     recentComments: []
   });
+  const listingsCount = useMemo(
+    () =>
+      listings.filter((listing) => {
+        const status = listing.status ?? "active";
+        return status === "active" || status === "reserved";
+      }).length,
+    [listings]
+  );
 
   useEffect(() => {
-    const syncProfile = () => {
+    let mounted = true;
+
+    async function syncProfile() {
       if (!isSupabaseUser) {
         setUser(getCurrentUser());
       }
 
-      setListingsCount(getCurrentUserListingsCount());
+      const localListings = getStoredListings().filter(
+        (listing) => listing.sellerId === CURRENT_USER_ID
+      );
+
+      if (!isSupabaseUser || !hasSupabaseBrowserEnv()) {
+        if (mounted) {
+          setListings(localListings);
+        }
+        return;
+      }
+
+      const authUser = await getAuthUser();
+
+      if (!authUser) {
+        if (mounted) {
+          setListings(localListings);
+        }
+        return;
+      }
+
+      const supabase = createClient();
+      const remoteListings = await getListingsByUserId(supabase, authUser.id);
+
+      if (mounted) {
+        setListings([
+          ...remoteListings.map((listing) => mapListingRowToProduct(listing) as Listing),
+          ...localListings
+        ]);
+      }
+    }
+
+    const handleSyncProfile = () => {
+      void syncProfile();
     };
 
-    syncProfile();
-    window.addEventListener(USER_EVENT, syncProfile);
-    window.addEventListener(LISTINGS_EVENT, syncProfile);
-    window.addEventListener("storage", syncProfile);
+    void syncProfile();
+    window.addEventListener(USER_EVENT, handleSyncProfile);
+    window.addEventListener(LISTINGS_EVENT, handleSyncProfile);
+    window.addEventListener("storage", handleSyncProfile);
 
     return () => {
-      window.removeEventListener(USER_EVENT, syncProfile);
-      window.removeEventListener(LISTINGS_EVENT, syncProfile);
-      window.removeEventListener("storage", syncProfile);
+      mounted = false;
+      window.removeEventListener(USER_EVENT, handleSyncProfile);
+      window.removeEventListener(LISTINGS_EVENT, handleSyncProfile);
+      window.removeEventListener("storage", handleSyncProfile);
     };
   }, [isSupabaseUser]);
 
@@ -171,7 +216,7 @@ export function ProfilePageClient({
             ) : null}
           </div>
           <div className="space-y-6">
-            <MyListings />
+            <MyListings listings={listings} />
             <DealHistory userId={user.id} />
           </div>
         </div>
