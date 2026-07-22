@@ -106,7 +106,7 @@ export function MessageComposer({ onSend }: MessageComposerProps) {
   }
 
   return (
-    <div className="border-t border-ink/8 bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+    <div className="shrink-0 border-t border-ink/8 bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <QuickReplies onPick={setText} />
 
       {attachments.length > 0 ? (

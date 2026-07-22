@@ -113,7 +113,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   const [dealError, setDealError] = useState("");
   const [isDealBusy, setIsDealBusy] = useState(false);
   const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const confirmedDealsCount = listing?.sellerId ? getConfirmedDealsCount(listing.sellerId) : 0;
 
   useEffect(() => {
@@ -329,7 +329,16 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   }, [conversationId]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const container = messagesScrollRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: "smooth"
+    });
   }, [messages.length]);
 
   function handleSend(text: string, attachments: ChatAttachment[] = []) {
@@ -626,9 +635,9 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   );
 
   return (
-    <section className="flex min-h-[calc(100vh-9rem)] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:min-h-[720px]">
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-ink/8 bg-white p-4">
+    <section className="flex h-[calc(100dvh-7.5rem)] min-h-[560px] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:h-[calc(100dvh-9rem)] lg:min-h-[640px]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="shrink-0 border-b border-ink/8 bg-white p-4">
           <div className="flex items-center gap-3">
             <Link
               href="/chat"
@@ -735,7 +744,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                             className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-leaf/20 bg-white px-4 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                           >
                             <PackageCheck size={17} />
-                            Поставить бронь
+                            Назначить время
                           </button>
                         ) : null}
                       </div>
@@ -864,7 +873,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
           ) : null}
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-[#f7f5ef] p-4">
+        <div ref={messagesScrollRef} className="min-h-0 flex-1 overflow-y-auto bg-[#f7f5ef] p-4">
           <div className="space-y-3">
             {messages.length > 0 ? (
               messages.map((message) => (
@@ -878,7 +887,6 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                 </p>
               </div>
             )}
-            <div ref={scrollRef} />
           </div>
         </div>
 
