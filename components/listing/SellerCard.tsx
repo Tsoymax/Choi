@@ -200,7 +200,7 @@ export function SellerCard({ listing }: SellerCardProps) {
           className="focus-ring inline-flex h-14 items-center justify-center gap-2 rounded-full bg-leaf px-5 text-base font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d]"
         >
           <MessageCircle size={20} />
-          Написать
+          Назначить встречу
         </button>
         <button
           type="button"

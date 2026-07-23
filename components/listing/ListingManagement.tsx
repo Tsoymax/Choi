@@ -145,7 +145,7 @@ export function ListingManagement({ listing }: ListingManagementProps) {
             className="focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-full bg-leaf px-4 text-sm font-semibold text-white shadow-lg shadow-leaf/20 transition hover:bg-[#3f6d4d] disabled:opacity-60"
           >
             <ShieldCheck size={16} />
-            Назначить время
+            Предложить время
           </button>
         ) : null}
 

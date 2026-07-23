@@ -413,11 +413,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     );
 
     if (error || !nextReservation) {
-      setReservationError("Не удалось предложить бронь. Проверьте время и попробуйте ещё раз.");
+      setReservationError("Не удалось предложить время. Проверьте время и попробуйте ещё раз.");
     } else {
       setReservation(nextReservation);
       setReservationEditorOpen(false);
-      setReservationStatusText("Заявка на бронь отправлена продавцу.");
+      setReservationStatusText("Время встречи отправлено продавцу.");
     }
 
     setIsReservationBusy(false);
@@ -439,11 +439,11 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     );
 
     if (error || !nextReservation) {
-      setReservationError("Не удалось принять бронь. Попробуйте ещё раз.");
+      setReservationError("Не удалось подтвердить время. Попробуйте ещё раз.");
     } else {
       setReservation(nextReservation);
       setListing((current) => current ? { ...current, status: "reserved" } : current);
-      setReservationStatusText("Бронь принята. Объявление отмечено как забронированное.");
+      setReservationStatusText("Время подтверждено. Объявление отмечено как забронированное.");
     }
 
     setIsReservationBusy(false);
@@ -465,10 +465,10 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     );
 
     if (error || !nextReservation) {
-      setReservationError("Не удалось отклонить бронь. Попробуйте ещё раз.");
+      setReservationError("Не удалось отклонить время. Попробуйте ещё раз.");
     } else {
       setReservation(nextReservation);
-      setReservationStatusText("Бронь отклонена.");
+      setReservationStatusText("Время отклонено.");
     }
 
     setIsReservationBusy(false);
@@ -503,7 +503,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     );
 
     if (error || !nextReservation) {
-      setReservationError("Не удалось поставить бронь для покупателя.");
+      setReservationError("Не удалось предложить время покупателю.");
     } else {
       setReservation(nextReservation);
       setReservationEditorOpen(false);
@@ -618,6 +618,8 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     !pendingReservation &&
     (canRequestReservation || canSellerReserveForBuyer);
   const showReservationEditor = reservationEditorOpen && canOpenReservationEditor;
+  const visibleReservationNote =
+    (acceptedReservation?.note ?? pendingReservation?.note ?? "").trim();
   const canCreateDeal =
     isSeller &&
     !pendingDeal &&
@@ -684,7 +686,9 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col">
                       {(acceptedReservation || pendingReservation || showReservationEditor) ? (
-                        <p className="text-sm font-semibold text-ink">Бронь на время</p>
+                        <p className="text-sm font-semibold text-ink">
+                          {acceptedReservation ? "Назначена встреча" : "Встреча на время"}
+                        </p>
                       ) : null}
                       {acceptedReservation ? (
                         <p className="mt-0.5 text-xs text-ink/62">
@@ -704,7 +708,12 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                         </p>
                       ) : showReservationEditor ? (
                         <p className="mt-0.5 text-xs text-ink/62">
-                          Выберите время встречи. Бронь автоматически спадёт через 30 минут после этого времени.
+                          Выберите время встречи. Если встреча не подтвердится сделкой, бронь автоматически спадёт через 30 минут после этого времени.
+                        </p>
+                      ) : null}
+                      {visibleReservationNote ? (
+                        <p className="mt-1 rounded-2xl bg-mist px-3 py-2 text-xs font-medium text-ink/70">
+                          Комментарий: {visibleReservationNote}
                         </p>
                       ) : null}
 
@@ -717,7 +726,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                             className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-leaf/20 bg-white px-3 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                           >
                             <CalendarClock size={17} />
-                            Предложить бронь
+                            Предложить время
                           </button>
                         ) : null}
                         {canAnswerReservation ? (
@@ -750,7 +759,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                             className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-leaf/20 bg-white px-3 text-sm font-semibold text-leaf shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:pointer-events-none disabled:opacity-45"
                           >
                             <PackageCheck size={17} />
-                            Назначить время
+                            Предложить время
                           </button>
                         ) : null}
                       </div>
