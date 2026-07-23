@@ -6,7 +6,7 @@ const replies = ["Актуально?", "Можно дешевле?", "Где м
 
 export function QuickReplies({ onPick }: QuickRepliesProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2">
+    <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {replies.map((reply) => (
         <button
           key={reply}

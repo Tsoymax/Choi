@@ -55,14 +55,16 @@ export function ConversationScreen({ conversationId }: ConversationScreenProps) 
 
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
-      <Header
-        language={language}
-        onLanguageChange={setLanguage}
-        query={query}
-        onQueryChange={setQuery}
-      />
+      <div className="hidden md:block">
+        <Header
+          language={language}
+          onLanguageChange={setLanguage}
+          query={query}
+          onQueryChange={setQuery}
+        />
+      </div>
 
-      <section className="mx-auto max-w-[1504px] px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
+      <section className="mx-auto max-w-[1504px] px-0 py-0 md:px-6 md:py-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
           <div className="hidden lg:block">
             <ChatList
