@@ -644,9 +644,9 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
   );
 
   return (
-    <section className="flex h-[calc(100dvh-6rem)] min-h-[600px] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] lg:h-[calc(100dvh-7.5rem)] lg:min-h-[680px]">
+    <section className="flex h-[calc(100dvh-20rem)] min-h-[440px] overflow-hidden rounded-[24px] bg-white shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:h-[calc(100dvh-10rem)] sm:min-h-[560px] lg:h-[calc(100dvh-7.5rem)] lg:min-h-[680px]">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="max-h-[46dvh] shrink-0 overflow-y-auto border-b border-ink/8 bg-white p-3">
+        <header className="max-h-[34dvh] shrink-0 overflow-y-auto border-b border-ink/8 bg-white p-3 sm:max-h-[42dvh]">
           <div className="flex items-center gap-3">
             <Link
               href="/chat"

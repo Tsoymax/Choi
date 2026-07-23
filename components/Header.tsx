@@ -210,7 +210,7 @@ export function Header({
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
           <Link
             href="/favorites"
-            className="focus-ring relative hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist md:grid"
+            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
             aria-label="Избранное"
           >
             <Heart size={25} />
@@ -222,7 +222,7 @@ export function Header({
           </Link>
           <Link
             href="/chat"
-            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+            className="focus-ring relative hidden h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist md:grid"
             aria-label="Сообщения"
           >
             <MessageCircle size={25} />

@@ -62,7 +62,7 @@ export function ConversationScreen({ conversationId }: ConversationScreenProps) 
         onQueryChange={setQuery}
       />
 
-      <section className="mx-auto max-w-[1504px] px-4 py-6 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-[1504px] px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
           <div className="hidden lg:block">
             <ChatList
