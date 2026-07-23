@@ -7,11 +7,10 @@ import { calculateTrustTemperature } from "@/utils/trustTemperature";
 
 type TrustCardProps = {
   user: ChoiUser;
-  publicView?: boolean;
   reviewStats?: ReviewStats;
 };
 
-export function TrustCard({ user, publicView, reviewStats }: TrustCardProps) {
+export function TrustCard({ user, reviewStats }: TrustCardProps) {
   const confirmedDealsCount = getConfirmedDealsCount(user.id);
   const trustTemperature = calculateTrustTemperature(user, reviewStats);
 

@@ -1,4 +1,7 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { RoleGuard } from "@/components/admin/RoleGuard";
+import { requireModerator } from "@/lib/auth/roles";
 import { createClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +32,21 @@ export default async function DebugListingsPage() {
 
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+  const access = await requireModerator(supabase);
+
+  if (!access.user) {
+    redirect("/login?next=/debug/listings");
+  }
+
+  if (!access.allowed) {
+    return (
+      <RoleGuard
+        title="Debug закрыт"
+        message="Диагностика объявлений доступна только модераторам и администраторам."
+      />
+    );
+  }
+
   const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("listings")

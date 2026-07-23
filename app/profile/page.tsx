@@ -2,23 +2,14 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import { ProfileErrorActions } from "@/components/profile/ProfileErrorActions";
 import { ProfilePageClient } from "@/components/profile/ProfilePageClient";
-import { getCurrentProfileResult, getCurrentUser } from "@/lib/auth/server";
+import { getCurrentProfileResult } from "@/lib/auth/server";
 import {
   getOnboardingPath,
   getSupabaseErrorInfo,
   isProfileOnboardingComplete
 } from "@/lib/data/profiles";
 import { profileToChoiUser } from "@/lib/data/profiles";
-import { defaultCurrentUser, type ChoiUser } from "@/utils/users";
-
-function userToFallbackProfile(user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>): ChoiUser {
-  return {
-    ...defaultCurrentUser,
-    id: user.id,
-    name: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Choi",
-    phoneVerified: Boolean(user.phone)
-  };
-}
+import { defaultCurrentUser } from "@/utils/users";
 
 function ProfileErrorScreen({ error }: { error: unknown }) {
   const errorInfo = getSupabaseErrorInfo(error);

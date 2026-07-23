@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import type { Language } from "@/components/i18n";
@@ -45,6 +45,49 @@ export function SearchPageContent() {
   );
   const [draftQuery, setDraftQuery] = useState(filters.q);
 
+  const updateFilters = useCallback(
+    (patch: Partial<SearchFiltersState>) => {
+      const dynamicReset: Partial<SearchFiltersState> =
+        patch.category !== undefined
+          ? {
+              subcategory: "",
+              brand: "",
+              model: "",
+              yearFrom: "",
+              yearTo: "",
+              mileageFrom: "",
+              mileageTo: "",
+              transmission: "",
+              fuel: "",
+              drive: "",
+              body: "",
+              engine: "",
+              color: "",
+              exchange: "",
+              dealType: "",
+              rooms: "",
+              areaFrom: "",
+              areaTo: "",
+              floor: "",
+              renovation: "",
+              furniture: "",
+              parking: "",
+              condition: "",
+              memory: "",
+              warranty: "",
+              gender: "",
+              size: ""
+            }
+          : {};
+      const nextFilters = { ...filters, ...dynamicReset, ...patch };
+      const nextParams = filtersToSearchParams(nextFilters);
+      router.replace(`/search${nextParams.toString() ? `?${nextParams}` : ""}` as never, {
+        scroll: false
+      });
+    },
+    [filters, router]
+  );
+
   useEffect(() => {
     setDraftQuery(filters.q);
   }, [filters.q]);
@@ -76,7 +119,7 @@ export function SearchPageContent() {
     }, 450);
 
     return () => window.clearTimeout(timer);
-  }, [draftQuery]);
+  }, [draftQuery, filters.q, updateFilters]);
 
   useEffect(() => {
     if (filters.q.trim()) {
@@ -152,46 +195,6 @@ export function SearchPageContent() {
     () => filterListings(listings, filters, currentLocation, homeDistrict),
     [currentLocation, filters, homeDistrict, listings]
   );
-
-  function updateFilters(patch: Partial<SearchFiltersState>) {
-    const dynamicReset: Partial<SearchFiltersState> =
-      patch.category !== undefined
-        ? {
-            subcategory: "",
-            brand: "",
-            model: "",
-            yearFrom: "",
-            yearTo: "",
-            mileageFrom: "",
-            mileageTo: "",
-            transmission: "",
-            fuel: "",
-            drive: "",
-            body: "",
-            engine: "",
-            color: "",
-            exchange: "",
-            dealType: "",
-            rooms: "",
-            areaFrom: "",
-            areaTo: "",
-            floor: "",
-            renovation: "",
-            furniture: "",
-            parking: "",
-            condition: "",
-            memory: "",
-            warranty: "",
-            gender: "",
-            size: ""
-          }
-        : {};
-    const nextFilters = { ...filters, ...dynamicReset, ...patch };
-    const nextParams = filtersToSearchParams(nextFilters);
-    router.replace(`/search${nextParams.toString() ? `?${nextParams}` : ""}` as never, {
-      scroll: false
-    });
-  }
 
   function resetFilters() {
     setDraftQuery("");

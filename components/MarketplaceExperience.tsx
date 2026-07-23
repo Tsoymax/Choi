@@ -218,7 +218,7 @@ export function MarketplaceExperience({
           isLoading={isLoadingProducts}
         />
       </section>
-      <Footer language={language} />
+      <Footer />
     </main>
   );
 }

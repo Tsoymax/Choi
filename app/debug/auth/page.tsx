@@ -1,10 +1,15 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { RoleGuard } from "@/components/admin/RoleGuard";
+import { requireModerator } from "@/lib/auth/roles";
 import { createClient } from "@/utils/supabase/server";
 import {
   getSupabaseErrorInfo,
   logProfileDebug,
   type ProfileRow
 } from "@/lib/data/profiles";
+
+export const dynamic = "force-dynamic";
 
 type StepResult = {
   ok: boolean;
@@ -69,6 +74,21 @@ export default async function DebugAuthPage() {
   if (hasSupabaseEnv) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
+    const access = await requireModerator(supabase);
+
+    if (!access.user) {
+      redirect("/login?next=/debug/auth");
+    }
+
+    if (!access.allowed) {
+      return (
+        <RoleGuard
+          title="Debug закрыт"
+          message="Диагностика Choi доступна только модераторам и администраторам."
+        />
+      );
+    }
+
     const { data: authData, error: authError } = await supabase.auth.getUser();
     authStep = errorToStep(authError);
     hasUser = Boolean(authData.user);
@@ -176,4 +196,3 @@ export default async function DebugAuthPage() {
     </main>
   );
 }
-

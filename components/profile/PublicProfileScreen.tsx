@@ -121,7 +121,7 @@ export function PublicProfileScreen({ userId }: PublicProfileScreenProps) {
               listingsCount={activeListings.length}
               reviewStats={reviewStats}
             />
-            <TrustCard user={user} publicView reviewStats={reviewStats} />
+            <TrustCard user={user} reviewStats={reviewStats} />
             <ReviewSummary stats={reviewStats} />
             <div className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
               <ReportModal
