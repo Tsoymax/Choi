@@ -59,6 +59,16 @@ export function MessageComposer({ onSend }: MessageComposerProps) {
     clearComposer();
   }
 
+  function sendQuickReply(reply: string) {
+    const trimmedReply = reply.trim();
+    if (!trimmedReply || loadingFiles) {
+      return;
+    }
+
+    onSend(trimmedReply);
+    clearComposer();
+  }
+
   async function handleFilesChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) {
@@ -107,7 +117,7 @@ export function MessageComposer({ onSend }: MessageComposerProps) {
 
   return (
     <div className="shrink-0 border-t border-ink/8 bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <QuickReplies onPick={setText} />
+      <QuickReplies onPick={sendQuickReply} />
 
       {attachments.length > 0 ? (
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
@@ -175,7 +185,7 @@ export function MessageComposer({ onSend }: MessageComposerProps) {
           onKeyDown={handleKeyDown}
           rows={1}
           placeholder="Напишите сообщение"
-          className="focus-ring min-h-12 flex-1 resize-none rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-sm font-medium text-ink placeholder:text-ink/40"
+          className="focus-ring min-h-12 flex-1 resize-none rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-base font-medium text-ink placeholder:text-ink/40 sm:text-sm"
         />
         <button
           type="button"
