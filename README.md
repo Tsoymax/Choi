@@ -1,83 +1,149 @@
 # Choi
 
-Choi is a modern local marketplace prototype built with Next.js, TypeScript, and Tailwind CSS.
+**CHOI - локальный маркетплейс для Ташкента.**
 
-The first version focuses on a polished home experience: discovery, search, categories, districts, product cards, and featured local sellers. It uses local JSON data, so it can run without a backend or database.
+Choi помогает находить товары рядом, писать продавцам, договариваться о встрече, бронировать объявление на время и завершать сделку внутри одного спокойного локального сервиса.
 
-## Version
+Текущий этап: **Beta 0.9**.
 
-Current milestone: `v0.1`
+## Что Уже Есть
 
-## Stack
+- Регистрация, подтверждение email, вход и выход через Supabase Auth.
+- Onboarding после регистрации: имя, район, обращение.
+- Профиль пользователя и публичный профиль продавца.
+- Система доверия Choi без звезд: Янги, Ака / Опа, Акажон / Опажон, Ишончли, Устоз, Устози Choi.
+- Публикация, редактирование, архивирование и удаление объявлений.
+- Фотографии объявлений через Supabase Storage.
+- Динамические характеристики объявлений через `listing_attributes`.
+- Поиск и фильтры по основным полям и характеристикам.
+- Избранное.
+- Чат покупателя и продавца.
+- Отправка файлов в чате.
+- Бронь на время и подтверждение брони.
+- Завершение сделки и история покупок / продаж.
+- Отзывы после завершенной сделки.
+- Уведомления.
+- Жалобы и базовая админ-панель `/admin`.
+- PWA manifest и offline page.
+- Адаптация под мобильный сценарий.
+
+## Стек
 
 - Next.js App Router
 - React
 - TypeScript
 - Tailwind CSS
-- Local JSON data
-- Local SVG and image assets
-- GitHub Pages deployment
+- Supabase Auth
+- Supabase Database
+- Supabase Storage
+- Supabase Realtime
+- Vercel
 
-## What v0.1 Includes
-
-- Responsive marketplace home page
-- Choi logo and visual identity files
-- Saved brand reference sheet in `public/images/brand-logo-sketches.png`
-- Hero section with search
-- Category filtering
-- District filtering
-- Product cards
-- Featured seller blocks
-- Footer navigation
-- Test data in `data/`
-
-## Project Structure
+## Основные Маршруты
 
 ```text
-Choi_v0.1/
-|-- .github/
-|   `-- workflows/
-|       `-- pages.yml
-|-- app/
-|   |-- layout.tsx
-|   `-- page.tsx
-|-- components/
-|   |-- CategoryGrid.tsx
-|   |-- DistrictFilter.tsx
-|   |-- FeaturedSellers.tsx
-|   |-- Footer.tsx
-|   |-- Header.tsx
-|   |-- Hero.tsx
-|   |-- MarketplaceExperience.tsx
-|   |-- ProductCard.tsx
-|   |-- ProductGrid.tsx
-|   |-- SearchBar.tsx
-|   `-- types.ts
-|-- data/
-|   |-- categories.json
-|   |-- districts.json
-|   `-- products.json
-|-- public/
-|   |-- logo.svg
-|   |-- mascot.svg
-|   `-- images/
-|-- styles/
-|   `-- globals.css
-`-- package.json
+/                         главная
+/search                   поиск и фильтры
+/sell                     подать объявление
+/listing/[id]             страница объявления
+/listing/[id]/edit        редактирование объявления
+/favorites                избранное
+/chat                     список диалогов
+/chat/[conversationId]    чат
+/notifications            уведомления
+/profile                  мой профиль
+/profile/[userId]         публичный профиль
+/deals/[dealId]/review    отзыв после сделки
+/admin                    модерация
+/login                    вход
+/register                 регистрация
+/onboarding               настройка профиля
 ```
 
-## Run Locally
+## Запуск Локально
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Then open:
+Открыть:
 
 ```text
 http://localhost:3000
 ```
+
+## Environment Variables
+
+Создать `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+```
+
+Для production эти же переменные нужно добавить в Vercel Project Settings -> Environment Variables.
+
+## Supabase
+
+Проект использует таблицы:
+
+- `profiles`
+- `listings`
+- `listing_images`
+- `listing_attributes`
+- `favorites`
+- `conversations`
+- `messages`
+- `deals`
+- `reservation_requests`
+- `notifications`
+- `deal_reviews`
+- `deal_review_tags`
+- `reports`
+- moderation-related tables / policies
+
+SQL миграции находятся в:
+
+```text
+supabase/migrations/
+```
+
+В существующей базе миграции нужно выполнять по порядку и не переписывать уже примененную `001_initial_schema.sql`.
+
+## Storage
+
+Для фотографий объявлений и файлов чата используется Supabase Storage. Bucket и политики должны разрешать пользователю работать только со своими файлами, без `service_role` на клиенте.
+
+## Realtime
+
+Realtime используется для:
+
+- сообщений;
+- счетчиков чатов;
+- уведомлений.
+
+В Supabase нужно включить публикацию для таблиц, которые используются в realtime-сценариях, особенно `messages` и `notifications`.
+
+## Проверка Перед Beta
+
+Минимальный сценарий двумя аккаунтами:
+
+1. Пользователь A регистрируется, подтверждает email и проходит onboarding.
+2. Пользователь A публикует объявление.
+3. Пользователь B регистрируется и находит объявление через главную или поиск.
+4. Пользователь B добавляет объявление в избранное.
+5. Пользователь B пишет продавцу.
+6. В чате участники договариваются о времени.
+7. Продавец назначает время или покупатель предлагает бронь.
+8. Второй участник подтверждает бронь.
+9. Сделка завершается.
+10. Объявление уходит в архив и не возвращается в активные.
+11. Участники оставляют отзывы.
+12. Проверяется история покупок / продаж.
+13. Проверяется изменение статуса доверия.
+14. Проверяется уведомление.
+15. Проверяется жалоба и `/admin`.
 
 ## Build
 
@@ -85,36 +151,12 @@ http://localhost:3000
 pnpm build
 ```
 
-The static export is generated in:
-
-```text
-out/
-```
-
-## Check on GitHub Pages
-
-1. Create a new GitHub repository.
-2. Upload or push all files from `Choi_v0.1`.
-3. Open the repository on GitHub.
-4. Go to `Settings` -> `Pages`.
-5. Under `Build and deployment`, choose `GitHub Actions`.
-6. Go to the `Actions` tab and wait for `Deploy Choi to GitHub Pages` to finish.
-7. Open the published Pages URL shown in the deploy summary.
-
-The project already includes `.github/workflows/pages.yml`, so GitHub will build and publish the site automatically after a push to `main` or `master`.
-
-## Roadmap
-
-- `v0.1` - Home page, categories, district filter, product cards
-- `v0.2` - Stronger search and sorting
-- `v0.3` - Product detail page
-- `v0.4` - User profile and seller page
-- `v0.5` - Listing creation flow
-
 ## Product Direction
 
-Choi should feel like a real marketplace from the first screen: calm, fast, trustworthy, and visually polished. The project should avoid rough placeholder UI and grow version by version into a complete marketplace experience.
+Choi должен ощущаться как локальное приложение: быстрое, светлое, спокойное и понятное. Главное действие пользователя - увидеть товар рядом и написать продавцу.
 
-## Brand Direction
+Бренд Choi сохраняет чайную атмосферу, кремовый фон, зеленые акценты и идею:
 
-The current logo system is based on the supplied Choi sketches: green leaf forms, a modern `C` mark, and a tea-inspired mascot that signals comfort, trust, and local closeness.
+```text
+Всё начинается рядом.
+```
