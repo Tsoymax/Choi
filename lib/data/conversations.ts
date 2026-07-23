@@ -79,6 +79,24 @@ export async function getConversationsByUserId(supabase: SupabaseClient, userId:
   );
 }
 
+export async function getUnreadRemoteConversationCount(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select("id, messages!inner(id)")
+    .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+    .eq("messages.read", false)
+    .neq("messages.sender_id", userId);
+
+  if (error) {
+    return 0;
+  }
+
+  return new Set((data ?? []).map((conversation) => conversation.id)).size;
+}
+
 export async function getConversationById(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from("conversations")

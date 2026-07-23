@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { CHAT_EVENT, getUnreadConversationCount } from "@/utils/chat";
 import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import {
-  NOTIFICATION_EVENT,
-  getUnreadMessageNotificationsCount
-} from "@/lib/data/notifications";
+import { NOTIFICATION_EVENT } from "@/lib/data/notifications";
+import { getUnreadRemoteConversationCount } from "@/lib/data/conversations";
 import { createClient } from "@/utils/supabase/client";
 
 const UNREAD_COUNT_CACHE_TTL_MS = 15_000;
@@ -40,7 +38,7 @@ async function getUnreadChatCountSnapshot() {
     }
 
     const supabase = createClient();
-    const remoteUnreadCount = await getUnreadMessageNotificationsCount(supabase, user.id);
+    const remoteUnreadCount = await getUnreadRemoteConversationCount(supabase, user.id);
     return localUnreadCount + remoteUnreadCount;
   })()
     .then((count) => {
