@@ -1,4 +1,4 @@
-name: Build Choi
+name: Choi CI
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  lint-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,5 +32,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build static site
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Build
         run: pnpm build
