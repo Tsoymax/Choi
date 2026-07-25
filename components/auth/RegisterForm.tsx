@@ -18,6 +18,26 @@ function getSafeNext(value: string | null) {
   return value;
 }
 
+async function checkBetaAccess(email: string) {
+  const response = await fetch("/api/beta-access", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email })
+  });
+
+  const payload = (await response.json().catch(() => null)) as {
+    allowed?: boolean;
+    message?: string;
+  } | null;
+
+  return {
+    allowed: response.ok && payload?.allowed === true,
+    message: payload?.message ?? "Сейчас регистрация временно недоступна. Попробуйте позже."
+  };
+}
+
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,13 +76,22 @@ export function RegisterForm() {
       return;
     }
 
-    setIsSubmitting(true);
     const supabase = createClient();
     const callbackUrl = new URL(`${window.location.origin}/auth/callback`);
     callbackUrl.searchParams.set("next", nextPath);
+    const normalizedEmail = email.trim();
+
+    setIsSubmitting(true);
+    const betaAccess = await checkBetaAccess(normalizedEmail);
+
+    if (!betaAccess.allowed) {
+      setIsSubmitting(false);
+      setError(betaAccess.message);
+      return;
+    }
 
     const { data, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: normalizedEmail,
       password,
       options: {
         data: {
@@ -97,7 +126,7 @@ export function RegisterForm() {
     const loginParams = new URLSearchParams({
       pending: "1",
       next: nextPath,
-      email: email.trim()
+      email: normalizedEmail
     });
     router.replace(`/login?${loginParams.toString()}` as never);
   }

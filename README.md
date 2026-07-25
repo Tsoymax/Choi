@@ -82,9 +82,12 @@ http://localhost:3000
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+CHOI_BETA_ALLOWED_EMAILS=email1@example.com,email2@example.com
 ```
 
 Для production эти же переменные нужно добавить в Vercel Project Settings -> Environment Variables.
+
+`CHOI_BETA_ALLOWED_EMAILS` включает закрытую beta-регистрацию. Если переменная пустая или не задана, регистрация открыта. Чтобы открыть доступ всем, можно указать `*`.
 
 ## Supabase
 
