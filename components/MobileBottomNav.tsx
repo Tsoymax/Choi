@@ -21,26 +21,31 @@ const navItems: NavItem[] = [
 ];
 
 function isActivePath(pathname: string, key: NavItem["key"]) {
+  const normalizedPathname =
+    pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+
   if (key === "home") {
-    return pathname === "/";
+    return normalizedPathname === "/";
   }
 
   if (key === "chat") {
-    return pathname === "/chat";
+    return normalizedPathname === "/chat";
   }
 
   if (key === "profile") {
-    return pathname === "/profile" || pathname.startsWith("/profile/");
+    return normalizedPathname === "/profile" || normalizedPathname.startsWith("/profile/");
   }
 
-  return pathname === `/${key}` || pathname.startsWith(`/${key}/`);
+  return normalizedPathname === `/${key}` || normalizedPathname.startsWith(`/${key}/`);
 }
 
 export function MobileBottomNav() {
   const pathname = usePathname() ?? "/";
   const unreadCount = useUnreadChatCount();
+  const normalizedPathname =
+    pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 
-  if (pathname.startsWith("/chat/")) {
+  if (normalizedPathname.startsWith("/chat/")) {
     return null;
   }
 
