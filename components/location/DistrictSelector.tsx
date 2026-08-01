@@ -75,17 +75,19 @@ export function DistrictSelector({
   }
 
   return (
-    <div ref={rootRef} className="relative inline-flex">
+    <div ref={rootRef} className="relative inline-flex min-w-0">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={`focus-ring inline-flex shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white font-semibold text-ink shadow-sm transition hover:border-leaf/30 ${
-          compact ? "h-10 px-3 text-sm" : "h-12 px-4 text-base"
+          compact ? "h-10 max-w-full px-2.5 text-sm" : "h-12 px-4 text-base"
         }`}
         aria-expanded={open}
       >
         <MapPin size={compact ? 16 : 19} className="text-leaf" />
-        <span className="max-w-[180px] truncate">{currentDistrict.name}</span>
+        <span className={`${compact ? "max-w-[96px]" : "max-w-[180px]"} truncate`}>
+          {currentDistrict.name}
+        </span>
         <ChevronDown
           size={16}
           className={`text-ink/45 transition ${open ? "rotate-180" : ""}`}

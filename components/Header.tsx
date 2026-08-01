@@ -167,16 +167,23 @@ export function Header({
   return (
     <header className="sticky top-0 z-40 border-b border-ink/5 bg-white/92 backdrop-blur-xl">
       <DealNotificationModal />
-      <div className="mx-auto flex min-h-24 w-full max-w-[1504px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:px-8 xl:flex-nowrap">
+      <div className="mx-auto flex min-h-20 w-full max-w-[1504px] flex-nowrap items-center gap-2 px-3 py-3 sm:px-6 md:min-h-24 md:flex-wrap md:gap-3 lg:px-8 xl:flex-nowrap">
         <Link
           href="/"
           className="flex shrink-0 cursor-pointer items-center transition hover:opacity-85"
           aria-label="Choi home"
         >
-          <Image src="/logo.svg" alt="Choi" width={180} height={72} priority />
+          <Image
+            src="/logo.svg"
+            alt="Choi"
+            width={180}
+            height={72}
+            priority
+            className="h-auto w-[122px] sm:w-[160px] md:w-[180px]"
+          />
         </Link>
 
-        <div className="md:hidden">
+        <div className="min-w-0 flex-1 md:hidden">
           <DistrictSelector
             district={homeDistrict}
             compact
@@ -207,10 +214,10 @@ export function Header({
           />
         </form>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2 xl:gap-4">
           <Link
             href="/favorites"
-            className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+            className="focus-ring relative grid h-10 w-10 place-items-center rounded-full text-ink hover:bg-mist md:h-12 md:w-12"
             aria-label="Избранное"
           >
             <Heart size={25} />
@@ -232,7 +239,7 @@ export function Header({
               </span>
             ) : null}
           </Link>
-          <NotificationBell />
+          <NotificationBell compact />
           <Link
             href={(currentUser ? "/profile" : "/login") as never}
             className="focus-ring hidden h-12 items-center gap-2 rounded-full bg-mist px-2 text-base font-semibold text-ink transition hover:bg-[#e4eee7] md:flex xl:px-3"

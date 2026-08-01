@@ -24,7 +24,11 @@ let cachedUnreadNotifications: {
 } | null = null;
 let unreadNotificationsRequest: Promise<number> | null = null;
 
-export function NotificationBell() {
+type NotificationBellProps = {
+  compact?: boolean;
+};
+
+export function NotificationBell({ compact }: NotificationBellProps) {
   const router = useRouter();
   const [count, setCount] = useState(0);
   const [toast, setToast] = useState<NotificationRow | null>(null);
@@ -161,10 +165,15 @@ export function NotificationBell() {
     <>
       <Link
         href="/notifications"
-        className="focus-ring relative grid h-12 w-12 place-items-center rounded-full text-ink hover:bg-mist"
+        className={`focus-ring relative grid place-items-center rounded-full text-ink hover:bg-mist ${
+          compact ? "h-10 w-10 md:h-12 md:w-12" : "h-12 w-12"
+        }`}
         aria-label="Уведомления"
       >
-        <Bell size={24} />
+        <Bell
+          size={24}
+          className={compact ? "h-[22px] w-[22px] md:h-6 md:w-6" : undefined}
+        />
         <NotificationBadge count={count} />
       </Link>
       <NotificationToast
