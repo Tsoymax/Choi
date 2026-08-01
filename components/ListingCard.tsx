@@ -22,6 +22,7 @@ export function ListingCard({ product, language }: ListingCardProps) {
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
   const [favorite, setFavorite] = useState(false);
   const distanceLabel = formatDistanceKm(product.distanceKm);
+  const photos = product.images?.length ? product.images : [product.image];
 
   useEffect(() => {
     const syncFavorite = () => {
@@ -53,17 +54,35 @@ export function ListingCard({ product, language }: ListingCardProps) {
           openListing();
         }
       }}
-      className="group grid cursor-pointer grid-cols-[116px_1fr] overflow-hidden rounded-[22px] border border-ink/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft sm:block"
+      className="group block cursor-pointer overflow-hidden rounded-[22px] border border-ink/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
     >
-      <div className="relative aspect-square overflow-hidden bg-[#f7f5ef] sm:aspect-[4/3]">
-        <Image
-          src={product.image}
-          alt={title}
-          fill
-          unoptimized={product.image.startsWith("data:")}
-          className="object-cover transition duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 116px, (max-width: 1200px) 50vw, 25vw"
-        />
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f5ef]">
+        <div className="flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {photos.map((photo, index) => (
+            <div key={`${photo}-${index}`} className="relative h-full w-full shrink-0 snap-center">
+              <Image
+                src={photo}
+                alt={index === 0 ? title : `${title}, фото ${index + 1}`}
+                fill
+                unoptimized={photo.startsWith("data:")}
+                className="object-cover transition duration-500 group-hover:scale-105"
+                sizes="(max-width: 640px) 92vw, (max-width: 1200px) 50vw, 25vw"
+              />
+            </div>
+          ))}
+        </div>
+        {photos.length > 1 ? (
+          <div className="pointer-events-none absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-1 rounded-full bg-ink/28 px-2 py-1 backdrop-blur">
+            {photos.slice(0, 5).map((photo, index) => (
+              <span
+                key={`${photo}-dot-${index}`}
+                className={`h-1.5 w-1.5 rounded-full ${
+                  index === 0 ? "bg-white" : "bg-white/55"
+                }`}
+              />
+            ))}
+          </div>
+        ) : null}
         <button
           type="button"
           onClick={async (event) => {
@@ -81,7 +100,7 @@ export function ListingCard({ product, language }: ListingCardProps) {
             setFavorite(nextFavorite);
             await toggleFavoriteAsync(product.id);
           }}
-          className={`focus-ring absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full shadow-sm transition sm:right-4 sm:top-4 sm:h-10 sm:w-10 ${
+          className={`focus-ring absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full shadow-sm transition sm:h-10 sm:w-10 ${
             favorite ? "bg-leaf text-white" : "bg-white/88 text-ink hover:text-leaf"
           }`}
           aria-label={favorite ? "Удалить из избранного" : "Добавить в избранное"}
