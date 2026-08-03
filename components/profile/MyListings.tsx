@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
 import type { Listing, ListingStatus } from "@/utils/listings";
@@ -17,25 +17,18 @@ import {
 } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 
-type ListingTab = "active" | "sold";
-
 type MyListingsProps = {
   listings: Listing[];
 };
 
 export function MyListings({ listings }: MyListingsProps) {
-  const [activeTab, setActiveTab] = useState<ListingTab>("active");
-
-  const filteredListings = useMemo(
+  const activeListings = useMemo(
     () =>
       listings.filter((listing) => {
         const status = listing.status ?? "active";
-        if (activeTab === "active") {
-          return status === "active" || status === "reserved";
-        }
-        return status === "sold" || status === "archived";
+        return status === "active" || status === "reserved";
       }),
-    [activeTab, listings]
+    [listings]
   );
 
   async function changeListingStatus(listing: Listing, status: ListingStatus) {
@@ -69,44 +62,23 @@ export function MyListings({ listings }: MyListingsProps) {
   }
 
   return (
-    <section className="rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-ink">Мои объявления</h2>
-          <p className="mt-1 text-sm text-ink/58">
-            Управляйте объявлениями, опубликованными на Choi
-          </p>
-        </div>
-        <div className="flex rounded-full bg-mist p-1">
-          {(["active", "sold"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`focus-ring rounded-full px-4 py-2 text-sm font-semibold transition ${
-                activeTab === tab ? "bg-leaf text-white" : "text-ink hover:bg-white"
-              }`}
-            >
-              {tab === "active" ? "Активные" : "Проданные"}
-            </button>
-          ))}
-        </div>
+    <section className="overflow-hidden rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-ink">Мои объявления</h2>
+        <p className="mt-1 text-sm text-ink/58">
+          Управляйте активными объявлениями, опубликованными на Choi
+        </p>
       </div>
 
-      {filteredListings.length > 0 ? (
+      {activeListings.length > 0 ? (
         <div className="mt-6 grid gap-5 xl:grid-cols-2">
-          {filteredListings.map((listing) => (
-            <div key={listing.id} className="relative">
+          {activeListings.map((listing) => (
+            <div key={listing.id} className="relative min-w-0 overflow-hidden">
               <ListingCard product={listing} language="ru" />
               <div className="mt-3 grid gap-2 rounded-2xl border border-ink/10 bg-white p-3 sm:grid-cols-3">
                 <Link
                   href={`/listing/${listing.id}/edit`}
-                  className={`focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-mist px-3 text-sm font-semibold text-ink transition hover:bg-[#e4eee7] ${
-                    (listing.status ?? "active") === "sold" || (listing.status ?? "active") === "archived"
-                      ? "pointer-events-none opacity-55"
-                      : ""
-                  }`}
-                  aria-disabled={(listing.status ?? "active") === "sold" || (listing.status ?? "active") === "archived"}
+                  className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-mist px-3 text-sm font-semibold text-ink transition hover:bg-[#e4eee7]"
                 >
                   <MoreHorizontal size={16} />
                   Редактировать
@@ -114,12 +86,9 @@ export function MyListings({ listings }: MyListingsProps) {
                 <button
                   type="button"
                   onClick={() => void changeListingStatus(listing, "archived")}
-                  disabled={(listing.status ?? "active") === "sold" || (listing.status ?? "active") === "archived"}
-                  className="focus-ring h-10 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink transition hover:border-leaf/30 disabled:opacity-55"
+                  className="focus-ring h-10 rounded-full border border-ink/10 bg-white px-3 text-sm font-semibold text-ink transition hover:border-leaf/30"
                 >
-                  {(listing.status ?? "active") === "active" || (listing.status ?? "active") === "reserved"
-                    ? "Отметить проданным"
-                    : "В истории"}
+                  Снять с публикации
                 </button>
                 <button
                   type="button"
@@ -136,7 +105,7 @@ export function MyListings({ listings }: MyListingsProps) {
       ) : (
         <div className="mt-6 rounded-[24px] bg-mist p-8 text-center">
           <p className="text-lg font-semibold text-ink">
-            {activeTab === "active" ? "Активных объявлений пока нет" : "Проданных объявлений пока нет"}
+            Активных объявлений пока нет
           </p>
           <p className="mt-2 text-sm text-ink/58">
             Новые объявления, которые вы создадите, появятся здесь.
