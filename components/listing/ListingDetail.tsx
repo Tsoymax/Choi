@@ -190,7 +190,7 @@ export function ListingDetail({
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef]">
+    <main className="min-h-screen overflow-x-hidden bg-[#f7f5ef]">
       <Header
         language={language}
         onLanguageChange={setLanguage}
@@ -206,8 +206,8 @@ export function ListingDetail({
           Назад
         </Link>
 
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="space-y-6">
+        <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="min-w-0 space-y-6">
             <ListingGallery images={images} title={title} />
 
             <ListingAttributesSection
@@ -215,14 +215,14 @@ export function ListingDetail({
               attributes={listing.attributes}
             />
 
-            <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+            <section className="overflow-hidden rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
               <h2 className="text-2xl font-semibold text-ink">Описание</h2>
-              <p className="mt-4 whitespace-pre-line text-base leading-8 text-ink/72">
+              <p className="mt-4 whitespace-pre-line break-words text-base leading-8 text-ink/72 [overflow-wrap:anywhere]">
                 {listing.description || "Продавец пока не добавил подробное описание."}
               </p>
             </section>
 
-            <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+            <section className="overflow-hidden rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
               <h2 className="text-2xl font-semibold text-ink">Местоположение</h2>
               <p className="mt-4 inline-flex items-center gap-2 text-lg font-semibold text-ink">
                 <MapPin size={20} className="text-leaf" />
@@ -234,12 +234,12 @@ export function ListingDetail({
             </section>
           </div>
 
-          <div className="space-y-5">
-            <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
-              <p className="text-3xl font-semibold text-leaf">
+          <div className="min-w-0 space-y-5">
+            <section className="overflow-hidden rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+              <p className="break-words text-3xl font-semibold text-leaf [overflow-wrap:anywhere]">
                 {formatListingPrice(listing)}
               </p>
-              <h1 className="mt-4 text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+              <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-ink [overflow-wrap:anywhere] sm:text-4xl">
                 {title}
               </h1>
               <div className="mt-6 grid gap-3 text-sm text-ink/64">

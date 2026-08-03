@@ -25,6 +25,13 @@ function FieldControl({
 }) {
   const options = field.getOptions ? field.getOptions(values) : field.options;
   const isSelectDisabled = field.type === "select" && field.dependsOn && !values[field.dependsOn];
+  const normalizeValue = (nextValue: string) => {
+    if (field.type === "number") {
+      return nextValue.replace(/[^\d.,]/g, "").slice(0, 12);
+    }
+
+    return nextValue.slice(0, 80);
+  };
 
   return (
     <label id={`sell-field-attribute-${field.key}`} className="block scroll-mt-28">
@@ -51,9 +58,10 @@ function FieldControl({
       ) : (
         <div className="relative mt-2">
           <input
-            type={field.type === "number" ? "number" : "text"}
+            type="text"
+            inputMode={field.type === "number" ? "decimal" : "text"}
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => onChange(normalizeValue(event.target.value))}
             className="focus-ring h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
             placeholder={field.placeholder}
           />

@@ -109,10 +109,10 @@ export function ListingCard({ product, language }: ListingCardProps) {
         </button>
       </div>
       <div className="min-w-0 p-4 sm:p-5">
-        <h3 className="line-clamp-2 text-base font-semibold leading-snug text-ink sm:text-lg">
+        <h3 className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink [overflow-wrap:anywhere] sm:text-lg">
           {title}
         </h3>
-        <strong className="mt-2 block text-lg font-semibold text-ink">
+        <strong className="mt-2 block break-words text-lg font-semibold text-ink [overflow-wrap:anywhere]">
           {formatListingPrice(product)}
         </strong>
         {product.status === "reserved" ? (

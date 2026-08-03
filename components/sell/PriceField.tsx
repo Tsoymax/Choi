@@ -27,7 +27,7 @@ export function PriceField({
           value={price}
           disabled={negotiable}
           inputMode="numeric"
-          onChange={(event) => onPriceChange(event.target.value.replace(/[^\d]/g, ""))}
+          onChange={(event) => onPriceChange(event.target.value.replace(/[^\d]/g, "").slice(0, 15))}
           className="focus-ring h-14 rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm disabled:bg-mist disabled:text-ink/45"
           placeholder="Введите цену"
         />

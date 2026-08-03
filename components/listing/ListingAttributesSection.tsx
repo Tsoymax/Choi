@@ -26,7 +26,7 @@ export function ListingAttributesSection({
   const unknownAttributes = filledAttributes.filter(([key]) => !knownKeys.has(key));
 
   return (
-    <section className="rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
+    <section className="overflow-hidden rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
       <h2 className="text-2xl font-semibold text-ink">Характеристики</h2>
       <div className="mt-5 space-y-6">
         {groups.map((group) => {
@@ -50,10 +50,10 @@ export function ListingAttributesSection({
                 {groupAttributes.map(({ field, value }) => (
                   <div
                     key={field.key}
-                    className="rounded-2xl border border-ink/8 bg-mist/45 p-4"
+                    className="min-w-0 rounded-2xl border border-ink/8 bg-mist/45 p-4"
                   >
                     <dt className="text-sm font-medium text-ink/52">{field.label}</dt>
-                    <dd className="mt-1 text-base font-semibold text-ink">
+                    <dd className="mt-1 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
                       {formatAttributeValue(category, field.key, value)}
                     </dd>
                   </div>
@@ -74,12 +74,12 @@ export function ListingAttributesSection({
                 return (
                   <div
                     key={key}
-                    className="rounded-2xl border border-ink/8 bg-mist/45 p-4"
+                    className="min-w-0 rounded-2xl border border-ink/8 bg-mist/45 p-4"
                   >
                     <dt className="text-sm font-medium text-ink/52">
                       {field?.label ?? key}
                     </dt>
-                    <dd className="mt-1 text-base font-semibold text-ink">
+                    <dd className="mt-1 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
                       {formatAttributeValue(category, key, value)}
                     </dd>
                   </div>
