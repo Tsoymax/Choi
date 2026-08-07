@@ -223,6 +223,26 @@ function SliderRangeControl({
     onTo(next >= max ? "" : String(next));
   }
 
+  function updateFromInput(value: string) {
+    const cleaned = cleanNumber(value);
+    if (!cleaned) {
+      onFrom("");
+      return;
+    }
+
+    updateFrom(Number(cleaned));
+  }
+
+  function updateToInput(value: string) {
+    const cleaned = cleanNumber(value);
+    if (!cleaned) {
+      onTo("");
+      return;
+    }
+
+    updateTo(Number(cleaned));
+  }
+
   return (
     <div className="min-w-0 rounded-xl bg-white p-3 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -257,6 +277,24 @@ function SliderRangeControl({
           onChange={(event) => updateTo(Number(event.target.value))}
           className="pointer-events-none absolute inset-x-0 top-1/2 h-2 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-leaf [&::-moz-range-thumb]:shadow-md [&::-webkit-slider-runnable-track]:appearance-none [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-leaf [&::-webkit-slider-thumb]:shadow-md"
           aria-label={`${label} до`}
+        />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <input
+          value={from}
+          onChange={(event) => updateFromInput(event.target.value)}
+          inputMode="numeric"
+          placeholder="От"
+          className="focus-ring h-10 min-w-0 rounded-lg border border-ink/10 bg-mist/70 px-3 text-sm font-semibold text-ink placeholder:text-ink/45"
+          aria-label={`${label} от вручную`}
+        />
+        <input
+          value={to}
+          onChange={(event) => updateToInput(event.target.value)}
+          inputMode="numeric"
+          placeholder="До"
+          className="focus-ring h-10 min-w-0 rounded-lg border border-ink/10 bg-mist/70 px-3 text-sm font-semibold text-ink placeholder:text-ink/45"
+          aria-label={`${label} до вручную`}
         />
       </div>
     </div>
