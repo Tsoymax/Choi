@@ -130,7 +130,15 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           key: "fuel",
           label: "Тип топлива",
           type: "select",
-          options: toOptions(["Бензин", "Газ", "Дизель", "Гибрид", "Электро"])
+          options: toOptions([
+            "Бензин",
+            "Бензин/метан",
+            "Бензин/пропан",
+            "Газ",
+            "Дизель",
+            "Гибрид",
+            "Электро"
+          ])
         },
         {
           key: "transmission",
