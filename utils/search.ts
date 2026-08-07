@@ -323,7 +323,6 @@ export function filterListings(
     if (!matchesQuery(listing, filters.q)) return false;
     if (!matchesCategory(listing, filters.category)) return false;
     if (!matchesDistrict(listing, filters.district)) return false;
-    if (filters.onlyWithPhoto && !listing.image) return false;
     if (filters.negotiable && !listing.negotiable) return false;
     if (filters.onlyNew && !isNewListing(listing)) return false;
     if (
@@ -402,7 +401,7 @@ export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFi
       distanceRadius === "all"
         ? distanceRadius
         : "all",
-    onlyWithPhoto: searchParams.get("onlyWithPhoto") === "true",
+    onlyWithPhoto: false,
     onlyNew: searchParams.get("onlyNew") === "true",
     onlyBargain: searchParams.get("onlyBargain") === "true",
     onlyActive: searchParams.get("onlyActive") !== "false",
@@ -501,7 +500,6 @@ export function getActiveFilterChips(filters: SearchFiltersState) {
   add("gender", filters.gender);
   add("size", filters.size);
 
-  if (filters.onlyWithPhoto) chips.push({ key: "onlyWithPhoto", label: "с фото" });
   if (filters.onlyNew) chips.push({ key: "onlyNew", label: "новые 7 дней" });
   if (filters.onlyBargain) chips.push({ key: "onlyBargain", label: "с торгом" });
   if (!filters.onlyActive) chips.push({ key: "onlyActive", label: "все статусы" });

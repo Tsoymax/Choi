@@ -31,7 +31,6 @@ function hasExtraFilters(filters: SearchFiltersState) {
       filters.maxPrice ||
       filters.currency ||
       filters.distanceRadius !== "all" ||
-      filters.onlyWithPhoto ||
       filters.onlyNew ||
       filters.onlyBargain ||
       !filters.onlyActive ||
@@ -381,12 +380,7 @@ function AutoCompactFilters({
 
   return (
     <div className="mt-3 rounded-[24px] border border-ink/8 bg-[#f1f3f2] p-4 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-5">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <ToggleControl
-          label="Только с фото"
-          checked={filters.onlyWithPhoto}
-          onChange={(onlyWithPhoto) => onChange({ onlyWithPhoto })}
-        />
+      <div className="mb-5 flex justify-end">
         <button
           type="button"
           onClick={onClose}
@@ -572,18 +566,6 @@ export function CompactSearchFilters({
             })
           }
         />
-
-        <button
-          type="button"
-          onClick={() => onChange({ onlyWithPhoto: !filters.onlyWithPhoto })}
-          className={`focus-ring h-11 shrink-0 rounded-full border px-4 text-sm font-semibold shadow-sm transition ${
-            filters.onlyWithPhoto
-              ? "border-leaf bg-leaf text-white"
-              : "border-ink/10 bg-white text-ink hover:border-leaf/35 hover:bg-mist"
-          }`}
-        >
-          С фото
-        </button>
 
         <button
           type="button"

@@ -171,15 +171,6 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
         <label className="flex items-center gap-3 text-sm font-semibold text-ink">
           <input
             type="checkbox"
-            checked={filters.onlyWithPhoto}
-            onChange={(event) => onChange({ onlyWithPhoto: event.target.checked })}
-            className="h-5 w-5 rounded border-ink/20 accent-leaf"
-          />
-          Только с фото
-        </label>
-        <label className="flex items-center gap-3 text-sm font-semibold text-ink">
-          <input
-            type="checkbox"
             checked={filters.negotiable}
             onChange={(event) => onChange({ negotiable: event.target.checked })}
             className="h-5 w-5 rounded border-ink/20 accent-leaf"
