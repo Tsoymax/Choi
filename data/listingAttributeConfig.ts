@@ -10,6 +10,10 @@ export type ListingAttributeField = {
   required?: boolean;
   placeholder?: string;
   unit?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  maxLength?: number;
   options?: ListingAttributeOption[];
   dependsOn?: string;
   getOptions?: (values: Record<string, string>) => ListingAttributeOption[];
@@ -114,8 +118,8 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           dependsOn: "brand",
           getOptions: getCarModelOptions
         },
-        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "2020" },
-        { key: "mileage", label: "Пробег", type: "number", required: true, unit: "км", placeholder: "85000" },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1950, max: 2026, step: 1, maxLength: 4 },
+        { key: "mileage", label: "Пробег", type: "number", required: true, unit: "км", placeholder: "Выберите", min: 0, max: 999999, step: 1000, maxLength: 6 },
         {
           key: "fuel",
           label: "Тип топлива",
@@ -134,15 +138,8 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           type: "select",
           options: toOptions(["Передний", "Задний", "Полный"])
         },
-        { key: "engine", label: "Объем двигателя", type: "text", placeholder: "2.5" },
-        {
-          key: "body",
-          label: "Тип кузова",
-          type: "select",
-          options: toOptions(["Седан", "Хэтчбек", "Универсал", "Кроссовер", "Внедорожник", "Минивэн", "Пикап"])
-        },
+        { key: "engine", label: "Объем двигателя", type: "number", placeholder: "Выберите", min: 0, max: 9.9, step: 0.1, maxLength: 4 },
         { key: "color", label: "Цвет", type: "text", placeholder: "Белый" },
-        { key: "vin", label: "VIN", type: "text", placeholder: "Необязательно" },
         { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
         { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
         { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
