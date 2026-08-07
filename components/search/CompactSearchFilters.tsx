@@ -186,7 +186,6 @@ function SliderRangeControl({
   max,
   step,
   unit,
-  formatValue,
   onFrom,
   onTo
 }: {
@@ -197,7 +196,6 @@ function SliderRangeControl({
   max: number;
   step: number;
   unit?: string;
-  formatValue?: (value: number) => string;
   onFrom: (value: string) => void;
   onTo: (value: string) => void;
 }) {
@@ -208,10 +206,6 @@ function SliderRangeControl({
   const range = max - min;
   const fromPercent = range > 0 ? ((safeFrom - min) / range) * 100 : 0;
   const toPercent = range > 0 ? ((safeTo - min) / range) * 100 : 100;
-  const display = (value: number) => {
-    const formatted = formatValue ? formatValue(value) : value.toLocaleString("ru-RU");
-    return unit ? `${formatted} ${unit}` : formatted;
-  };
 
   function updateFrom(value: number) {
     const next = Math.min(value, safeTo);
@@ -247,9 +241,24 @@ function SliderRangeControl({
     <div className="min-w-0 rounded-xl bg-white p-3 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3">
         <span className="text-sm font-medium text-ink/78">{label}</span>
-        <span className="text-right text-xs font-semibold text-leaf">
-          {display(safeFrom)} - {display(safeTo)}
-        </span>
+        <div className="flex min-w-0 items-center justify-end gap-1 text-xs font-semibold text-leaf">
+          <input
+            value={from || String(safeFrom)}
+            onChange={(event) => updateFromInput(event.target.value)}
+            inputMode="numeric"
+            className="focus-ring h-7 w-20 rounded-md border border-transparent bg-transparent px-1 text-right font-semibold text-leaf transition hover:bg-mist focus:bg-white"
+            aria-label={`${label} от вручную`}
+          />
+          <span className="shrink-0">-</span>
+          <input
+            value={to || String(safeTo)}
+            onChange={(event) => updateToInput(event.target.value)}
+            inputMode="numeric"
+            className="focus-ring h-7 w-20 rounded-md border border-transparent bg-transparent px-1 text-right font-semibold text-leaf transition hover:bg-mist focus:bg-white"
+            aria-label={`${label} до вручную`}
+          />
+          {unit ? <span className="shrink-0">{unit}</span> : null}
+        </div>
       </div>
       <div className="relative h-9">
         <div
@@ -277,24 +286,6 @@ function SliderRangeControl({
           onChange={(event) => updateTo(Number(event.target.value))}
           className="pointer-events-none absolute inset-x-0 top-1/2 h-2 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-leaf [&::-moz-range-thumb]:shadow-md [&::-webkit-slider-runnable-track]:appearance-none [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-leaf [&::-webkit-slider-thumb]:shadow-md"
           aria-label={`${label} до`}
-        />
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <input
-          value={from}
-          onChange={(event) => updateFromInput(event.target.value)}
-          inputMode="numeric"
-          placeholder="От"
-          className="focus-ring h-10 min-w-0 rounded-lg border border-ink/10 bg-mist/70 px-3 text-sm font-semibold text-ink placeholder:text-ink/45"
-          aria-label={`${label} от вручную`}
-        />
-        <input
-          value={to}
-          onChange={(event) => updateToInput(event.target.value)}
-          inputMode="numeric"
-          placeholder="До"
-          className="focus-ring h-10 min-w-0 rounded-lg border border-ink/10 bg-mist/70 px-3 text-sm font-semibold text-ink placeholder:text-ink/45"
-          aria-label={`${label} до вручную`}
         />
       </div>
     </div>
