@@ -178,36 +178,76 @@ function CompactInputControl({
   );
 }
 
-function RangeControl({
+function SliderRangeControl({
   label,
   from,
   to,
+  min,
+  max,
+  step,
+  unit,
+  formatValue,
   onFrom,
   onTo
 }: {
   label: string;
   from: string;
   to: string;
+  min: number;
+  max: number;
+  step: number;
+  unit?: string;
+  formatValue?: (value: number) => string;
   onFrom: (value: string) => void;
   onTo: (value: string) => void;
 }) {
+  const currentFrom = Number(from || min);
+  const currentTo = Number(to || max);
+  const safeFrom = Math.min(Math.max(currentFrom, min), currentTo);
+  const safeTo = Math.max(Math.min(currentTo, max), safeFrom);
+  const display = (value: number) => {
+    const formatted = formatValue ? formatValue(value) : value.toLocaleString("ru-RU");
+    return unit ? `${formatted} ${unit}` : formatted;
+  };
+
+  function updateFrom(value: number) {
+    const next = Math.min(value, safeTo);
+    onFrom(next <= min ? "" : String(next));
+  }
+
+  function updateTo(value: number) {
+    const next = Math.max(value, safeFrom);
+    onTo(next >= max ? "" : String(next));
+  }
+
   return (
-    <div className="min-w-0">
-      <span className="mb-1.5 block text-sm font-medium text-ink/78">{label}</span>
-      <div className="grid grid-cols-2 gap-2">
+    <div className="min-w-0 rounded-xl bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <span className="text-sm font-medium text-ink/78">{label}</span>
+        <span className="text-right text-xs font-semibold text-leaf">
+          {display(safeFrom)} - {display(safeTo)}
+        </span>
+      </div>
+      <div className="space-y-3">
         <input
-          value={from}
-          onChange={(event) => onFrom(cleanNumber(event.target.value))}
-          inputMode="numeric"
-          placeholder="От:"
-          className="focus-ring h-12 min-w-0 rounded-xl border border-transparent bg-white px-3 text-sm font-semibold text-ink shadow-sm placeholder:text-ink/45"
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={safeFrom}
+          onChange={(event) => updateFrom(Number(event.target.value))}
+          className="h-2 w-full accent-leaf"
+          aria-label={`${label} от`}
         />
         <input
-          value={to}
-          onChange={(event) => onTo(cleanNumber(event.target.value))}
-          inputMode="numeric"
-          placeholder="до:"
-          className="focus-ring h-12 min-w-0 rounded-xl border border-transparent bg-white px-3 text-sm font-semibold text-ink shadow-sm placeholder:text-ink/45"
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={safeTo}
+          onChange={(event) => updateTo(Number(event.target.value))}
+          className="h-2 w-full accent-leaf"
+          aria-label={`${label} до`}
         />
       </div>
     </div>
@@ -279,19 +319,6 @@ function AutoCompactFilters({
           }))}
           onChange={(category) => onChange({ category })}
         />
-        <CompactInputControl
-          label="Подкатегория"
-          value={filters.subcategory}
-          placeholder="Все объявления"
-          onChange={(subcategory) => onChange({ subcategory })}
-        />
-        <RangeControl
-          label="Цена"
-          from={filters.minPrice}
-          to={filters.maxPrice}
-          onFrom={(minPrice) => onChange({ minPrice })}
-          onTo={(maxPrice) => onChange({ maxPrice })}
-        />
         <CompactSelectControl
           label="Марка"
           value={filters.brand}
@@ -305,25 +332,43 @@ function AutoCompactFilters({
           placeholder={filters.brand ? "Все модели" : "Сначала марка"}
           onChange={(model) => onChange({ model })}
         />
-        <RangeControl
+        <SliderRangeControl
+          label="Цена"
+          from={filters.minPrice}
+          to={filters.maxPrice}
+          min={0}
+          max={1000000000}
+          step={1000000}
+          unit={filters.currency === "usd" ? "$" : "сум"}
+          onFrom={(minPrice) => onChange({ minPrice })}
+          onTo={(maxPrice) => onChange({ maxPrice })}
+        />
+        <SliderRangeControl
           label="Пробег"
           from={filters.mileageFrom}
           to={filters.mileageTo}
+          min={0}
+          max={500000}
+          step={5000}
+          unit="км"
           onFrom={(mileageFrom) => onChange({ mileageFrom })}
           onTo={(mileageTo) => onChange({ mileageTo })}
+        />
+        <SliderRangeControl
+          label="Год выпуска"
+          from={filters.yearFrom}
+          to={filters.yearTo}
+          min={1980}
+          max={2026}
+          step={1}
+          onFrom={(yearFrom) => onChange({ yearFrom })}
+          onTo={(yearTo) => onChange({ yearTo })}
         />
         <CompactSelectControl
           label="Вид топлива"
           value={filters.fuel}
           options={optionsFor(fieldByKey.get("fuel"))}
           onChange={(fuel) => onChange({ fuel })}
-        />
-        <RangeControl
-          label="Год выпуска"
-          from={filters.yearFrom}
-          to={filters.yearTo}
-          onFrom={(yearFrom) => onChange({ yearFrom })}
-          onTo={(yearTo) => onChange({ yearTo })}
         />
         <CompactSelectControl
           label="Коробка передач"
