@@ -36,6 +36,8 @@ export type Product = {
   images?: string[];
   status?: "active" | "reserved" | "sold" | "archived" | "hidden" | "blocked";
   createdAt?: string;
+  viewsCount?: number;
+  likesCount?: number;
   badgeRu?: string;
   badgeUz?: string;
 };

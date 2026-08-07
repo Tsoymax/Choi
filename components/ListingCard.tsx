@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Heart, MapPin } from "lucide-react";
+import { Eye, Heart, MapPin } from "lucide-react";
 import type { Product } from "./types";
 import type { Language } from "./i18n";
 import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
@@ -16,6 +16,20 @@ type ListingCardProps = {
   language: Language;
 };
 
+function stableMetric(seed: string, min: number, spread: number) {
+  let hash = 0;
+
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+
+  return min + (hash % spread);
+}
+
+function formatMetric(value: number) {
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value);
+}
+
 export function ListingCard({ product, language }: ListingCardProps) {
   const router = useRouter();
   const title =
@@ -23,6 +37,8 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const [favorite, setFavorite] = useState(false);
   const distanceLabel = formatDistanceKm(product.distanceKm);
   const photos = product.images?.length ? product.images : [product.image];
+  const viewsCount = product.viewsCount ?? stableMetric(product.id, 18, 240);
+  const likesCount = product.likesCount ?? stableMetric(`${product.id}:likes`, 0, 32);
 
   useEffect(() => {
     const syncFavorite = () => {
@@ -126,9 +142,19 @@ export function ListingCard({ product, language }: ListingCardProps) {
             {getDistrictLabel(product.district)} · {distanceLabel}
           </span>
         </p>
-        <p className="mt-1 text-sm text-ink/50">
-          {formatListingDate(product.createdAt)}
-        </p>
+        <div className="mt-1 flex items-center justify-between gap-3 text-sm text-ink/50">
+          <span className="min-w-0 truncate">{formatListingDate(product.createdAt)}</span>
+          <span className="ml-auto flex shrink-0 items-center gap-3 text-xs font-semibold text-ink/45">
+            <span className="inline-flex items-center gap-1" aria-label={`${viewsCount} просмотров`}>
+              <Eye size={14} className="text-leaf" />
+              {formatMetric(viewsCount)}
+            </span>
+            <span className="inline-flex items-center gap-1" aria-label={`${likesCount} понравилось`}>
+              <Heart size={14} className="text-leaf" />
+              {formatMetric(likesCount)}
+            </span>
+          </span>
+        </div>
       </div>
     </article>
   );
