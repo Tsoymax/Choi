@@ -27,6 +27,7 @@ import {
 } from "@/lib/data/listings";
 import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
+import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { ListingGallery } from "./ListingGallery";
 import { ListingAttributesSection } from "./ListingAttributesSection";
 import { ListingManagement } from "./ListingManagement";
@@ -37,31 +38,6 @@ type ListingDetailProps = {
   initialListing?: Listing | null;
   initialCurrentUserId?: string;
 };
-
-function formatMileage(value?: string) {
-  if (!value) {
-    return "";
-  }
-
-  const amount = Number(value);
-  const formatted = Number.isFinite(amount)
-    ? new Intl.NumberFormat("ru-RU").format(amount)
-    : value;
-
-  return `${formatted} км`;
-}
-
-function formatAutoMeta(attributes?: Record<string, string>) {
-  if (!attributes) {
-    return "";
-  }
-
-  const releaseDate = [attributes.year, attributes.month].filter(Boolean).join("/");
-
-  return [releaseDate, formatMileage(attributes.mileage), attributes.fuel]
-    .filter(Boolean)
-    .join(" · ");
-}
 
 export function ListingDetail({
   listingId,
@@ -200,7 +176,8 @@ export function ListingDetail({
   const images = listing.images?.length ? listing.images : [listing.image];
   const isOwner = listing.sellerId === currentUserId;
   const isModeratedAway = listing.status === "hidden" || listing.status === "blocked";
-  const autoMeta = listing.category === "auto" ? formatAutoMeta(listing.attributes) : "";
+  const autoMeta =
+    listing.category === "auto" ? formatAutoListingMeta(listing.attributes) : "";
 
   if (isModeratedAway && !isOwner) {
     return (

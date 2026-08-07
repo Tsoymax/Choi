@@ -8,6 +8,7 @@ import type { Product } from "./types";
 import type { Language } from "./i18n";
 import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
+import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import {
   getCurrentUser as getCurrentAuthUser,
   hasSupabaseBrowserEnv,
@@ -25,31 +26,6 @@ function formatMetric(value: number) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value);
 }
 
-function formatMileage(value?: string) {
-  if (!value) {
-    return "";
-  }
-
-  const amount = Number(value);
-  const formatted = Number.isFinite(amount)
-    ? new Intl.NumberFormat("ru-RU").format(amount)
-    : value;
-
-  return `${formatted} км`;
-}
-
-function formatAutoCardMeta(attributes?: Record<string, string>) {
-  if (!attributes) {
-    return "";
-  }
-
-  const releaseDate = [attributes.year, attributes.month].filter(Boolean).join("/");
-
-  return [releaseDate, formatMileage(attributes.mileage), attributes.fuel]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 export function ListingCard({ product, language }: ListingCardProps) {
   const router = useRouter();
   const title =
@@ -63,7 +39,8 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const photos = product.images?.length ? product.images : [product.image];
   const viewsCount = product.viewsCount ?? 0;
   const isOwnListing = Boolean(product.sellerId && currentUserId === product.sellerId);
-  const autoMeta = product.category === "auto" ? formatAutoCardMeta(product.attributes) : "";
+  const autoMeta =
+    product.category === "auto" ? formatAutoListingMeta(product.attributes) : "";
 
   useEffect(() => {
     setLikesCount(product.likesCount ?? 0);

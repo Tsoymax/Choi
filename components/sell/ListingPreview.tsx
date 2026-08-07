@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ImageIcon, MapPin } from "lucide-react";
+import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { tashkentDistricts } from "./sellData";
 
 type ListingPreviewProps = {
@@ -30,31 +31,6 @@ function formatPreviewPrice(price: string, currency: "uzs" | "usd", negotiable: 
   return `$${new Intl.NumberFormat("en-US").format(amount)}`;
 }
 
-function formatMileage(value?: string) {
-  if (!value) {
-    return "";
-  }
-
-  const amount = Number(value);
-  const formatted = Number.isFinite(amount)
-    ? new Intl.NumberFormat("ru-RU").format(amount)
-    : value;
-
-  return `${formatted} км`;
-}
-
-function formatAutoMeta(attributes?: Record<string, string>) {
-  if (!attributes) {
-    return "";
-  }
-
-  const releaseDate = [attributes.year, attributes.month].filter(Boolean).join("/");
-
-  return [releaseDate, formatMileage(attributes.mileage), attributes.fuel]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 export function ListingPreview({
   title,
   category,
@@ -67,7 +43,7 @@ export function ListingPreview({
 }: ListingPreviewProps) {
   const districtLabel =
     tashkentDistricts.find((item) => item.id === district)?.label ?? "Район";
-  const autoMeta = category === "auto" ? formatAutoMeta(attributes) : "";
+  const autoMeta = category === "auto" ? formatAutoListingMeta(attributes) : "";
 
   return (
     <aside className="sticky top-28 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
