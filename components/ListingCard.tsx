@@ -16,16 +16,6 @@ type ListingCardProps = {
   language: Language;
 };
 
-function stableMetric(seed: string, min: number, spread: number) {
-  let hash = 0;
-
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
-  }
-
-  return min + (hash % spread);
-}
-
 function formatMetric(value: number) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value);
 }
@@ -35,10 +25,14 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const title =
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
   const [favorite, setFavorite] = useState(false);
+  const [likesCount, setLikesCount] = useState(product.likesCount ?? 0);
   const distanceLabel = formatDistanceKm(product.distanceKm);
   const photos = product.images?.length ? product.images : [product.image];
-  const viewsCount = product.viewsCount ?? stableMetric(product.id, 18, 240);
-  const likesCount = product.likesCount ?? stableMetric(`${product.id}:likes`, 0, 32);
+  const viewsCount = product.viewsCount ?? 0;
+
+  useEffect(() => {
+    setLikesCount(product.likesCount ?? 0);
+  }, [product.id, product.likesCount]);
 
   useEffect(() => {
     const syncFavorite = () => {
@@ -114,6 +108,9 @@ export function ListingCard({ product, language }: ListingCardProps) {
 
             const nextFavorite = !favorite;
             setFavorite(nextFavorite);
+            setLikesCount((currentCount) =>
+              Math.max(0, currentCount + (nextFavorite ? 1 : -1))
+            );
             await toggleFavoriteAsync(product.id);
           }}
           className={`focus-ring absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full shadow-sm transition sm:h-10 sm:w-10 ${

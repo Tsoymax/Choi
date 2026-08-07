@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Product } from "@/components/types";
+import { getListingEngagementMetrics } from "@/lib/data/listingEngagement";
 
 export type ListingRow = {
   id: string;
@@ -154,6 +155,30 @@ export function mapListingRowToProduct(listing: ListingWithRelations): ListingPr
     badgeRu: "Сегодня",
     badgeUz: "Bugun"
   };
+}
+
+export async function mapListingRowsToProductsWithMetrics(
+  supabase: SupabaseClient,
+  listings: ListingWithRelations[]
+) {
+  const metricsByListingId = await getListingEngagementMetrics(
+    supabase,
+    listings.map((listing) => listing.id)
+  );
+
+  return listings.map((listing) => ({
+    ...mapListingRowToProduct(listing),
+    viewsCount: metricsByListingId[listing.id]?.viewsCount ?? 0,
+    likesCount: metricsByListingId[listing.id]?.likesCount ?? 0
+  }));
+}
+
+export async function mapListingRowToProductWithMetrics(
+  supabase: SupabaseClient,
+  listing: ListingWithRelations
+) {
+  const [product] = await mapListingRowsToProductsWithMetrics(supabase, [listing]);
+  return product;
 }
 
 export async function getActiveListings(supabase: SupabaseClient) {

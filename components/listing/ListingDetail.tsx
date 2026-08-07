@@ -22,8 +22,10 @@ import { hasSupabaseBrowserEnv, getCurrentUser } from "@/lib/auth/client";
 import {
   getActiveListings,
   getListingById as getRemoteListingById,
-  mapListingRowToProduct
+  mapListingRowToProductWithMetrics,
+  mapListingRowsToProductsWithMetrics
 } from "@/lib/data/listings";
+import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
 import { ListingGallery } from "./ListingGallery";
 import { ListingAttributesSection } from "./ListingAttributesSection";
@@ -73,16 +75,26 @@ export function ListingDetail({
         setCurrentUserId(user.id);
       }
 
+      if (remoteListing && user?.id && user.id !== remoteListing.user_id) {
+        await recordListingView(supabase, listingId);
+      }
+
+      const [remoteProduct, visibleProducts] = await Promise.all([
+        remoteListing ? mapListingRowToProductWithMetrics(supabase, remoteListing) : null,
+        mapListingRowsToProductsWithMetrics(
+          supabase,
+          visibleListings.filter((item) => item.id !== listingId)
+        )
+      ]);
+
       if (remoteListing) {
-        setListing(mapListingRowToProduct(remoteListing) as Listing);
+        setListing(remoteProduct as Listing);
       } else if (!localListing) {
         setListing(undefined);
       }
 
       setRemoteRelatedListings(
-        visibleListings
-          .filter((item) => item.id !== listingId)
-          .map((item) => mapListingRowToProduct(item) as Listing)
+        visibleProducts as Listing[]
       );
       setIsLoadingListing(false);
     }

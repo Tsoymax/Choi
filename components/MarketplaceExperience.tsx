@@ -10,7 +10,7 @@ import type { Language } from "./i18n";
 import type { Category, Product } from "./types";
 import { LISTINGS_EVENT, getStoredListings } from "@/utils/listings";
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
+import { getActiveListings, mapListingRowsToProductsWithMetrics } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 import { sellCategories } from "@/components/sell/sellData";
 import type { Coordinates, DistanceRadius } from "@/lib/location/distance";
@@ -79,12 +79,13 @@ export function MarketplaceExperience({
 
       const supabase = createClient();
       const listings = await getActiveListings(supabase);
+      const productsWithMetrics = await mapListingRowsToProductsWithMetrics(supabase, listings);
 
       if (!mounted) {
         return;
       }
 
-      setRemoteProducts(listings.map(mapListingRowToProduct));
+      setRemoteProducts(productsWithMetrics);
       setIsLoadingProducts(false);
     }
 

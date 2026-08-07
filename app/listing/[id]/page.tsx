@@ -3,8 +3,9 @@ import { ListingDetail } from "@/components/listing/ListingDetail";
 import { createClient } from "@/utils/supabase/server";
 import {
   getListingById,
-  mapListingRowToProduct
+  mapListingRowToProductWithMetrics
 } from "@/lib/data/listings";
+import { recordListingView } from "@/lib/data/listingEngagement";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
     ]);
 
     currentUserId = userData.user?.id ?? "";
-    initialListing = remoteListing ? mapListingRowToProduct(remoteListing) : null;
+    if (remoteListing && currentUserId && currentUserId !== remoteListing.user_id) {
+      await recordListingView(supabase, id);
+    }
+
+    initialListing = remoteListing
+      ? await mapListingRowToProductWithMetrics(supabase, remoteListing)
+      : null;
   }
 
   return (

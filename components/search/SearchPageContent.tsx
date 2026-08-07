@@ -9,7 +9,7 @@ import { SearchResults } from "@/components/search/SearchResults";
 import type { Listing } from "@/utils/listings";
 import { LISTINGS_EVENT, getAllListings } from "@/utils/listings";
 import { getCurrentUser, hasSupabaseBrowserEnv } from "@/lib/auth/client";
-import { getActiveListings, mapListingRowToProduct } from "@/lib/data/listings";
+import { getActiveListings, mapListingRowsToProductsWithMetrics } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 import {
   filterListings,
@@ -143,10 +143,11 @@ export function SearchPageContent() {
 
       const supabase = createClient();
       const remoteListings = await getActiveListings(supabase);
+      const remoteProducts = await mapListingRowsToProductsWithMetrics(supabase, remoteListings);
       if (mounted) {
         setListings([
-          ...remoteListings.map((listing) => ({
-            ...mapListingRowToProduct(listing),
+          ...remoteProducts.map((listing) => ({
+            ...listing,
             description: listing.description
           })),
           ...localListings

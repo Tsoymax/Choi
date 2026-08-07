@@ -20,7 +20,7 @@ import {
   type ChoiUser,
   getCurrentUser
 } from "@/utils/users";
-import { getListingsByUserId, mapListingRowToProduct } from "@/lib/data/listings";
+import { getListingsByUserId, mapListingRowsToProductsWithMetrics } from "@/lib/data/listings";
 import { profileToChoiUser, updateCurrentProfile } from "@/lib/data/profiles";
 import { getReviewStatsForUser, type ReviewStats } from "@/lib/data/reviews";
 
@@ -87,10 +87,11 @@ export function ProfilePageClient({
 
       const supabase = createClient();
       const remoteListings = await getListingsByUserId(supabase, authUser.id);
+      const remoteProducts = await mapListingRowsToProductsWithMetrics(supabase, remoteListings);
 
       if (mounted) {
         setListings([
-          ...remoteListings.map((listing) => mapListingRowToProduct(listing) as Listing),
+          ...(remoteProducts as Listing[]),
           ...localListings
         ]);
       }

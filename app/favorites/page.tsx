@@ -14,7 +14,7 @@ import { FAVORITES_EVENT, getFavoriteIdsAsync, isUuid } from "@/utils/favorites"
 import { hasSupabaseBrowserEnv } from "@/lib/auth/client";
 import {
   getListingsByIds,
-  mapListingRowToProduct
+  mapListingRowsToProductsWithMetrics
 } from "@/lib/data/listings";
 import { createClient } from "@/utils/supabase/client";
 
@@ -36,9 +36,8 @@ export default function FavoritesPage() {
       if (hasSupabaseBrowserEnv() && remoteIds.length > 0) {
         const supabase = createClient();
         const remoteListings = await getListingsByIds(supabase, remoteIds);
-        const mappedRemoteListings = remoteListings.map(
-          (listing) => mapListingRowToProduct(listing) as Listing
-        );
+        const mappedRemoteListings =
+          (await mapListingRowsToProductsWithMetrics(supabase, remoteListings)) as Listing[];
         const localOnlyListings = nextListings.filter(
           (listing) =>
             !mappedRemoteListings.some((remoteListing) => remoteListing.id === listing.id)
