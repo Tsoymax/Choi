@@ -133,12 +133,11 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           required: true,
           options: toOptions([
             "Бензин",
-            "Бензин/метан",
-            "Бензин/пропан",
-            "Газ",
+            "Бензин-Метан",
+            "Бензин-Пропан",
             "Дизель",
-            "Гибрид",
-            "Электро"
+            "Электро",
+            "Гибрид"
           ])
         },
         {
