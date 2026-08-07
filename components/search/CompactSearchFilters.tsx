@@ -480,10 +480,10 @@ function AutoCompactFilters({
           decimal
           onChange={(engine) => onChange({ engine })}
         />
-        <CompactInputControl
+        <CompactSelectControl
           label="Цвет"
           value={filters.color}
-          placeholder="Выберите"
+          options={optionsFor(fieldByKey.get("color"))}
           onChange={(color) => onChange({ color })}
         />
         <CompactSelectControl

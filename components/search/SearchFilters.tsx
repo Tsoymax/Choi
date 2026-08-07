@@ -233,7 +233,7 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
           {selectField("Привод", filters.drive, "drive", fieldByKey.get("drive")?.options)}
           {selectField("Тип кузова", filters.body, "body", fieldByKey.get("body")?.options)}
           {textField("Объем двигателя", filters.engine, "engine", "2.5")}
-          {textField("Цвет", filters.color, "color", "Белый")}
+          {selectField("Цвет", filters.color, "color", fieldByKey.get("color")?.options)}
           {selectField("Обмен", filters.exchange, "exchange", fieldByKey.get("exchange")?.options)}
         </div>
       ) : null}

@@ -109,6 +109,27 @@ function getCarModelOptions(values: Record<string, string>) {
   return toOptions(models);
 }
 
+const carColorOptions = toOptions([
+  "Белый",
+  "Черный",
+  "Серый",
+  "Серебристый",
+  "Синий",
+  "Голубой",
+  "Красный",
+  "Бордовый",
+  "Зеленый",
+  "Темно-зеленый",
+  "Желтый",
+  "Оранжевый",
+  "Коричневый",
+  "Бежевый",
+  "Золотистый",
+  "Фиолетовый",
+  "Розовый",
+  "Комбинированный"
+]);
+
 export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGroup[]> = {
   auto: [
     {
@@ -153,7 +174,7 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           options: toOptions(["Передний", "Задний", "Полный"])
         },
         { key: "engine", label: "Объем двигателя", type: "number", placeholder: "Выберите", min: 0, max: 9.9, step: 0.1, maxLength: 4 },
-        { key: "color", label: "Цвет", type: "text", placeholder: "Белый" },
+        { key: "color", label: "Цвет", type: "select", options: carColorOptions },
         { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
         { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
         { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
