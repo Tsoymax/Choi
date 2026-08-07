@@ -8,8 +8,13 @@ import type { Product } from "./types";
 import type { Language } from "./i18n";
 import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
-import { requireCurrentUser } from "@/lib/auth/client";
+import {
+  getCurrentUser as getCurrentAuthUser,
+  hasSupabaseBrowserEnv,
+  requireCurrentUser
+} from "@/lib/auth/client";
 import { formatDistanceKm } from "@/lib/location/distance";
+import { CURRENT_USER_ID } from "@/utils/users";
 
 type ListingCardProps = {
   product: Product;
@@ -26,13 +31,40 @@ export function ListingCard({ product, language }: ListingCardProps) {
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
   const [favorite, setFavorite] = useState(false);
   const [likesCount, setLikesCount] = useState(product.likesCount ?? 0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(
+    hasSupabaseBrowserEnv() ? null : CURRENT_USER_ID
+  );
   const distanceLabel = formatDistanceKm(product.distanceKm);
   const photos = product.images?.length ? product.images : [product.image];
   const viewsCount = product.viewsCount ?? 0;
+  const isOwnListing = Boolean(product.sellerId && currentUserId === product.sellerId);
 
   useEffect(() => {
     setLikesCount(product.likesCount ?? 0);
   }, [product.id, product.likesCount]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function syncCurrentUser() {
+      if (!hasSupabaseBrowserEnv()) {
+        setCurrentUserId(CURRENT_USER_ID);
+        return;
+      }
+
+      const user = await getCurrentAuthUser();
+
+      if (mounted) {
+        setCurrentUserId(user?.id ?? null);
+      }
+    }
+
+    void syncCurrentUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const syncFavorite = () => {
@@ -92,6 +124,11 @@ export function ListingCard({ product, language }: ListingCardProps) {
               />
             ))}
           </div>
+        ) : null}
+        {isOwnListing ? (
+          <span className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-1.5 text-xs font-semibold text-leaf shadow-sm backdrop-blur">
+            Моё
+          </span>
         ) : null}
         <button
           type="button"
