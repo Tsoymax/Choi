@@ -28,6 +28,7 @@ import {
 import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
+import { markCachedListingViewed } from "@/utils/listingEngagementCache";
 import { ListingGallery } from "./ListingGallery";
 import { ListingAttributesSection } from "./ListingAttributesSection";
 import { ListingManagement } from "./ListingManagement";
@@ -77,7 +78,18 @@ export function ListingDetail({
       }
 
       if (remoteListing && user?.id && user.id !== remoteListing.user_id) {
-        await recordListingView(supabase, listingId);
+        const wasRecorded = await recordListingView(supabase, listingId);
+
+        if (wasRecorded && markCachedListingViewed(listingId)) {
+          setListing((current) =>
+            current
+              ? {
+                  ...current,
+                  viewsCount: (current.viewsCount ?? 0) + 1
+                }
+              : current
+          );
+        }
       }
 
       const [remoteProduct, visibleProducts] = await Promise.all([

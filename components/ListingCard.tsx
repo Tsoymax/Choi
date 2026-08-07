@@ -9,6 +9,7 @@ import type { Language } from "./i18n";
 import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
+import { setCachedListingLikes } from "@/utils/listingEngagementCache";
 import {
   getCurrentUser as getCurrentAuthUser,
   hasSupabaseBrowserEnv,
@@ -147,10 +148,10 @@ export function ListingCard({ product, language }: ListingCardProps) {
             }
 
             const nextFavorite = !favorite;
+            const nextLikesCount = Math.max(0, likesCount + (nextFavorite ? 1 : -1));
             setFavorite(nextFavorite);
-            setLikesCount((currentCount) =>
-              Math.max(0, currentCount + (nextFavorite ? 1 : -1))
-            );
+            setLikesCount(nextLikesCount);
+            setCachedListingLikes(product.id, nextLikesCount);
             await toggleFavoriteAsync(product.id);
           }}
           className={`focus-ring absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full shadow-sm transition sm:h-10 sm:w-10 ${

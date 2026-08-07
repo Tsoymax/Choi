@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Product } from "@/components/types";
 import { getListingEngagementMetrics } from "@/lib/data/listingEngagement";
+import { withCachedListingEngagement } from "@/utils/listingEngagementCache";
 
 export type ListingRow = {
   id: string;
@@ -166,11 +167,13 @@ export async function mapListingRowsToProductsWithMetrics(
     listings.map((listing) => listing.id)
   );
 
-  return listings.map((listing) => ({
-    ...mapListingRowToProduct(listing),
-    viewsCount: metricsByListingId[listing.id]?.viewsCount ?? 0,
-    likesCount: metricsByListingId[listing.id]?.likesCount ?? 0
-  }));
+  return listings.map((listing) =>
+    withCachedListingEngagement({
+      ...mapListingRowToProduct(listing),
+      viewsCount: metricsByListingId[listing.id]?.viewsCount ?? 0,
+      likesCount: metricsByListingId[listing.id]?.likesCount ?? 0
+    })
+  );
 }
 
 export async function mapListingRowToProductWithMetrics(

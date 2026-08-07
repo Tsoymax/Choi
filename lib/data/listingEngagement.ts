@@ -59,7 +59,7 @@ export async function getListingEngagementMetrics(
 
 export async function recordListingView(supabase: SupabaseClient, listingId: string) {
   if (!isUuid(listingId)) {
-    return;
+    return false;
   }
 
   const { error } = await supabase.rpc("record_listing_view", {
@@ -69,4 +69,6 @@ export async function recordListingView(supabase: SupabaseClient, listingId: str
   if (error && process.env.NODE_ENV !== "production") {
     console.info("[Choi listing engagement] view was not recorded", error.message);
   }
+
+  return !error;
 }
