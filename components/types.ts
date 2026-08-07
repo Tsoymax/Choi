@@ -34,6 +34,7 @@ export type Product = {
   reviews: number;
   image: string;
   images?: string[];
+  attributes?: Record<string, string>;
   status?: "active" | "reserved" | "sold" | "archived" | "hidden" | "blocked";
   createdAt?: string;
   viewsCount?: number;

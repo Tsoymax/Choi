@@ -38,6 +38,31 @@ type ListingDetailProps = {
   initialCurrentUserId?: string;
 };
 
+function formatMileage(value?: string) {
+  if (!value) {
+    return "";
+  }
+
+  const amount = Number(value);
+  const formatted = Number.isFinite(amount)
+    ? new Intl.NumberFormat("ru-RU").format(amount)
+    : value;
+
+  return `${formatted} км`;
+}
+
+function formatAutoMeta(attributes?: Record<string, string>) {
+  if (!attributes) {
+    return "";
+  }
+
+  const releaseDate = [attributes.year, attributes.month].filter(Boolean).join("/");
+
+  return [releaseDate, formatMileage(attributes.mileage), attributes.fuel]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function ListingDetail({
   listingId,
   initialListing = null,
@@ -175,6 +200,7 @@ export function ListingDetail({
   const images = listing.images?.length ? listing.images : [listing.image];
   const isOwner = listing.sellerId === currentUserId;
   const isModeratedAway = listing.status === "hidden" || listing.status === "blocked";
+  const autoMeta = listing.category === "auto" ? formatAutoMeta(listing.attributes) : "";
 
   if (isModeratedAway && !isOwner) {
     return (
@@ -254,6 +280,16 @@ export function ListingDetail({
               <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-ink [overflow-wrap:anywhere] sm:text-4xl">
                 {title}
               </h1>
+              {autoMeta ? (
+                <p className="mt-3 break-words text-base font-medium text-ink/50 [overflow-wrap:anywhere]">
+                  {autoMeta}
+                </p>
+              ) : null}
+              {listing.category === "auto" && listing.attributes?.color ? (
+                <p className="mt-2 break-words text-base font-medium text-ink/50 [overflow-wrap:anywhere]">
+                  ● {listing.attributes.color}
+                </p>
+              ) : null}
               <div className="mt-6 grid gap-3 text-sm text-ink/64">
                 <p className="inline-flex items-center gap-2">
                   <Tag size={17} className="text-leaf" />

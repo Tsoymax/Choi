@@ -25,6 +25,31 @@ function formatMetric(value: number) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value);
 }
 
+function formatMileage(value?: string) {
+  if (!value) {
+    return "";
+  }
+
+  const amount = Number(value);
+  const formatted = Number.isFinite(amount)
+    ? new Intl.NumberFormat("ru-RU").format(amount)
+    : value;
+
+  return `${formatted} км`;
+}
+
+function formatAutoCardMeta(attributes?: Record<string, string>) {
+  if (!attributes) {
+    return "";
+  }
+
+  const releaseDate = [attributes.year, attributes.month].filter(Boolean).join("/");
+
+  return [releaseDate, formatMileage(attributes.mileage), attributes.fuel]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function ListingCard({ product, language }: ListingCardProps) {
   const router = useRouter();
   const title =
@@ -38,6 +63,7 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const photos = product.images?.length ? product.images : [product.image];
   const viewsCount = product.viewsCount ?? 0;
   const isOwnListing = Boolean(product.sellerId && currentUserId === product.sellerId);
+  const autoMeta = product.category === "auto" ? formatAutoCardMeta(product.attributes) : "";
 
   useEffect(() => {
     setLikesCount(product.likesCount ?? 0);
@@ -162,9 +188,21 @@ export function ListingCard({ product, language }: ListingCardProps) {
         <h3 className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink [overflow-wrap:anywhere] sm:text-lg">
           {title}
         </h3>
-        <strong className="mt-2 block break-words text-lg font-semibold text-ink [overflow-wrap:anywhere]">
-          {formatListingPrice(product)}
-        </strong>
+        {autoMeta ? (
+          <p className="mt-1 line-clamp-2 break-words text-sm font-medium text-ink/45 [overflow-wrap:anywhere]">
+            {autoMeta}
+          </p>
+        ) : null}
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <strong className="break-words text-lg font-semibold text-ink [overflow-wrap:anywhere]">
+            {formatListingPrice(product)}
+          </strong>
+          {product.category === "auto" && product.attributes?.color ? (
+            <span className="break-words text-sm font-medium text-ink/45 [overflow-wrap:anywhere]">
+              ● {product.attributes.color}
+            </span>
+          ) : null}
+        </div>
         {product.status === "reserved" ? (
           <span className="mt-2 inline-flex rounded-full bg-leaf/10 px-3 py-1 text-xs font-semibold text-leaf">
             Забронировано

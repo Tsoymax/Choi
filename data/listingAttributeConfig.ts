@@ -36,6 +36,11 @@ const yesNoOptions = [
   { value: "no", label: "Нет" }
 ];
 
+const carMonthOptions = Array.from({ length: 12 }, (_, index) => {
+  const month = String(index + 1).padStart(2, "0");
+  return { value: month, label: month };
+});
+
 const carBrands = [
   "Chevrolet",
   "Toyota",
@@ -119,6 +124,7 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           getOptions: getCarModelOptions
         },
         { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1950, max: 2026, step: 1, maxLength: 4 },
+        { key: "month", label: "Месяц выпуска", type: "select", required: true, options: carMonthOptions },
         { key: "mileage", label: "Пробег", type: "number", required: true, unit: "км", placeholder: "Выберите", min: 0, max: 999999, step: 1000, maxLength: 6 },
         {
           key: "fuel",

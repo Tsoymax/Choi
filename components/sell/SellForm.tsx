@@ -87,6 +87,18 @@ function fileToDataUrl(file: File) {
   });
 }
 
+function getAutoListingTitle(attributes: Record<string, string>) {
+  return attributes.model?.trim() || attributes.brand?.trim() || "";
+}
+
+function getEffectiveListingTitle(
+  category: string,
+  title: string,
+  attributes: Record<string, string>
+) {
+  return category === "auto" ? getAutoListingTitle(attributes) : title.trim();
+}
+
 export function SellForm({
   mode = "create",
   initialListing = null,
@@ -129,6 +141,11 @@ export function SellForm({
   const mainPhoto = useMemo(
     () => photos.find((photo) => photo.id === mainPhotoId) ?? photos[0],
     [mainPhotoId, photos]
+  );
+  const isAutoCategory = category === "auto";
+  const effectiveTitle = useMemo(
+    () => getEffectiveListingTitle(category, title, attributes),
+    [attributes, category, title]
   );
 
   useEffect(() => {
@@ -282,9 +299,12 @@ export function SellForm({
     nextAttributeErrors: Record<string, string>
   ) {
     window.requestAnimationFrame(() => {
-      const firstFieldKey = (
-        ["photos", "title", "category", "price", "description", "district", "profile"] as const
-      ).find((key) => nextErrors[key]);
+      const fieldOrder = (
+        isAutoCategory
+          ? ["photos", "category", "price", "description", "district", "profile"]
+          : ["photos", "title", "category", "price", "description", "district", "profile"]
+      ) as Array<keyof FormErrors>;
+      const firstFieldKey = fieldOrder.find((key) => nextErrors[key]);
       const firstAttributeKey = Object.keys(nextAttributeErrors)[0];
       const targetId = firstFieldKey
         ? fieldScrollIds[firstFieldKey]
@@ -324,7 +344,7 @@ export function SellForm({
     if (!category) {
       nextErrors.category = "Выберите категорию.";
     }
-    if (!title.trim()) {
+    if (!isAutoCategory && !title.trim()) {
       nextErrors.title = "Введите название объявления.";
     }
     if (!description.trim()) {
@@ -388,6 +408,7 @@ export function SellForm({
 
     const districtCoordinates = getDistrictCoordinate(district);
     const listingAttributes = normalizeAttributeValues(attributes);
+    const listingTitle = getEffectiveListingTitle(category, title, attributes);
 
     if (hasSupabaseBrowserEnv()) {
       const user = await getCurrentUser();
@@ -400,7 +421,7 @@ export function SellForm({
       const supabase = createClient();
       if (isEditMode && initialListing) {
         const listingResult = await updateRemoteListing(supabase, initialListing.id, {
-          title: title.trim(),
+          title: listingTitle,
           description: description.trim(),
           category,
           district,
@@ -480,7 +501,7 @@ export function SellForm({
 
       const result = await createListingWithImages(supabase, {
         userId: user.id,
-        title: title.trim(),
+        title: listingTitle,
         description: description.trim(),
         category,
         district,
@@ -525,7 +546,7 @@ export function SellForm({
 
     if (isEditMode && initialListing) {
       updateStoredListing(initialListing.id, {
-        title: title.trim(),
+        title: listingTitle,
         description: description.trim(),
         category,
         district,
@@ -545,7 +566,7 @@ export function SellForm({
     }
 
     saveStoredListing({
-      title: title.trim(),
+      title: listingTitle,
       description: description.trim(),
       category,
       district,
@@ -581,26 +602,28 @@ export function SellForm({
         />
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          <label id="sell-field-title" className="block scroll-mt-28">
-            <span className="text-sm font-semibold text-ink">
-              Название объявления <span className="text-coral">*</span>
-            </span>
-            <input
-              value={title}
-              maxLength={70}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                markDirty();
-                setErrors((current) => ({ ...current, title: undefined }));
-              }}
-              className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
-              placeholder="Например, iPhone 14 Pro 256 ГБ"
-            />
-            <span className="mt-2 flex items-center justify-between text-sm">
-              <span className="font-medium text-coral">{errors.title}</span>
-              <span className="ml-auto text-ink/45">{title.length}/70</span>
-            </span>
-          </label>
+          {!isAutoCategory ? (
+            <label id="sell-field-title" className="block scroll-mt-28">
+              <span className="text-sm font-semibold text-ink">
+                Название объявления <span className="text-coral">*</span>
+              </span>
+              <input
+                value={title}
+                maxLength={70}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  markDirty();
+                  setErrors((current) => ({ ...current, title: undefined }));
+                }}
+                className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
+                placeholder="Например, iPhone 14 Pro 256 ГБ"
+              />
+              <span className="mt-2 flex items-center justify-between text-sm">
+                <span className="font-medium text-coral">{errors.title}</span>
+                <span className="ml-auto text-ink/45">{title.length}/70</span>
+              </span>
+            </label>
+          ) : null}
 
           <CategorySelect
             value={category}
@@ -760,7 +783,9 @@ export function SellForm({
       </div>
 
       <ListingPreview
-        title={title}
+        title={effectiveTitle}
+        category={category}
+        attributes={attributes}
         price={price}
         currency={currency}
         negotiable={negotiable}
