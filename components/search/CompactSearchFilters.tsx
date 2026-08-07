@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
 import {
   getAttributeGroups,
@@ -84,27 +84,79 @@ function ChipSelect({
   options: Option[];
   onChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? label;
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
+  function choose(nextValue: string) {
+    onChange(nextValue);
+    setOpen(false);
+  }
+
   return (
-    <label className="relative shrink-0">
+    <div ref={rootRef} className="relative shrink-0">
       <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 min-w-[148px] appearance-none rounded-full border border-ink/10 bg-white px-4 pr-10 text-sm font-semibold text-ink shadow-sm outline-none transition hover:border-leaf/35 hover:bg-mist focus:border-leaf/55 focus:ring-2 focus:ring-leaf/18"
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={`inline-flex h-11 min-w-[148px] items-center justify-between gap-3 rounded-full border bg-white px-4 text-sm font-semibold text-ink shadow-sm outline-none transition hover:border-leaf/35 hover:bg-mist ${
+          open ? "border-leaf/55 bg-mist shadow-[0_0_0_3px_rgba(79,135,98,0.12)]" : "border-ink/10"
+        }`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
-        <option value="">{label}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        aria-hidden="true"
-        size={16}
-        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ink/55"
-      />
-    </label>
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown
+          aria-hidden="true"
+          size={16}
+          className={`shrink-0 text-ink/55 transition ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open ? (
+        <div
+          role="listbox"
+          className="absolute left-0 z-50 mt-2 max-h-72 min-w-full overflow-auto rounded-2xl border border-ink/10 bg-white p-1 shadow-[0_18px_48px_rgba(24,32,29,0.14)]"
+        >
+          <button
+            type="button"
+            role="option"
+            aria-selected={!value}
+            onClick={() => choose("")}
+            className={`block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
+              !value ? "bg-mist text-leaf" : "text-ink hover:bg-mist"
+            }`}
+          >
+            {label}
+          </button>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={value === option.value}
+              onClick={() => choose(option.value)}
+              className={`block w-full whitespace-nowrap rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
+                value === option.value ? "bg-mist text-leaf" : "text-ink hover:bg-mist"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
