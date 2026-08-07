@@ -205,6 +205,9 @@ function SliderRangeControl({
   const currentTo = Number(to || max);
   const safeFrom = Math.min(Math.max(currentFrom, min), currentTo);
   const safeTo = Math.max(Math.min(currentTo, max), safeFrom);
+  const range = max - min;
+  const fromPercent = range > 0 ? ((safeFrom - min) / range) * 100 : 0;
+  const toPercent = range > 0 ? ((safeTo - min) / range) * 100 : 100;
   const display = (value: number) => {
     const formatted = formatValue ? formatValue(value) : value.toLocaleString("ru-RU");
     return unit ? `${formatted} ${unit}` : formatted;
@@ -228,7 +231,13 @@ function SliderRangeControl({
           {display(safeFrom)} - {display(safeTo)}
         </span>
       </div>
-      <div className="space-y-3">
+      <div className="relative h-9">
+        <div
+          className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full"
+          style={{
+            background: `linear-gradient(to right, rgba(20, 31, 27, 0.12) 0%, rgba(20, 31, 27, 0.12) ${fromPercent}%, #4f8762 ${fromPercent}%, #4f8762 ${toPercent}%, rgba(20, 31, 27, 0.12) ${toPercent}%, rgba(20, 31, 27, 0.12) 100%)`
+          }}
+        />
         <input
           type="range"
           min={min}
@@ -236,7 +245,7 @@ function SliderRangeControl({
           step={step}
           value={safeFrom}
           onChange={(event) => updateFrom(Number(event.target.value))}
-          className="h-2 w-full accent-leaf"
+          className="pointer-events-none absolute inset-x-0 top-1/2 h-2 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-leaf [&::-moz-range-thumb]:shadow-md [&::-webkit-slider-runnable-track]:appearance-none [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-leaf [&::-webkit-slider-thumb]:shadow-md"
           aria-label={`${label} от`}
         />
         <input
@@ -246,7 +255,7 @@ function SliderRangeControl({
           step={step}
           value={safeTo}
           onChange={(event) => updateTo(Number(event.target.value))}
-          className="h-2 w-full accent-leaf"
+          className="pointer-events-none absolute inset-x-0 top-1/2 h-2 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-leaf [&::-moz-range-thumb]:shadow-md [&::-webkit-slider-runnable-track]:appearance-none [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-leaf [&::-webkit-slider-thumb]:shadow-md"
           aria-label={`${label} до`}
         />
       </div>
