@@ -90,7 +90,7 @@ function ChipSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="focus-ring h-11 appearance-none rounded-full border border-ink/10 bg-white px-4 pr-10 text-sm font-semibold text-ink shadow-sm transition hover:border-leaf/35 hover:bg-mist"
+        className="h-11 min-w-[148px] appearance-none rounded-full border border-ink/10 bg-white px-4 pr-10 text-sm font-semibold text-ink shadow-sm outline-none transition hover:border-leaf/35 hover:bg-mist focus:border-leaf/55 focus:ring-2 focus:ring-leaf/18"
       >
         <option value="">{label}</option>
         {options.map((option) => (
@@ -112,7 +112,7 @@ function CompactSelectControl({
   label,
   value,
   options,
-  placeholder = "Все объявления",
+  placeholder = "Выберите",
   onChange
 }: {
   label: string;
@@ -238,9 +238,9 @@ function SliderRangeControl({
   }
 
   return (
-    <div className="min-w-0 rounded-xl bg-white p-3 shadow-sm">
+    <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-xl bg-white p-3 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="text-sm font-medium text-ink/78">{label}</span>
+        <span className="max-w-[104px] text-sm font-medium leading-tight text-ink/78">{label}</span>
         <div className="flex min-w-0 items-center justify-end gap-1 text-xs font-semibold text-leaf">
           <input
             value={from || String(safeFrom)}
@@ -367,7 +367,7 @@ function AutoCompactFilters({
           label="Модель"
           value={filters.model}
           options={modelOptions}
-          placeholder={filters.brand ? "Все модели" : "Сначала марка"}
+          placeholder={filters.brand ? "Выберите" : "Сначала марка"}
           onChange={(model) => onChange({ model })}
         />
         <SliderRangeControl
@@ -431,7 +431,7 @@ function AutoCompactFilters({
         <CompactInputControl
           label="Цвет"
           value={filters.color}
-          placeholder="Все объявления"
+          placeholder="Выберите"
           onChange={(color) => onChange({ color })}
         />
         <CompactSelectControl
