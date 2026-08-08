@@ -453,16 +453,20 @@ function AutoCompactFilters({
           options={optionsFor(fieldByKey.get("color"))}
           onChange={(color) => onChange({ color })}
         />
-        <ToggleControl
-          label="Торг"
-          checked={filters.onlyBargain}
-          onChange={(onlyBargain) => onChange({ onlyBargain })}
-        />
-        <ToggleControl
-          label="Обмен"
-          checked={filters.exchange === "yes"}
-          onChange={(exchange) => onChange({ exchange: exchange ? "yes" : "" })}
-        />
+        <div className="pt-[26px]">
+          <ToggleControl
+            label="Торг"
+            checked={filters.onlyBargain}
+            onChange={(onlyBargain) => onChange({ onlyBargain })}
+          />
+        </div>
+        <div className="pt-[26px]">
+          <ToggleControl
+            label="Обмен"
+            checked={filters.exchange === "yes"}
+            onChange={(exchange) => onChange({ exchange: exchange ? "yes" : "" })}
+          />
+        </div>
       </div>
 
       <div className="mt-5 flex justify-end">
