@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
 import {
   getAttributeGroups,
@@ -85,6 +85,7 @@ function ChipSelect({
   onChange: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>();
   const rootRef = useRef<HTMLDivElement>(null);
   const selectedLabel = options.find((option) => option.value === value)?.label ?? label;
 
@@ -98,6 +99,41 @@ function ChipSelect({
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function updateMenuPosition() {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+
+      const viewportPadding = 12;
+      const width = Math.min(Math.max(rect.width, 180), window.innerWidth - viewportPadding * 2);
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.left, window.innerWidth - width - viewportPadding)
+      );
+
+      setMenuStyle({
+        left,
+        top: rect.bottom + 8,
+        width
+      });
+    }
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open]);
 
   function choose(nextValue: string) {
     onChange(nextValue);
@@ -127,7 +163,8 @@ function ChipSelect({
       {open ? (
         <div
           role="listbox"
-          className="absolute left-0 z-50 mt-2 max-h-72 min-w-full overflow-auto rounded-2xl border border-ink/10 bg-white p-1 shadow-[0_18px_48px_rgba(24,32,29,0.14)]"
+          style={menuStyle}
+          className="fixed z-[80] max-h-72 overflow-auto rounded-2xl border border-ink/10 bg-white p-1 shadow-[0_18px_48px_rgba(24,32,29,0.14)]"
         >
           <button
             type="button"
