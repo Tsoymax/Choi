@@ -416,6 +416,18 @@ function AutoCompactFilters({
           placeholder={filters.brand ? "Выберите" : "Сначала марка"}
           onChange={(model) => onChange({ model })}
         />
+        <CompactSelectControl
+          label="Вид топлива"
+          value={filters.fuel}
+          options={optionsFor(fieldByKey.get("fuel"))}
+          onChange={(fuel) => onChange({ fuel })}
+        />
+        <CompactSelectControl
+          label="Коробка передач"
+          value={filters.transmission}
+          options={optionsFor(fieldByKey.get("transmission"))}
+          onChange={(transmission) => onChange({ transmission })}
+        />
         <SliderRangeControl
           label="Цена"
           from={filters.minPrice}
@@ -432,7 +444,7 @@ function AutoCompactFilters({
           from={filters.mileageFrom}
           to={filters.mileageTo}
           min={0}
-          max={500000}
+          max={3000000}
           step={5000}
           unit="км"
           onFrom={(mileageFrom) => onChange({ mileageFrom })}
@@ -442,23 +454,11 @@ function AutoCompactFilters({
           label="Год выпуска"
           from={filters.yearFrom}
           to={filters.yearTo}
-          min={1980}
-          max={2026}
+          min={1900}
+          max={2027}
           step={1}
           onFrom={(yearFrom) => onChange({ yearFrom })}
           onTo={(yearTo) => onChange({ yearTo })}
-        />
-        <CompactSelectControl
-          label="Вид топлива"
-          value={filters.fuel}
-          options={optionsFor(fieldByKey.get("fuel"))}
-          onChange={(fuel) => onChange({ fuel })}
-        />
-        <CompactSelectControl
-          label="Коробка передач"
-          value={filters.transmission}
-          options={optionsFor(fieldByKey.get("transmission"))}
-          onChange={(transmission) => onChange({ transmission })}
         />
         <CompactSelectControl
           label="Привод"
