@@ -27,6 +27,40 @@ function formatMetric(value: number) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value);
 }
 
+const carColorStyles: Record<string, string> = {
+  белый: "#f8f8f4",
+  черный: "#111815",
+  серый: "#8d9590",
+  серебристый: "#c8d0cc",
+  зеленый: "#4f875f",
+  синий: "#24548f",
+  голубой: "#5fa7d8",
+  красный: "#b83a35",
+  бордовый: "#7c2530",
+  желтый: "#e0b836",
+  оранжевый: "#d97a2b",
+  коричневый: "#7a5136",
+  бежевый: "#d8c7aa",
+  золотой: "#c4a34d",
+  фиолетовый: "#6c4d96",
+  комбинированный: "linear-gradient(135deg, #111815 0 30%, #f8f8f4 30% 58%, #4f875f 58% 100%)"
+};
+
+function getCarColorStyle(color?: string) {
+  const normalized = color?.trim().toLowerCase().replaceAll("ё", "е");
+  return normalized ? carColorStyles[normalized] ?? "#8d9590" : "#8d9590";
+}
+
+function getCarColorTextStyle(color?: string) {
+  const normalized = color?.trim().toLowerCase().replaceAll("ё", "е");
+
+  if (normalized === "белый" || normalized === "комбинированный") {
+    return "#4f875f";
+  }
+
+  return getCarColorStyle(color);
+}
+
 export function ListingCard({ product, language }: ListingCardProps) {
   const router = useRouter();
   const title =
@@ -167,7 +201,7 @@ export function ListingCard({ product, language }: ListingCardProps) {
           {title}
         </h3>
         {autoMeta ? (
-          <p className="mt-1 line-clamp-2 break-words text-sm font-medium text-ink/45 [overflow-wrap:anywhere]">
+          <p className="mt-1 line-clamp-2 break-words text-[15px] font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
             {autoMeta}
           </p>
         ) : null}
@@ -176,8 +210,16 @@ export function ListingCard({ product, language }: ListingCardProps) {
             {formatListingPrice(product)}
           </strong>
           {product.category === "auto" && product.attributes?.color ? (
-            <span className="break-words text-sm font-medium text-ink/45 [overflow-wrap:anywhere]">
-              ● {product.attributes.color}
+            <span
+              className="inline-flex min-w-0 items-center gap-1.5 break-words text-sm font-semibold [overflow-wrap:anywhere]"
+              style={{ color: getCarColorTextStyle(product.attributes.color) }}
+            >
+              <span
+                aria-hidden="true"
+                className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink/10 shadow-sm"
+                style={{ background: getCarColorStyle(product.attributes.color) }}
+              />
+              {product.attributes.color}
             </span>
           ) : null}
         </div>
