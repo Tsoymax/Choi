@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ImageIcon, MapPin } from "lucide-react";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
+import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
 import { tashkentDistricts } from "./sellData";
 
 type ListingPreviewProps = {
@@ -71,7 +72,7 @@ export function ListingPreview({
             {title || "Название объявления"}
           </h3>
           {autoMeta ? (
-            <p className="mt-2 line-clamp-2 break-words text-sm font-medium text-ink/45 [overflow-wrap:anywhere]">
+            <p className="mt-2 line-clamp-2 break-words text-[15px] font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
               {autoMeta}
             </p>
           ) : null}
@@ -80,8 +81,16 @@ export function ListingPreview({
               {formatPreviewPrice(price, currency, negotiable)}
             </strong>
             {category === "auto" && attributes.color ? (
-              <span className="break-words text-sm font-medium text-ink/45 [overflow-wrap:anywhere]">
-                ● {attributes.color}
+              <span
+                className="inline-flex min-w-0 items-center gap-1.5 break-words text-sm font-semibold [overflow-wrap:anywhere]"
+                style={{ color: getCarColorTextStyle(attributes.color) }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink/10 shadow-sm"
+                  style={{ background: getCarColorStyle(attributes.color) }}
+                />
+                {attributes.color}
               </span>
             ) : null}
           </div>

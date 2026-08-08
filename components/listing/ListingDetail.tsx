@@ -28,6 +28,7 @@ import {
 import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
+import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
 import { markCachedListingViewed } from "@/utils/listingEngagementCache";
 import { ListingGallery } from "./ListingGallery";
 import { ListingAttributesSection } from "./ListingAttributesSection";
@@ -270,14 +271,22 @@ export function ListingDetail({
                 {title}
               </h1>
               {autoMeta ? (
-                <p className="mt-3 break-words text-base font-medium text-ink/50 [overflow-wrap:anywhere]">
+                <p className="mt-3 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
                   {autoMeta}
                 </p>
               ) : null}
               {listing.category === "auto" && listing.attributes?.color ? (
-                <p className="mt-2 break-words text-base font-medium text-ink/50 [overflow-wrap:anywhere]">
-                  ● {listing.attributes.color}
-                </p>
+                <div
+                  className="mt-2 inline-flex min-w-0 items-center gap-2 break-words text-base font-semibold [overflow-wrap:anywhere]"
+                  style={{ color: getCarColorTextStyle(listing.attributes.color) }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-3 w-3 shrink-0 rounded-full border border-ink/10 shadow-sm"
+                    style={{ background: getCarColorStyle(listing.attributes.color) }}
+                  />
+                  {listing.attributes.color}
+                </div>
               ) : null}
               <div className="mt-6 grid gap-3 text-sm text-ink/64">
                 <p className="inline-flex items-center gap-2">
