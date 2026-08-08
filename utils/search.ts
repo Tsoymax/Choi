@@ -34,6 +34,8 @@ export type SearchFiltersState = {
   drive: string;
   body: string;
   engine: string;
+  engineFrom: string;
+  engineTo: string;
   color: string;
   exchange: string;
   dealType: string;
@@ -77,6 +79,8 @@ export const defaultSearchFilters: SearchFiltersState = {
   drive: "",
   body: "",
   engine: "",
+  engineFrom: "",
+  engineTo: "",
   color: "",
   exchange: "",
   dealType: "",
@@ -281,7 +285,8 @@ function matchesDynamicFilters(listing: Listing, filters: SearchFiltersState) {
   if (!matchesAttribute(listing, "fuel", filters.fuel)) return false;
   if (!matchesAttribute(listing, "drive", filters.drive)) return false;
   if (!matchesAttribute(listing, "body", filters.body)) return false;
-  if (!matchesAttributeLike(listing, "engine", filters.engine)) return false;
+  if (filters.engine && !matchesAttributeLike(listing, "engine", filters.engine)) return false;
+  if (!matchesNumberRange(getAttribute(listing, "engine"), filters.engineFrom, filters.engineTo)) return false;
   if (!matchesAttributeLike(listing, "color", filters.color)) return false;
   if (!matchesAttribute(listing, "exchange", filters.exchange)) return false;
   if (!matchesAttribute(listing, "deal_type", filters.dealType)) return false;
@@ -319,7 +324,7 @@ export function filterListings(
 
   const filteredListings = listings.filter((listing) => {
     const status = listing.status ?? "active";
-    if (filters.onlyActive && status !== "active" && status !== "reserved") return false;
+    if (status !== "active" && status !== "reserved") return false;
     if (!matchesQuery(listing, filters.q)) return false;
     if (!matchesCategory(listing, filters.category)) return false;
     if (!matchesDistrict(listing, filters.district)) return false;
@@ -404,7 +409,7 @@ export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFi
     onlyWithPhoto: false,
     onlyNew: searchParams.get("onlyNew") === "true",
     onlyBargain: searchParams.get("onlyBargain") === "true",
-    onlyActive: searchParams.get("onlyActive") !== "false",
+    onlyActive: true,
     negotiable: searchParams.get("negotiable") === "true",
     brand: searchParams.get("brand") ?? "",
     model: searchParams.get("model") ?? "",
@@ -417,6 +422,8 @@ export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFi
     drive: searchParams.get("drive") ?? "",
     body: searchParams.get("body") ?? "",
     engine: searchParams.get("engine") ?? "",
+    engineFrom: searchParams.get("engineFrom") ?? "",
+    engineTo: searchParams.get("engineTo") ?? "",
     color: searchParams.get("color") ?? "",
     exchange: searchParams.get("exchange") ?? "",
     dealType: searchParams.get("dealType") ?? "",
@@ -484,6 +491,8 @@ export function getActiveFilterChips(filters: SearchFiltersState) {
   add("drive", filters.drive);
   add("body", filters.body);
   add("engine", filters.engine);
+  add("engineFrom", `объем от ${filters.engineFrom}`);
+  add("engineTo", `объем до ${filters.engineTo}`);
   add("color", filters.color);
   add("exchange", filters.exchange === "yes" ? "обмен: да" : filters.exchange === "no" ? "обмен: нет" : "");
   add("dealType", filters.dealType);
@@ -502,7 +511,6 @@ export function getActiveFilterChips(filters: SearchFiltersState) {
 
   if (filters.onlyNew) chips.push({ key: "onlyNew", label: "новые 7 дней" });
   if (filters.onlyBargain) chips.push({ key: "onlyBargain", label: "с торгом" });
-  if (!filters.onlyActive) chips.push({ key: "onlyActive", label: "все статусы" });
   if (filters.negotiable) chips.push({ key: "negotiable", label: "договорная" });
 
   return chips.filter((chip) => chip.label);

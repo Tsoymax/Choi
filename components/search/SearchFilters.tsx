@@ -193,16 +193,7 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
             onChange={(event) => onChange({ onlyBargain: event.target.checked })}
             className="h-5 w-5 rounded border-ink/20 accent-leaf"
           />
-          Только с торгом
-        </label>
-        <label className="flex items-center gap-3 text-sm font-semibold text-ink">
-          <input
-            type="checkbox"
-            checked={filters.onlyActive}
-            onChange={(event) => onChange({ onlyActive: event.target.checked })}
-            className="h-5 w-5 rounded border-ink/20 accent-leaf"
-          />
-          Только активные
+          Торг
         </label>
       </div>
 
@@ -223,9 +214,20 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
           {selectField("Топливо", filters.fuel, "fuel", fieldByKey.get("fuel")?.options)}
           {selectField("Привод", filters.drive, "drive", fieldByKey.get("drive")?.options)}
           {selectField("Тип кузова", filters.body, "body", fieldByKey.get("body")?.options)}
-          {textField("Объем двигателя", filters.engine, "engine", "2.5")}
+          <div className="grid grid-cols-2 gap-3">
+            {numberField("Объем от", filters.engineFrom, "engineFrom", "0")}
+            {numberField("Объем до", filters.engineTo, "engineTo", "6")}
+          </div>
           {selectField("Цвет", filters.color, "color", fieldByKey.get("color")?.options)}
-          {selectField("Обмен", filters.exchange, "exchange", fieldByKey.get("exchange")?.options)}
+          <label className="flex items-center gap-3 text-sm font-semibold text-ink">
+            <input
+              type="checkbox"
+              checked={filters.exchange === "yes"}
+              onChange={(event) => onChange({ exchange: event.target.checked ? "yes" : "" })}
+              className="h-5 w-5 rounded border-ink/20 accent-leaf"
+            />
+            Обмен
+          </label>
         </div>
       ) : null}
 

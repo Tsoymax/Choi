@@ -62,6 +62,8 @@ export function SearchPageContent() {
               drive: "",
               body: "",
               engine: "",
+              engineFrom: "",
+              engineTo: "",
               color: "",
               exchange: "",
               dealType: "",

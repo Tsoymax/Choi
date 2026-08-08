@@ -33,7 +33,6 @@ function hasExtraFilters(filters: SearchFiltersState) {
       filters.distanceRadius !== "all" ||
       filters.onlyNew ||
       filters.onlyBargain ||
-      !filters.onlyActive ||
       filters.negotiable ||
       filters.brand ||
       filters.model ||
@@ -46,6 +45,8 @@ function hasExtraFilters(filters: SearchFiltersState) {
       filters.drive ||
       filters.body ||
       filters.engine ||
+      filters.engineFrom ||
+      filters.engineTo ||
       filters.color ||
       filters.exchange ||
       filters.dealType ||
@@ -198,37 +199,6 @@ function CompactSelectControl({
   );
 }
 
-function CompactInputControl({
-  label,
-  value,
-  placeholder,
-  onChange,
-  numeric = false,
-  decimal = false
-}: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  onChange: (value: string) => void;
-  numeric?: boolean;
-  decimal?: boolean;
-}) {
-  return (
-    <label className="min-w-0">
-      <span className="mb-1.5 block text-sm font-medium text-ink/78">{label}</span>
-      <input
-        value={value}
-        onChange={(event) =>
-          onChange(numeric ? cleanNumber(event.target.value, decimal) : event.target.value)
-        }
-        inputMode={numeric ? "numeric" : undefined}
-        placeholder={placeholder}
-        className="focus-ring h-12 w-full rounded-xl border border-transparent bg-white px-3 text-sm font-semibold text-ink shadow-sm transition placeholder:text-ink/45 hover:border-leaf/25"
-      />
-    </label>
-  );
-}
-
 function SliderRangeControl({
   label,
   from,
@@ -269,7 +239,7 @@ function SliderRangeControl({
   }
 
   function updateFromInput(value: string) {
-    const cleaned = cleanNumber(value);
+    const cleaned = cleanNumber(value, step < 1);
     if (!cleaned) {
       onFrom("");
       return;
@@ -279,7 +249,7 @@ function SliderRangeControl({
   }
 
   function updateToInput(value: string) {
-    const cleaned = cleanNumber(value);
+    const cleaned = cleanNumber(value, step < 1);
     if (!cleaned) {
       onTo("");
       return;
@@ -460,19 +430,22 @@ function AutoCompactFilters({
           onFrom={(yearFrom) => onChange({ yearFrom })}
           onTo={(yearTo) => onChange({ yearTo })}
         />
+        <SliderRangeControl
+          label="Объем двигателя"
+          from={filters.engineFrom}
+          to={filters.engineTo}
+          min={0}
+          max={6}
+          step={0.1}
+          unit="л"
+          onFrom={(engineFrom) => onChange({ engineFrom })}
+          onTo={(engineTo) => onChange({ engineTo })}
+        />
         <CompactSelectControl
           label="Привод"
           value={filters.drive}
           options={optionsFor(fieldByKey.get("drive"))}
           onChange={(drive) => onChange({ drive })}
-        />
-        <CompactInputControl
-          label="Объем двигателя"
-          value={filters.engine}
-          placeholder="От:"
-          numeric
-          decimal
-          onChange={(engine) => onChange({ engine })}
         />
         <CompactSelectControl
           label="Цвет"
@@ -480,21 +453,15 @@ function AutoCompactFilters({
           options={optionsFor(fieldByKey.get("color"))}
           onChange={(color) => onChange({ color })}
         />
-        <CompactSelectControl
-          label="Обмен"
-          value={filters.exchange}
-          options={optionsFor(fieldByKey.get("exchange"))}
-          onChange={(exchange) => onChange({ exchange })}
-        />
         <ToggleControl
-          label="Только с торгом"
+          label="Торг"
           checked={filters.onlyBargain}
           onChange={(onlyBargain) => onChange({ onlyBargain })}
         />
         <ToggleControl
-          label="Только активные"
-          checked={filters.onlyActive}
-          onChange={(onlyActive) => onChange({ onlyActive })}
+          label="Обмен"
+          checked={filters.exchange === "yes"}
+          onChange={(exchange) => onChange({ exchange: exchange ? "yes" : "" })}
         />
       </div>
 
