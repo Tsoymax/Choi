@@ -210,29 +210,122 @@ function CompactSelectControl({
   placeholder?: string;
   onChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? placeholder;
+  const disabled = options.length === 0;
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function updateMenuPosition() {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+
+      const viewportPadding = 12;
+      const width = Math.min(Math.max(rect.width, 180), window.innerWidth - viewportPadding * 2);
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.left, window.innerWidth - width - viewportPadding)
+      );
+      const availableHeight = Math.max(180, window.innerHeight - rect.bottom - viewportPadding);
+
+      setMenuStyle({
+        left,
+        top: rect.bottom + 6,
+        width,
+        maxHeight: Math.min(320, availableHeight)
+      });
+    }
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open]);
+
+  function choose(nextValue: string) {
+    onChange(nextValue);
+    setOpen(false);
+  }
+
   return (
-    <label className="min-w-0">
+    <div ref={rootRef} className="min-w-0">
       <span className="mb-1.5 block text-sm font-medium text-ink/78">{label}</span>
-      <span className="relative block">
-        <select
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="focus-ring h-12 w-full appearance-none rounded-xl border border-transparent bg-white px-3 pr-9 text-sm font-semibold text-ink shadow-sm transition hover:border-leaf/25"
+      <div className="relative">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((current) => !current)}
+          className={`focus-ring flex h-12 w-full items-center justify-between gap-3 rounded-xl border bg-white px-3 text-left text-sm font-semibold text-ink shadow-sm transition ${
+            open ? "border-leaf bg-white" : "border-transparent hover:border-leaf/25"
+          } ${disabled ? "cursor-not-allowed text-ink/45" : ""}`}
+          aria-haspopup="listbox"
+          aria-expanded={open}
         >
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden="true"
-          size={17}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/70"
-        />
-      </span>
-    </label>
+          <span className="min-w-0 truncate">{selectedLabel}</span>
+          <ChevronDown
+            aria-hidden="true"
+            size={17}
+            className={`shrink-0 text-ink/70 transition ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {open ? (
+          <div
+            role="listbox"
+            style={menuStyle}
+            className="fixed z-[90] overflow-auto rounded-2xl border border-ink/10 bg-white p-1 shadow-[0_18px_48px_rgba(24,32,29,0.16)]"
+          >
+            <button
+              type="button"
+              role="option"
+              aria-selected={!value}
+              onClick={() => choose("")}
+              className={`block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
+                !value ? "bg-mist text-leaf" : "text-ink hover:bg-mist"
+              }`}
+            >
+              {placeholder}
+            </button>
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={value === option.value}
+                onClick={() => choose(option.value)}
+                className={`block w-full whitespace-nowrap rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
+                  value === option.value ? "bg-mist text-leaf" : "text-ink hover:bg-mist"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
