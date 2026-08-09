@@ -4,13 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Listing } from "@/utils/listings";
 import { formatListingPrice } from "@/utils/listings";
+import { getAutoListingTitle } from "@/utils/autoListingMeta";
 
 type ListingChatCardProps = {
   listing: Listing;
 };
 
 export function ListingChatCard({ listing }: ListingChatCardProps) {
-  const title = listing.titleRu ?? listing.title;
+  const title =
+    listing.category === "auto"
+      ? getAutoListingTitle(listing.attributes)
+      : listing.titleRu ?? listing.title;
 
   return (
     <Link

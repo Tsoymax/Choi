@@ -1,3 +1,10 @@
+export function getAutoListingTitle(attributes?: Record<string, string>) {
+  const brand = attributes?.brand?.trim();
+  const model = attributes?.model?.trim();
+
+  return [brand, model].filter(Boolean).join(" ") || "Авто";
+}
+
 function formatMileage(value?: string) {
   if (!value) {
     return "";

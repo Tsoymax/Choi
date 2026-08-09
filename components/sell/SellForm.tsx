@@ -24,6 +24,7 @@ import {
   updateListingAttributes
 } from "@/lib/data/listingAttributes";
 import { getAttributeGroups } from "@/data/listingAttributeConfig";
+import { getAutoListingTitle } from "@/utils/autoListingMeta";
 import { getElectronicsListingTitle } from "@/utils/electronicsListingMeta";
 import { getRealEstateListingTitle } from "@/utils/realEstateListingMeta";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
@@ -87,10 +88,6 @@ function fileToDataUrl(file: File) {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
-}
-
-function getAutoListingTitle(attributes: Record<string, string>) {
-  return attributes.model?.trim() || attributes.brand?.trim() || "";
 }
 
 function firstFilledAttribute(attributes: Record<string, string>, keys: string[]) {

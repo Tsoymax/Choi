@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Conversation, Message } from "@/utils/chat";
 import { hasUnreadConversation } from "@/utils/chat";
 import type { Listing } from "@/utils/listings";
+import { getAutoListingTitle } from "@/utils/autoListingMeta";
 import { getMessagePreview } from "@/lib/chat/attachments";
 
 type ChatListItemProps = {
@@ -34,7 +35,10 @@ export function ChatListItem({
   const unread = conversation.remote
     ? Boolean(lastMessage && lastMessage.sender === "seller" && !lastMessage.read)
     : hasUnreadConversation(conversation.id);
-  const title = listing?.titleRu ?? listing?.title ?? "Объявление";
+  const title =
+    listing?.category === "auto"
+      ? getAutoListingTitle(listing.attributes)
+      : listing?.titleRu ?? listing?.title ?? "Объявление";
 
   return (
     <Link

@@ -27,7 +27,7 @@ import {
 } from "@/lib/data/listings";
 import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
-import { formatAutoListingMeta } from "@/utils/autoListingMeta";
+import { formatAutoListingMeta, getAutoListingTitle } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
 import {
   formatElectronicsListingMeta,
@@ -195,7 +195,9 @@ export function ListingDetail({
 
   const rawTitle = listing.titleRu ?? listing.title;
   const title =
-    listing.category === "real-estate"
+    listing.category === "auto"
+      ? getAutoListingTitle(listing.attributes)
+      : listing.category === "real-estate"
       ? getRealEstateListingTitle(listing.attributes)
       : listing.category === "electronics"
         ? getElectronicsListingTitle(listing.attributes)

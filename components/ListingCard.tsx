@@ -8,7 +8,7 @@ import type { Product } from "./types";
 import type { Language } from "./i18n";
 import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/favorites";
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
-import { formatAutoListingMeta } from "@/utils/autoListingMeta";
+import { formatAutoListingMeta, getAutoListingTitle } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
 import {
   formatElectronicsListingMeta,
@@ -41,7 +41,9 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const rawTitle =
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
   const title =
-    product.category === "real-estate"
+    product.category === "auto"
+      ? getAutoListingTitle(product.attributes)
+      : product.category === "real-estate"
       ? getRealEstateListingTitle(product.attributes)
       : product.category === "electronics"
         ? getElectronicsListingTitle(product.attributes)
