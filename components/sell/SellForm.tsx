@@ -729,50 +729,19 @@ export function SellForm({
           />
         </section>
 
-        <section
-          id="sell-field-profile"
-          className="scroll-mt-28 space-y-5 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7"
-        >
-          <h2 className="text-xl font-semibold text-ink">Продавец</h2>
-          <div className="rounded-2xl border border-ink/10 bg-mist p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-ink/58">
-                  Объявление будет опубликовано от имени
-                </p>
-                <p className="mt-1 text-xl font-semibold text-ink">
-                  {isProfileLoading ? "Загружаем..." : sellerName || "Имя не указано"}
-                </p>
-              </div>
+        <div id="sell-field-profile" className="scroll-mt-28">
+          {profileLoadError || errors.profile ? (
+            <div className="rounded-[20px] bg-[#fff2ef] p-4 text-sm font-semibold text-coral">
+              <p>{profileLoadError || errors.profile}</p>
               <Link
                 href="/profile"
-                className="focus-ring inline-flex h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-leaf shadow-sm"
+                className="focus-ring mt-3 inline-flex h-10 items-center rounded-full bg-leaf px-4 text-sm font-semibold text-white"
               >
-                Изменить в профиле
+                Перейти в профиль
               </Link>
             </div>
-            {profileLoadError ? (
-              <p className="mt-4 rounded-2xl bg-[#fff2ef] p-4 text-sm font-semibold text-coral">
-                {profileLoadError}
-              </p>
-            ) : null}
-            {!profileLoadError && errors.profile ? (
-              <div className="mt-4 rounded-2xl bg-[#fff2ef] p-4">
-                <p className="text-sm font-semibold text-coral">{errors.profile}</p>
-                <Link
-                  href="/profile"
-                  className="focus-ring mt-3 inline-flex h-10 items-center rounded-full bg-leaf px-4 text-sm font-semibold text-white"
-                >
-                  Перейти в профиль
-                </Link>
-              </div>
-            ) : null}
-          </div>
-          <p className="text-sm leading-6 text-ink/58">
-            Покупатели будут связываться с вами через Choi Chat. Телефон в объявлении не
-            показывается.
-          </p>
-        </section>
+          ) : null}
+        </div>
 
         <div className="sticky bottom-[calc(86px+env(safe-area-inset-bottom))] z-20 grid gap-3 rounded-[24px] bg-white/92 p-3 shadow-[0_18px_60px_rgba(24,32,29,0.12)] backdrop-blur md:static md:bg-transparent md:p-0 md:shadow-none">
           <button
