@@ -29,7 +29,10 @@ import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
-import { formatElectronicsListingMeta } from "@/utils/electronicsListingMeta";
+import {
+  formatElectronicsListingMeta,
+  getElectronicsListingTitle
+} from "@/utils/electronicsListingMeta";
 import {
   formatRealEstateListingMeta,
   getRealEstateListingTitle
@@ -192,7 +195,11 @@ export function ListingDetail({
 
   const rawTitle = listing.titleRu ?? listing.title;
   const title =
-    listing.category === "real-estate" ? getRealEstateListingTitle(listing.attributes) : rawTitle;
+    listing.category === "real-estate"
+      ? getRealEstateListingTitle(listing.attributes)
+      : listing.category === "electronics"
+        ? getElectronicsListingTitle(listing.attributes)
+        : rawTitle;
   const images = listing.images?.length ? listing.images : [listing.image];
   const isOwner = listing.sellerId === currentUserId;
   const isModeratedAway = listing.status === "hidden" || listing.status === "blocked";

@@ -78,7 +78,7 @@ export function ListingPreview({
         </div>
         <div className="p-5">
           <h3 className="text-lg font-semibold leading-tight text-ink">
-            {title || "Название объявления"}
+            {title || "Название появится автоматически"}
           </h3>
           {listingMeta ? (
             <p className="mt-2 line-clamp-2 break-words text-[15px] font-semibold leading-snug text-ink [overflow-wrap:anywhere]">

@@ -10,7 +10,10 @@ import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/f
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
-import { formatElectronicsListingMeta } from "@/utils/electronicsListingMeta";
+import {
+  formatElectronicsListingMeta,
+  getElectronicsListingTitle
+} from "@/utils/electronicsListingMeta";
 import {
   formatRealEstateListingMeta,
   getRealEstateListingTitle
@@ -38,7 +41,11 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const rawTitle =
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
   const title =
-    product.category === "real-estate" ? getRealEstateListingTitle(product.attributes) : rawTitle;
+    product.category === "real-estate"
+      ? getRealEstateListingTitle(product.attributes)
+      : product.category === "electronics"
+        ? getElectronicsListingTitle(product.attributes)
+        : rawTitle;
   const [favorite, setFavorite] = useState(false);
   const [likesCount, setLikesCount] = useState(product.likesCount ?? 0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(

@@ -24,6 +24,7 @@ import {
   updateListingAttributes
 } from "@/lib/data/listingAttributes";
 import { getAttributeGroups } from "@/data/listingAttributeConfig";
+import { getElectronicsListingTitle } from "@/utils/electronicsListingMeta";
 import { getRealEstateListingTitle } from "@/utils/realEstateListingMeta";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import type { ProfileRow } from "@/lib/data/profiles";
@@ -34,10 +35,11 @@ import { ListingAttributesFields } from "./ListingAttributesFields";
 import { LocationSelect } from "./LocationSelect";
 import { PhotoUploader, type UploadPhoto } from "./PhotoUploader";
 import { PriceField } from "./PriceField";
+import { sellCategories } from "./sellData";
 
 type FormErrors = Partial<
   Record<
-    "photos" | "category" | "title" | "description" | "price" | "district" | "profile",
+    "photos" | "category" | "description" | "price" | "district" | "profile",
     string
   >
 >;
@@ -72,7 +74,6 @@ type SellFormProps = {
 const fieldScrollIds: Record<keyof FormErrors, string> = {
   photos: "sell-field-photos",
   category: "sell-field-category",
-  title: "sell-field-title",
   description: "sell-field-description",
   price: "sell-field-price",
   district: "sell-field-district",
@@ -92,20 +93,55 @@ function getAutoListingTitle(attributes: Record<string, string>) {
   return attributes.model?.trim() || attributes.brand?.trim() || "";
 }
 
+function firstFilledAttribute(attributes: Record<string, string>, keys: string[]) {
+  for (const key of keys) {
+    const value = attributes[key]?.trim();
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+function getCategoryFallbackTitle(category: string) {
+  return sellCategories.find((item) => item.id === category)?.label ?? "Объявление";
+}
+
 function getEffectiveListingTitle(
   category: string,
   title: string,
   attributes: Record<string, string>
 ) {
+  const fallbackTitle = getCategoryFallbackTitle(category);
+
   if (category === "auto") {
-    return getAutoListingTitle(attributes);
+    return getAutoListingTitle(attributes) || fallbackTitle;
   }
 
   if (category === "real-estate") {
     return getRealEstateListingTitle(attributes);
   }
 
-  return title.trim();
+  if (category === "electronics") {
+    return getElectronicsListingTitle(attributes);
+  }
+
+  const generatedTitle = firstFilledAttribute(attributes, [
+    "model",
+    "brand",
+    "part_type",
+    "home_category",
+    "business_category",
+    "service_category",
+    "company",
+    "material",
+    "condition",
+    "size"
+  ]);
+
+  return generatedTitle || title.trim() || fallbackTitle;
 }
 
 export function SellForm({
@@ -120,7 +156,7 @@ export function SellForm({
   const [photos, setPhotos] = useState<UploadPhoto[]>([]);
   const [mainPhotoId, setMainPhotoId] = useState("");
   const [category, setCategory] = useState(initialListing?.category ?? "");
-  const [title, setTitle] = useState(initialListing?.title ?? "");
+  const existingTitle = initialListing?.title ?? "";
   const [description, setDescription] = useState(initialListing?.description ?? "");
   const [price, setPrice] = useState(
     initialListing?.price === null || initialListing?.price === undefined
@@ -151,10 +187,9 @@ export function SellForm({
     () => photos.find((photo) => photo.id === mainPhotoId) ?? photos[0],
     [mainPhotoId, photos]
   );
-  const isGeneratedTitleCategory = category === "auto" || category === "real-estate";
   const effectiveTitle = useMemo(
-    () => getEffectiveListingTitle(category, title, attributes),
-    [attributes, category, title]
+    () => getEffectiveListingTitle(category, existingTitle, attributes),
+    [attributes, category, existingTitle]
   );
 
   useEffect(() => {
@@ -308,11 +343,14 @@ export function SellForm({
     nextAttributeErrors: Record<string, string>
   ) {
     window.requestAnimationFrame(() => {
-      const fieldOrder = (
-        isGeneratedTitleCategory
-          ? ["photos", "category", "price", "description", "district", "profile"]
-          : ["photos", "title", "category", "price", "description", "district", "profile"]
-      ) as Array<keyof FormErrors>;
+      const fieldOrder = [
+        "photos",
+        "category",
+        "price",
+        "description",
+        "district",
+        "profile"
+      ] as Array<keyof FormErrors>;
       const firstFieldKey = fieldOrder.find((key) => nextErrors[key]);
       const firstAttributeKey = Object.keys(nextAttributeErrors)[0];
       const targetId = firstFieldKey
@@ -352,9 +390,6 @@ export function SellForm({
     }
     if (!category) {
       nextErrors.category = "Выберите категорию.";
-    }
-    if (!isGeneratedTitleCategory && !title.trim()) {
-      nextErrors.title = "Введите название объявления.";
     }
     if (!description.trim()) {
       nextErrors.description = "Добавьте описание.";
@@ -417,7 +452,7 @@ export function SellForm({
 
     const districtCoordinates = getDistrictCoordinate(district);
     const listingAttributes = normalizeAttributeValues(attributes);
-    const listingTitle = getEffectiveListingTitle(category, title, attributes);
+    const listingTitle = getEffectiveListingTitle(category, existingTitle, attributes);
 
     if (hasSupabaseBrowserEnv()) {
       const user = await getCurrentUser();
@@ -611,29 +646,6 @@ export function SellForm({
         />
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          {!isGeneratedTitleCategory ? (
-            <label id="sell-field-title" className="block scroll-mt-28">
-              <span className="text-sm font-semibold text-ink">
-                Название объявления <span className="text-coral">*</span>
-              </span>
-              <input
-                value={title}
-                maxLength={70}
-                onChange={(event) => {
-                  setTitle(event.target.value);
-                  markDirty();
-                  setErrors((current) => ({ ...current, title: undefined }));
-                }}
-                className="focus-ring mt-2 h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 text-base font-medium text-ink shadow-sm"
-                placeholder="Например, iPhone 14 Pro 256 ГБ"
-              />
-              <span className="mt-2 flex items-center justify-between text-sm">
-                <span className="font-medium text-coral">{errors.title}</span>
-                <span className="ml-auto text-ink/45">{title.length}/70</span>
-              </span>
-            </label>
-          ) : null}
-
           <CategorySelect
             value={category}
             error={errors.category}

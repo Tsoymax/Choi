@@ -1,3 +1,7 @@
+export function getElectronicsListingTitle(attributes?: Record<string, string>) {
+  return attributes?.model?.trim() || attributes?.brand?.trim() || "Электроника";
+}
+
 export function formatElectronicsListingMeta(attributes?: Record<string, string>) {
   if (!attributes) {
     return "";
