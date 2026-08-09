@@ -1,5 +1,8 @@
 export function getElectronicsListingTitle(attributes?: Record<string, string>) {
-  return attributes?.model?.trim() || attributes?.brand?.trim() || "Электроника";
+  const brand = attributes?.brand?.trim();
+  const model = attributes?.model?.trim();
+
+  return [brand, model].filter(Boolean).join(" ") || "Электроника";
 }
 
 export function formatElectronicsListingMeta(attributes?: Record<string, string>) {
@@ -7,7 +10,7 @@ export function formatElectronicsListingMeta(attributes?: Record<string, string>
     return "";
   }
 
-  return [attributes.brand, attributes.model, attributes.memory, attributes.condition]
+  return [attributes.memory, attributes.condition]
     .map((value) => value?.trim())
     .filter(Boolean)
     .join(" · ");
