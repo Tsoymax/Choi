@@ -10,6 +10,10 @@ import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/f
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
+import {
+  formatRealEstateListingMeta,
+  getRealEstateListingTitle
+} from "@/utils/realEstateListingMeta";
 import { setCachedListingLikes } from "@/utils/listingEngagementCache";
 import {
   getCurrentUser as getCurrentAuthUser,
@@ -30,8 +34,10 @@ function formatMetric(value: number) {
 
 export function ListingCard({ product, language }: ListingCardProps) {
   const router = useRouter();
-  const title =
+  const rawTitle =
     language === "uz" ? product.titleUz ?? product.title : product.titleRu ?? product.title;
+  const title =
+    product.category === "real-estate" ? getRealEstateListingTitle(product.attributes) : rawTitle;
   const [favorite, setFavorite] = useState(false);
   const [likesCount, setLikesCount] = useState(product.likesCount ?? 0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(
@@ -43,6 +49,9 @@ export function ListingCard({ product, language }: ListingCardProps) {
   const isOwnListing = Boolean(product.sellerId && currentUserId === product.sellerId);
   const autoMeta =
     product.category === "auto" ? formatAutoListingMeta(product.attributes) : "";
+  const realEstateMeta =
+    product.category === "real-estate" ? formatRealEstateListingMeta(product.attributes) : "";
+  const listingMeta = autoMeta || realEstateMeta;
 
   useEffect(() => {
     setLikesCount(product.likesCount ?? 0);
@@ -167,9 +176,9 @@ export function ListingCard({ product, language }: ListingCardProps) {
         <h3 className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink [overflow-wrap:anywhere] sm:text-lg">
           {title}
         </h3>
-        {autoMeta ? (
+        {listingMeta ? (
           <p className="mt-1 line-clamp-2 break-words text-[15px] font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
-            {autoMeta}
+            {listingMeta}
           </p>
         ) : null}
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">

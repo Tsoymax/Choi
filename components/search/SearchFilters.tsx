@@ -243,7 +243,6 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
           {numberField("Этаж", filters.floor, "floor")}
           {selectField("Ремонт", filters.renovation, "renovation", fieldByKey.get("renovation")?.options)}
           {selectField("Мебель", filters.furniture, "furniture", fieldByKey.get("furniture")?.options)}
-          {selectField("Парковка", filters.parking, "parking", fieldByKey.get("parking")?.options)}
         </div>
       ) : null}
 

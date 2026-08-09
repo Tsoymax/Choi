@@ -24,6 +24,7 @@ import {
   updateListingAttributes
 } from "@/lib/data/listingAttributes";
 import { getAttributeGroups } from "@/data/listingAttributeConfig";
+import { getRealEstateListingTitle } from "@/utils/realEstateListingMeta";
 import { getCurrentUser as getFallbackCurrentUser } from "@/utils/users";
 import type { ProfileRow } from "@/lib/data/profiles";
 import { getDistrictCoordinate } from "@/data/districtCoordinates";
@@ -96,7 +97,15 @@ function getEffectiveListingTitle(
   title: string,
   attributes: Record<string, string>
 ) {
-  return category === "auto" ? getAutoListingTitle(attributes) : title.trim();
+  if (category === "auto") {
+    return getAutoListingTitle(attributes);
+  }
+
+  if (category === "real-estate") {
+    return getRealEstateListingTitle(attributes);
+  }
+
+  return title.trim();
 }
 
 export function SellForm({
@@ -142,7 +151,7 @@ export function SellForm({
     () => photos.find((photo) => photo.id === mainPhotoId) ?? photos[0],
     [mainPhotoId, photos]
   );
-  const isAutoCategory = category === "auto";
+  const isGeneratedTitleCategory = category === "auto" || category === "real-estate";
   const effectiveTitle = useMemo(
     () => getEffectiveListingTitle(category, title, attributes),
     [attributes, category, title]
@@ -300,7 +309,7 @@ export function SellForm({
   ) {
     window.requestAnimationFrame(() => {
       const fieldOrder = (
-        isAutoCategory
+        isGeneratedTitleCategory
           ? ["photos", "category", "price", "description", "district", "profile"]
           : ["photos", "title", "category", "price", "description", "district", "profile"]
       ) as Array<keyof FormErrors>;
@@ -344,7 +353,7 @@ export function SellForm({
     if (!category) {
       nextErrors.category = "Выберите категорию.";
     }
-    if (!isAutoCategory && !title.trim()) {
+    if (!isGeneratedTitleCategory && !title.trim()) {
       nextErrors.title = "Введите название объявления.";
     }
     if (!description.trim()) {
@@ -602,7 +611,7 @@ export function SellForm({
         />
 
         <section className="space-y-6 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-7">
-          {!isAutoCategory ? (
+          {!isGeneratedTitleCategory ? (
             <label id="sell-field-title" className="block scroll-mt-28">
               <span className="text-sm font-semibold text-ink">
                 Название объявления <span className="text-coral">*</span>

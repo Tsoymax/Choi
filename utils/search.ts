@@ -45,7 +45,6 @@ export type SearchFiltersState = {
   floor: string;
   renovation: string;
   furniture: string;
-  parking: string;
   condition: string;
   memory: string;
   warranty: string;
@@ -90,7 +89,6 @@ export const defaultSearchFilters: SearchFiltersState = {
   floor: "",
   renovation: "",
   furniture: "",
-  parking: "",
   condition: "",
   memory: "",
   warranty: "",
@@ -295,7 +293,6 @@ function matchesDynamicFilters(listing: Listing, filters: SearchFiltersState) {
   if (!matchesAttribute(listing, "floor", filters.floor)) return false;
   if (!matchesAttribute(listing, "renovation", filters.renovation)) return false;
   if (!matchesAttribute(listing, "furniture", filters.furniture)) return false;
-  if (!matchesAttribute(listing, "parking", filters.parking)) return false;
   if (!matchesAttribute(listing, "condition", filters.condition)) return false;
   if (!matchesAttributeLike(listing, "memory", filters.memory)) return false;
   if (!matchesAttribute(listing, "warranty", filters.warranty)) return false;
@@ -433,7 +430,6 @@ export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFi
     floor: searchParams.get("floor") ?? "",
     renovation: searchParams.get("renovation") ?? "",
     furniture: searchParams.get("furniture") ?? "",
-    parking: searchParams.get("parking") ?? "",
     condition: searchParams.get("condition") ?? "",
     memory: searchParams.get("memory") ?? "",
     warranty: searchParams.get("warranty") ?? "",
@@ -502,7 +498,6 @@ export function getActiveFilterChips(filters: SearchFiltersState) {
   add("floor", `этаж ${filters.floor}`);
   add("renovation", filters.renovation);
   add("furniture", filters.furniture === "yes" ? "мебель: да" : filters.furniture === "no" ? "мебель: нет" : "");
-  add("parking", filters.parking === "yes" ? "парковка: да" : filters.parking === "no" ? "парковка: нет" : "");
   add("condition", filters.condition);
   add("memory", filters.memory);
   add("warranty", filters.warranty === "yes" ? "гарантия: да" : filters.warranty === "no" ? "гарантия: нет" : "");

@@ -29,6 +29,10 @@ import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
+import {
+  formatRealEstateListingMeta,
+  getRealEstateListingTitle
+} from "@/utils/realEstateListingMeta";
 import { markCachedListingViewed } from "@/utils/listingEngagementCache";
 import { ListingGallery } from "./ListingGallery";
 import { ListingAttributesSection } from "./ListingAttributesSection";
@@ -185,12 +189,17 @@ export function ListingDetail({
     );
   }
 
-  const title = listing.titleRu ?? listing.title;
+  const rawTitle = listing.titleRu ?? listing.title;
+  const title =
+    listing.category === "real-estate" ? getRealEstateListingTitle(listing.attributes) : rawTitle;
   const images = listing.images?.length ? listing.images : [listing.image];
   const isOwner = listing.sellerId === currentUserId;
   const isModeratedAway = listing.status === "hidden" || listing.status === "blocked";
   const autoMeta =
     listing.category === "auto" ? formatAutoListingMeta(listing.attributes) : "";
+  const realEstateMeta =
+    listing.category === "real-estate" ? formatRealEstateListingMeta(listing.attributes) : "";
+  const listingMeta = autoMeta || realEstateMeta;
 
   if (isModeratedAway && !isOwner) {
     return (
@@ -270,9 +279,9 @@ export function ListingDetail({
               <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-ink [overflow-wrap:anywhere] sm:text-4xl">
                 {title}
               </h1>
-              {autoMeta ? (
+              {listingMeta ? (
                 <p className="mt-3 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
-                  {autoMeta}
+                  {listingMeta}
                 </p>
               ) : null}
               {listing.category === "auto" && listing.attributes?.color ? (

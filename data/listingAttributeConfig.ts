@@ -186,10 +186,10 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
       title: "Недвижимость",
       fields: [
         { key: "deal_type", label: "Тип", type: "select", options: toOptions(["Продажа", "Аренда"]) },
-        { key: "rooms", label: "Количество комнат", type: "number" },
-        { key: "area", label: "Площадь", type: "number", unit: "м²" },
-        { key: "floor", label: "Этаж", type: "number" },
-        { key: "floors_total", label: "Этажность", type: "number" },
+        { key: "rooms", label: "Количество комнат", type: "number", required: true },
+        { key: "area", label: "Площадь", type: "number", required: true, unit: "м²" },
+        { key: "floor", label: "Этаж", type: "number", required: true },
+        { key: "floors_total", label: "Этажность", type: "number", required: true },
         { key: "built_year", label: "Год постройки", type: "number" },
         { key: "balcony", label: "Балкон", type: "select", options: yesNoOptions },
         {
@@ -198,8 +198,7 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           type: "select",
           options: toOptions(["Без ремонта", "Косметический", "Евроремонт"])
         },
-        { key: "furniture", label: "Мебель", type: "select", options: yesNoOptions },
-        { key: "parking", label: "Парковка", type: "select", options: yesNoOptions }
+        { key: "furniture", label: "Мебель", type: "select", options: yesNoOptions }
       ]
     }
   ],

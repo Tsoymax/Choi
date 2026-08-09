@@ -56,7 +56,6 @@ function hasExtraFilters(filters: SearchFiltersState) {
       filters.floor ||
       filters.renovation ||
       filters.furniture ||
-      filters.parking ||
       filters.condition ||
       filters.memory ||
       filters.warranty ||

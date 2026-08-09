@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ImageIcon, MapPin } from "lucide-react";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
+import { formatRealEstateListingMeta } from "@/utils/realEstateListingMeta";
 import { tashkentDistricts } from "./sellData";
 
 type ListingPreviewProps = {
@@ -45,6 +46,9 @@ export function ListingPreview({
   const districtLabel =
     tashkentDistricts.find((item) => item.id === district)?.label ?? "Район";
   const autoMeta = category === "auto" ? formatAutoListingMeta(attributes) : "";
+  const realEstateMeta =
+    category === "real-estate" ? formatRealEstateListingMeta(attributes) : "";
+  const listingMeta = autoMeta || realEstateMeta;
 
   return (
     <aside className="sticky top-28 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -71,9 +75,9 @@ export function ListingPreview({
           <h3 className="text-lg font-semibold leading-tight text-ink">
             {title || "Название объявления"}
           </h3>
-          {autoMeta ? (
+          {listingMeta ? (
             <p className="mt-2 line-clamp-2 break-words text-[15px] font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
-              {autoMeta}
+              {listingMeta}
             </p>
           ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">

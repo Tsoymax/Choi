@@ -73,7 +73,6 @@ export function SearchPageContent() {
               floor: "",
               renovation: "",
               furniture: "",
-              parking: "",
               condition: "",
               memory: "",
               warranty: "",
