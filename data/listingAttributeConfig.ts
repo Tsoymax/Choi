@@ -109,6 +109,122 @@ function getCarModelOptions(values: Record<string, string>) {
   return toOptions(models);
 }
 
+const electronicsBrands = [
+  "Apple",
+  "Samsung",
+  "Xiaomi",
+  "Redmi",
+  "Poco",
+  "Huawei",
+  "Honor",
+  "OnePlus",
+  "Google",
+  "Sony",
+  "LG",
+  "Nokia",
+  "Motorola",
+  "Realme",
+  "Vivo",
+  "OPPO",
+  "Tecno",
+  "Infinix",
+  "Lenovo",
+  "HP",
+  "Dell",
+  "ASUS",
+  "Acer",
+  "MSI"
+];
+
+const electronicsModelsByBrand: Record<string, string[]> = {
+  Apple: [
+    "iPhone 16 Pro Max",
+    "iPhone 16 Pro",
+    "iPhone 16",
+    "iPhone 15 Pro Max",
+    "iPhone 15 Pro",
+    "iPhone 15",
+    "iPhone 14 Pro Max",
+    "iPhone 14 Pro",
+    "iPhone 14",
+    "iPhone 13 Pro Max",
+    "iPhone 13 Pro",
+    "iPhone 13",
+    "MacBook Air",
+    "MacBook Pro",
+    "iPad Pro",
+    "iPad Air",
+    "AirPods Pro"
+  ],
+  Samsung: [
+    "Galaxy S25 Ultra",
+    "Galaxy S25",
+    "Galaxy S24 Ultra",
+    "Galaxy S24",
+    "Galaxy S23 Ultra",
+    "Galaxy S23",
+    "Galaxy A55",
+    "Galaxy A35",
+    "Galaxy Z Fold",
+    "Galaxy Z Flip",
+    "Galaxy Tab"
+  ],
+  Xiaomi: ["14 Ultra", "14", "13T Pro", "13T", "12 Pro", "Mi 11", "Pad 6"],
+  Redmi: ["Note 13 Pro", "Note 13", "Note 12 Pro", "Note 12", "12C", "13C"],
+  Poco: ["F6 Pro", "F6", "X6 Pro", "X6", "M6 Pro"],
+  Huawei: ["Pura 70", "P60 Pro", "Mate 60 Pro", "Nova 12", "MateBook"],
+  Honor: ["Magic6 Pro", "Magic5 Pro", "X9b", "X8a", "Pad"],
+  OnePlus: ["12", "11", "10 Pro", "Nord 4", "Nord CE"],
+  Google: ["Pixel 9 Pro", "Pixel 9", "Pixel 8 Pro", "Pixel 8", "Pixel 7"],
+  Sony: ["Xperia 1", "Xperia 5", "PlayStation 5", "PlayStation 4"],
+  LG: ["TV OLED", "TV NanoCell", "Monitor UltraGear"],
+  Nokia: ["G42", "G22", "C32", "105"],
+  Motorola: ["Edge 50", "Edge 40", "G84", "G54"],
+  Realme: ["GT 6", "12 Pro", "12", "C67", "C55"],
+  Vivo: ["V30", "V29", "Y36", "Y27"],
+  OPPO: ["Reno 12", "Reno 11", "A78", "A58"],
+  Tecno: ["Camon 30", "Spark 20", "Pova 6"],
+  Infinix: ["Note 40", "Hot 40", "Zero 30"],
+  Lenovo: ["ThinkPad", "IdeaPad", "Legion", "Tab"],
+  HP: ["Pavilion", "Envy", "EliteBook", "Victus", "Omen"],
+  Dell: ["XPS", "Inspiron", "Latitude", "Alienware"],
+  ASUS: ["ZenBook", "VivoBook", "ROG", "TUF"],
+  Acer: ["Aspire", "Swift", "Nitro", "Predator"],
+  MSI: ["Modern", "Prestige", "Katana", "Raider"]
+};
+
+function getElectronicsModelOptions(values: Record<string, string>) {
+  const models = electronicsModelsByBrand[values.brand] ?? [];
+  return toOptions(models);
+}
+
+const electronicsMemoryOptions = toOptions([
+  "16 ГБ",
+  "32 ГБ",
+  "64 ГБ",
+  "128 ГБ",
+  "256 ГБ",
+  "512 ГБ",
+  "1 ТБ",
+  "2 ТБ"
+]);
+
+const electronicsColorOptions = toOptions([
+  "Белый",
+  "Черный",
+  "Серый",
+  "Серебристый",
+  "Золотой",
+  "Синий",
+  "Голубой",
+  "Зеленый",
+  "Красный",
+  "Розовый",
+  "Фиолетовый",
+  "Желтый",
+  "Комбинированный"
+]);
+
 const carColorOptions = toOptions([
   "Белый",
   "Черный",
@@ -206,18 +322,22 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
     {
       title: "Электроника",
       fields: [
-        { key: "brand", label: "Бренд", type: "text", placeholder: "Apple" },
-        { key: "model", label: "Модель", type: "text", placeholder: "iPhone 14 Pro" },
+        { key: "brand", label: "Бренд", type: "select", options: toOptions(electronicsBrands) },
+        {
+          key: "model",
+          label: "Модель",
+          type: "select",
+          dependsOn: "brand",
+          getOptions: getElectronicsModelOptions
+        },
         {
           key: "condition",
           label: "Состояние",
           type: "select",
           options: toOptions(["Новое", "Отличное", "Хорошее", "Есть следы использования"])
         },
-        { key: "memory", label: "Память", type: "text", placeholder: "256 ГБ" },
-        { key: "color", label: "Цвет", type: "text" },
-        { key: "kit", label: "Комплектация", type: "text" },
-        { key: "warranty", label: "Гарантия", type: "select", options: yesNoOptions }
+        { key: "memory", label: "Память", type: "select", options: electronicsMemoryOptions },
+        { key: "color", label: "Цвет", type: "select", options: electronicsColorOptions }
       ]
     }
   ],

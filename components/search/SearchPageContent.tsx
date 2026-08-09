@@ -75,7 +75,6 @@ export function SearchPageContent() {
               furniture: "",
               condition: "",
               memory: "",
-              warranty: "",
               gender: "",
               size: ""
             }

@@ -58,7 +58,6 @@ function hasExtraFilters(filters: SearchFiltersState) {
       filters.furniture ||
       filters.condition ||
       filters.memory ||
-      filters.warranty ||
       filters.gender ||
       filters.size
   );

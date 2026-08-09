@@ -249,11 +249,11 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
       {filters.category === "electronics" ? (
         <div className="space-y-4 rounded-[20px] border border-ink/10 bg-mist/50 p-4">
           <h3 className="font-semibold text-ink">Электроника</h3>
-          {textField("Бренд", filters.brand, "brand", "Apple")}
-          {textField("Модель", filters.model, "model", "iPhone")}
+          {selectField("Бренд", filters.brand, "brand", fieldByKey.get("brand")?.options, { model: "" })}
+          {selectField("Модель", filters.model, "model", carModelOptions)}
           {selectField("Состояние", filters.condition, "condition", fieldByKey.get("condition")?.options)}
-          {textField("Память", filters.memory, "memory", "256 ГБ")}
-          {selectField("Гарантия", filters.warranty, "warranty", fieldByKey.get("warranty")?.options)}
+          {selectField("Память", filters.memory, "memory", fieldByKey.get("memory")?.options)}
+          {selectField("Цвет", filters.color, "color", fieldByKey.get("color")?.options)}
         </div>
       ) : null}
 

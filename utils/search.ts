@@ -47,7 +47,6 @@ export type SearchFiltersState = {
   furniture: string;
   condition: string;
   memory: string;
-  warranty: string;
   gender: string;
   size: string;
 };
@@ -91,7 +90,6 @@ export const defaultSearchFilters: SearchFiltersState = {
   furniture: "",
   condition: "",
   memory: "",
-  warranty: "",
   gender: "",
   size: ""
 };
@@ -295,7 +293,6 @@ function matchesDynamicFilters(listing: Listing, filters: SearchFiltersState) {
   if (!matchesAttribute(listing, "furniture", filters.furniture)) return false;
   if (!matchesAttribute(listing, "condition", filters.condition)) return false;
   if (!matchesAttributeLike(listing, "memory", filters.memory)) return false;
-  if (!matchesAttribute(listing, "warranty", filters.warranty)) return false;
   if (!matchesAttribute(listing, "gender", filters.gender)) return false;
   if (!matchesAttributeLike(listing, "size", filters.size)) return false;
 
@@ -432,7 +429,6 @@ export function filtersFromSearchParams(searchParams: URLSearchParams): SearchFi
     furniture: searchParams.get("furniture") ?? "",
     condition: searchParams.get("condition") ?? "",
     memory: searchParams.get("memory") ?? "",
-    warranty: searchParams.get("warranty") ?? "",
     gender: searchParams.get("gender") ?? "",
     size: searchParams.get("size") ?? ""
   };
@@ -500,7 +496,6 @@ export function getActiveFilterChips(filters: SearchFiltersState) {
   add("furniture", filters.furniture === "yes" ? "мебель: да" : filters.furniture === "no" ? "мебель: нет" : "");
   add("condition", filters.condition);
   add("memory", filters.memory);
-  add("warranty", filters.warranty === "yes" ? "гарантия: да" : filters.warranty === "no" ? "гарантия: нет" : "");
   add("gender", filters.gender);
   add("size", filters.size);
 
