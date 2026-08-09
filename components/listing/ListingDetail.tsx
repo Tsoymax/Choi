@@ -29,6 +29,7 @@ import { recordListingView } from "@/lib/data/listingEngagement";
 import { createClient } from "@/utils/supabase/client";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
+import { formatElectronicsListingMeta } from "@/utils/electronicsListingMeta";
 import {
   formatRealEstateListingMeta,
   getRealEstateListingTitle
@@ -199,7 +200,13 @@ export function ListingDetail({
     listing.category === "auto" ? formatAutoListingMeta(listing.attributes) : "";
   const realEstateMeta =
     listing.category === "real-estate" ? formatRealEstateListingMeta(listing.attributes) : "";
-  const listingMeta = autoMeta || realEstateMeta;
+  const electronicsMeta =
+    listing.category === "electronics" ? formatElectronicsListingMeta(listing.attributes) : "";
+  const listingMeta = autoMeta || realEstateMeta || electronicsMeta;
+  const displayColor =
+    listing.category === "auto" || listing.category === "electronics"
+      ? listing.attributes?.color
+      : "";
 
   if (isModeratedAway && !isOwner) {
     return (
@@ -284,17 +291,17 @@ export function ListingDetail({
                   {listingMeta}
                 </p>
               ) : null}
-              {listing.category === "auto" && listing.attributes?.color ? (
+              {displayColor ? (
                 <div
                   className="mt-2 inline-flex min-w-0 items-center gap-2 break-words text-base font-semibold [overflow-wrap:anywhere]"
-                  style={{ color: getCarColorTextStyle(listing.attributes.color) }}
+                  style={{ color: getCarColorTextStyle(displayColor) }}
                 >
                   <span
                     aria-hidden="true"
                     className="h-3 w-3 shrink-0 rounded-full border border-ink/10 shadow-sm"
-                    style={{ background: getCarColorStyle(listing.attributes.color) }}
+                    style={{ background: getCarColorStyle(displayColor) }}
                   />
-                  {listing.attributes.color}
+                  {displayColor}
                 </div>
               ) : null}
               <div className="mt-6 grid gap-3 text-sm text-ink/64">

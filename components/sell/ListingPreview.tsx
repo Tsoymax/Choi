@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ImageIcon, MapPin } from "lucide-react";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
+import { formatElectronicsListingMeta } from "@/utils/electronicsListingMeta";
 import { formatRealEstateListingMeta } from "@/utils/realEstateListingMeta";
 import { tashkentDistricts } from "./sellData";
 
@@ -48,7 +49,11 @@ export function ListingPreview({
   const autoMeta = category === "auto" ? formatAutoListingMeta(attributes) : "";
   const realEstateMeta =
     category === "real-estate" ? formatRealEstateListingMeta(attributes) : "";
-  const listingMeta = autoMeta || realEstateMeta;
+  const electronicsMeta =
+    category === "electronics" ? formatElectronicsListingMeta(attributes) : "";
+  const listingMeta = autoMeta || realEstateMeta || electronicsMeta;
+  const displayColor =
+    category === "auto" || category === "electronics" ? attributes.color : "";
 
   return (
     <aside className="sticky top-28 rounded-[24px] bg-white p-5 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
@@ -84,17 +89,17 @@ export function ListingPreview({
             <strong className="break-words text-xl font-semibold text-ink [overflow-wrap:anywhere]">
               {formatPreviewPrice(price, currency, negotiable)}
             </strong>
-            {category === "auto" && attributes.color ? (
+            {displayColor ? (
               <span
                 className="inline-flex min-w-0 items-center gap-1.5 break-words text-sm font-semibold [overflow-wrap:anywhere]"
-                style={{ color: getCarColorTextStyle(attributes.color) }}
+                style={{ color: getCarColorTextStyle(displayColor) }}
               >
                 <span
                   aria-hidden="true"
                   className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink/10 shadow-sm"
-                  style={{ background: getCarColorStyle(attributes.color) }}
+                  style={{ background: getCarColorStyle(displayColor) }}
                 />
-                {attributes.color}
+                {displayColor}
               </span>
             ) : null}
           </div>

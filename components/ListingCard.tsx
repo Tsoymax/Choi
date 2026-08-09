@@ -10,6 +10,7 @@ import { FAVORITES_EVENT, isFavoriteAsync, toggleFavoriteAsync } from "@/utils/f
 import { formatListingDate, formatListingPrice, getDistrictLabel } from "@/utils/listings";
 import { formatAutoListingMeta } from "@/utils/autoListingMeta";
 import { getCarColorStyle, getCarColorTextStyle } from "@/utils/carColors";
+import { formatElectronicsListingMeta } from "@/utils/electronicsListingMeta";
 import {
   formatRealEstateListingMeta,
   getRealEstateListingTitle
@@ -51,7 +52,13 @@ export function ListingCard({ product, language }: ListingCardProps) {
     product.category === "auto" ? formatAutoListingMeta(product.attributes) : "";
   const realEstateMeta =
     product.category === "real-estate" ? formatRealEstateListingMeta(product.attributes) : "";
-  const listingMeta = autoMeta || realEstateMeta;
+  const electronicsMeta =
+    product.category === "electronics" ? formatElectronicsListingMeta(product.attributes) : "";
+  const listingMeta = autoMeta || realEstateMeta || electronicsMeta;
+  const displayColor =
+    product.category === "auto" || product.category === "electronics"
+      ? product.attributes?.color
+      : "";
 
   useEffect(() => {
     setLikesCount(product.likesCount ?? 0);
@@ -185,17 +192,17 @@ export function ListingCard({ product, language }: ListingCardProps) {
           <strong className="break-words text-lg font-semibold text-ink [overflow-wrap:anywhere]">
             {formatListingPrice(product)}
           </strong>
-          {product.category === "auto" && product.attributes?.color ? (
+          {displayColor ? (
             <span
               className="inline-flex min-w-0 items-center gap-1.5 break-words text-sm font-semibold [overflow-wrap:anywhere]"
-              style={{ color: getCarColorTextStyle(product.attributes.color) }}
+              style={{ color: getCarColorTextStyle(displayColor) }}
             >
               <span
                 aria-hidden="true"
                 className="h-2.5 w-2.5 shrink-0 rounded-full border border-ink/10 shadow-sm"
-                style={{ background: getCarColorStyle(product.attributes.color) }}
+                style={{ background: getCarColorStyle(displayColor) }}
               />
-              {product.attributes.color}
+              {displayColor}
             </span>
           ) : null}
         </div>
