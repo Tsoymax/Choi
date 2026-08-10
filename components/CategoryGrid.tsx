@@ -144,28 +144,35 @@ export function CategoryGrid({
               />
 
               {isExpanded && subcategories.length > 0 ? (
-                <div className="mt-2 rounded-[22px] border border-leaf/18 bg-white/95 p-3 shadow-[0_10px_28px_rgba(24,32,29,0.08)]">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-leaf">
-                        Подкатегории
+                <div className="relative mt-3 overflow-hidden rounded-[24px] border border-leaf/16 bg-gradient-to-br from-white via-white to-mist/70 p-3.5 shadow-[0_14px_34px_rgba(24,32,29,0.09)] animate-in fade-in slide-in-from-top-1 duration-200 sm:p-4">
+                  <span className="absolute left-8 top-0 h-3 w-3 -translate-y-1/2 rotate-45 border-l border-t border-leaf/16 bg-white" />
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-leaf/8" />
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-leaf/85">
+                        Выберите подкатегорию
                       </p>
-                      <h3 className="mt-0.5 line-clamp-1 text-sm font-semibold text-ink">
+                      <h3 className="mt-1 line-clamp-1 text-base font-semibold text-ink">
                         {categoryLabel}
                       </h3>
                     </div>
-                    <span className="rounded-full bg-mist px-2 py-1 text-[11px] font-semibold text-leaf">
-                      {subcategories.length}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCategory("")}
+                      className="focus-ring grid h-8 w-8 shrink-0 place-items-center rounded-full bg-mist text-sm font-semibold text-leaf transition hover:bg-leaf hover:text-white"
+                      aria-label="Закрыть подкатегории"
+                    >
+                      ×
+                    </button>
                   </div>
 
-                  <div className="mt-3 flex max-h-[180px] flex-col gap-2 overflow-y-auto pr-1">
+                  <div className="relative mt-3 flex max-h-[188px] flex-wrap gap-2 overflow-y-auto pr-1">
                     {subcategories.map((subcategory) => (
                       <button
                         key={subcategory.id}
                         type="button"
                         onClick={() => onCategoryChange(expandedCategory, subcategory.label)}
-                        className="focus-ring w-full rounded-2xl border border-ink/8 bg-mist px-3 py-2 text-left text-sm font-semibold text-ink transition hover:border-leaf/25 hover:bg-leaf hover:text-white"
+                        className="focus-ring rounded-full border border-ink/8 bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-[0_6px_16px_rgba(24,32,29,0.05)] transition hover:-translate-y-0.5 hover:border-leaf/25 hover:bg-leaf hover:text-white"
                       >
                         {subcategory.label}
                       </button>
