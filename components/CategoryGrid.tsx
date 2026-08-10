@@ -91,11 +91,6 @@ export function CategoryGrid({
 }: CategoryGridProps) {
   const t = translations[language];
   const [expandedCategory, setExpandedCategory] = useState("");
-  const expandedCategoryCopy = categoryCopy[expandedCategory];
-  const expandedCategoryLabel =
-    language === "uz"
-      ? expandedCategoryCopy?.uz
-      : expandedCategoryCopy?.ru;
   const subcategories = useMemo(
     () => getSubcategories(expandedCategory),
     [expandedCategory]
@@ -133,48 +128,71 @@ export function CategoryGrid({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[repeat(20,minmax(0,1fr))]">
-        {categories.map((category, index) => (
-          <CategoryCard
-            key={category.id}
-            category={category}
-            index={index}
-            active={activeCategory === category.id || expandedCategory === category.id}
-            language={language}
-            onClick={() => handleCategoryClick(category.id)}
-          />
-        ))}
-      </div>
+        {categories.map((category, index) => {
+          const isExpanded = expandedCategory === category.id;
+          const desktopSpan = index < 4 ? "lg:col-span-5" : "lg:col-span-4";
+          const categoryLabel = getCategoryDisplay(category, language).label;
 
-      {expandedCategory && subcategories.length > 0 ? (
-        <div className="mt-4 rounded-[24px] border border-ink/8 bg-white p-4 shadow-[0_12px_34px_rgba(24,32,29,0.07)] sm:p-5">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-leaf">
-                Подкатегории
-              </p>
-              <h3 className="mt-1 text-xl font-semibold text-ink">
-                {expandedCategoryLabel ?? "Выберите раздел"}
-              </h3>
+          return (
+            <div key={category.id} className={`min-w-0 ${desktopSpan}`}>
+              <CategoryCard
+                category={category}
+                index={index}
+                active={activeCategory === category.id || isExpanded}
+                language={language}
+                onClick={() => handleCategoryClick(category.id)}
+              />
+
+              {isExpanded && subcategories.length > 0 ? (
+                <div className="mt-2 rounded-[22px] border border-leaf/18 bg-white/95 p-3 shadow-[0_10px_28px_rgba(24,32,29,0.08)]">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-leaf">
+                        Подкатегории
+                      </p>
+                      <h3 className="mt-0.5 line-clamp-1 text-sm font-semibold text-ink">
+                        {categoryLabel}
+                      </h3>
+                    </div>
+                    <span className="rounded-full bg-mist px-2 py-1 text-[11px] font-semibold text-leaf">
+                      {subcategories.length}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex max-h-[180px] flex-col gap-2 overflow-y-auto pr-1">
+                    {subcategories.map((subcategory) => (
+                      <button
+                        key={subcategory.id}
+                        type="button"
+                        onClick={() => onCategoryChange(expandedCategory, subcategory.label)}
+                        className="focus-ring w-full rounded-2xl border border-ink/8 bg-mist px-3 py-2 text-left text-sm font-semibold text-ink transition hover:border-leaf/25 hover:bg-leaf hover:text-white"
+                      >
+                        {subcategory.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
-            <p className="text-sm text-ink/55">Выберите уточнение для поиска рядом</p>
-          </div>
-
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
-            {subcategories.map((subcategory) => (
-              <button
-                key={subcategory.id}
-                type="button"
-                onClick={() => onCategoryChange(expandedCategory, subcategory.label)}
-                className="focus-ring shrink-0 rounded-full border border-ink/10 bg-mist px-4 py-2 text-sm font-semibold text-ink transition hover:-translate-y-0.5 hover:border-leaf/25 hover:bg-leaf hover:text-white"
-              >
-                {subcategory.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
+          );
+        })}
+      </div>
     </section>
   );
+}
+
+function getCategoryDisplay(category: Category, language: Language) {
+  const copy = categoryCopy[category.id];
+  const label =
+    language === "uz"
+      ? copy?.uz ?? category.labelUz ?? category.label
+      : copy?.ru ?? category.labelRu ?? category.label;
+  const description =
+    language === "uz"
+      ? copy?.descriptionUz ?? category.descriptionUz ?? category.description
+      : copy?.descriptionRu ?? category.descriptionRu ?? category.description;
+
+  return { label, description };
 }
 
 type CategoryCardProps = {
@@ -192,22 +210,13 @@ function CategoryCard({
   language,
   onClick
 }: CategoryCardProps) {
-  const copy = categoryCopy[category.id];
-  const label =
-    language === "uz"
-      ? copy?.uz ?? category.labelUz ?? category.label
-      : copy?.ru ?? category.labelRu ?? category.label;
-  const description =
-    language === "uz"
-      ? copy?.descriptionUz ?? category.descriptionUz ?? category.description
-      : copy?.descriptionRu ?? category.descriptionRu ?? category.description;
-  const desktopSpan = index < 4 ? "lg:col-span-5" : "lg:col-span-4";
+  const { label, description } = getCategoryDisplay(category, language);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative min-h-[138px] overflow-hidden rounded-[24px] border bg-white p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${desktopSpan} ${
+      className={`focus-ring group relative min-h-[138px] w-full overflow-hidden rounded-[24px] border bg-white p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${
         active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
       }`}
     >
