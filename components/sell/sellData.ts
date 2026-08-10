@@ -1,11 +1,11 @@
 export const sellCategories = [
-  { id: "auto", label: "Авто" },
+  { id: "auto", label: "Транспорт" },
   { id: "real-estate", label: "Недвижимость" },
   { id: "electronics", label: "Электроника" },
-  { id: "fashion", label: "Одежда и аксессуары" },
+  { id: "fashion", label: "Одежда, обувь и аксессуары" },
   { id: "jobs", label: "Работа и подработка" },
   { id: "services", label: "Услуги" },
-  { id: "parts", label: "Запчасти" },
+  { id: "parts", label: "Все для авто" },
   { id: "home", label: "Для дома" },
   { id: "business", label: "Для бизнеса" }
 ];
