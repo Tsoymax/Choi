@@ -75,6 +75,114 @@ function optionsFor(field?: ListingAttributeField, values?: Record<string, strin
   return field?.getOptions?.(values ?? {}) ?? field?.options ?? [];
 }
 
+const autoFilterFieldsBySubcategory: Record<string, string[]> = {
+  "electric-cars": [
+    "brand",
+    "model",
+    "price",
+    "mileage",
+    "year",
+    "drive",
+    "color",
+    "bargain",
+    "exchange"
+  ],
+  motorcycles: [
+    "brand",
+    "model",
+    "fuel",
+    "transmission",
+    "price",
+    "mileage",
+    "year",
+    "engine",
+    "color",
+    "bargain",
+    "exchange"
+  ],
+  trucks: [
+    "brand",
+    "model",
+    "fuel",
+    "transmission",
+    "price",
+    "mileage",
+    "year",
+    "engine",
+    "color",
+    "bargain",
+    "exchange"
+  ],
+  buses: [
+    "brand",
+    "model",
+    "fuel",
+    "transmission",
+    "price",
+    "mileage",
+    "year",
+    "engine",
+    "color",
+    "bargain",
+    "exchange"
+  ],
+  trailers: ["brand", "model", "price", "year", "color", "bargain", "exchange"],
+  "car-rental": [
+    "brand",
+    "model",
+    "fuel",
+    "transmission",
+    "price",
+    "year",
+    "color",
+    "bargain"
+  ]
+};
+
+function getAutoSubcategoryId(value: string) {
+  const normalizedValue = value.trim().toLowerCase();
+  if (!normalizedValue) {
+    return "";
+  }
+
+  return (
+    getSubcategories("auto").find(
+      (subcategory) =>
+        subcategory.id.toLowerCase() === normalizedValue ||
+        subcategory.label.toLowerCase() === normalizedValue
+    )?.id ?? ""
+  );
+}
+
+function shouldShowAutoFilter(subcategory: string, field: string) {
+  const subcategoryId = getAutoSubcategoryId(subcategory);
+  const allowedFields = subcategoryId ? autoFilterFieldsBySubcategory[subcategoryId] : undefined;
+  return !allowedFields || allowedFields.includes(field);
+}
+
+const autoFilterResetByField: Record<string, Partial<SearchFiltersState>> = {
+  brand: { brand: "", model: "" },
+  model: { model: "" },
+  fuel: { fuel: "" },
+  transmission: { transmission: "" },
+  price: { minPrice: "", maxPrice: "" },
+  mileage: { mileageFrom: "", mileageTo: "" },
+  year: { yearFrom: "", yearTo: "" },
+  engine: { engine: "", engineFrom: "", engineTo: "" },
+  drive: { drive: "" },
+  color: { color: "" },
+  bargain: { onlyBargain: false },
+  exchange: { exchange: "" }
+};
+
+function getAutoSubcategoryPatch(subcategory: string): Partial<SearchFiltersState> {
+  return Object.entries(autoFilterResetByField).reduce<Partial<SearchFiltersState>>(
+    (patch, [field, reset]) =>
+      shouldShowAutoFilter(subcategory, field) ? patch : { ...patch, ...reset },
+    { subcategory }
+  );
+}
+
 function ChipSelect({
   label,
   value,
@@ -479,10 +587,8 @@ function AutoCompactFilters({
   }, []);
 
   const modelOptions = optionsFor(fieldByKey.get("model"), { brand: filters.brand });
-  const subcategoryOptions = getSubcategories(filters.category).map((subcategory) => ({
-    value: subcategory.label,
-    label: subcategory.label
-  }));
+  const showFilter = (field: string) => shouldShowAutoFilter(filters.subcategory, field);
+  const selectedSubcategoryLabel = filters.subcategory || "Все подкатегории";
 
   return (
     <div className="mt-3 rounded-[24px] border border-ink/8 bg-[#f1f3f2] p-4 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-5">
@@ -497,7 +603,12 @@ function AutoCompactFilters({
         </button>
       </div>
 
-      <h2 className="mb-4 text-2xl font-semibold text-ink">Фильтры</h2>
+      <div className="mb-4">
+        <h2 className="text-2xl font-semibold text-ink">Фильтры</h2>
+        <p className="mt-1 text-sm font-medium text-ink/55">
+          {selectedSubcategoryLabel}
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <CompactSelectControl
@@ -509,106 +620,124 @@ function AutoCompactFilters({
           }))}
           onChange={(category) => onChange({ category })}
         />
-        <CompactSelectControl
-          label="Подкатегория"
-          value={filters.subcategory}
-          options={subcategoryOptions}
-          onChange={(subcategory) => onChange({ subcategory })}
-        />
-        <CompactSelectControl
-          label="Марка"
-          value={filters.brand}
-          options={optionsFor(fieldByKey.get("brand"))}
-          onChange={(brand) => onChange({ brand, model: "" })}
-        />
-        <CompactSelectControl
-          label="Модель"
-          value={filters.model}
-          options={modelOptions}
-          placeholder={filters.brand ? "Выберите" : "Сначала марка"}
-          onChange={(model) => onChange({ model })}
-        />
-        <CompactSelectControl
-          label="Вид топлива"
-          value={filters.fuel}
-          options={optionsFor(fieldByKey.get("fuel"))}
-          onChange={(fuel) => onChange({ fuel })}
-        />
-        <CompactSelectControl
-          label="Коробка передач"
-          value={filters.transmission}
-          options={optionsFor(fieldByKey.get("transmission"))}
-          onChange={(transmission) => onChange({ transmission })}
-        />
-        <SliderRangeControl
-          label="Цена"
-          from={filters.minPrice}
-          to={filters.maxPrice}
-          min={0}
-          max={1000000000}
-          step={1000000}
-          unit={filters.currency === "usd" ? "$" : "сум"}
-          onFrom={(minPrice) => onChange({ minPrice })}
-          onTo={(maxPrice) => onChange({ maxPrice })}
-        />
-        <SliderRangeControl
-          label="Пробег"
-          from={filters.mileageFrom}
-          to={filters.mileageTo}
-          min={0}
-          max={3000000}
-          step={5000}
-          unit="км"
-          onFrom={(mileageFrom) => onChange({ mileageFrom })}
-          onTo={(mileageTo) => onChange({ mileageTo })}
-        />
-        <SliderRangeControl
-          label="Год выпуска"
-          from={filters.yearFrom}
-          to={filters.yearTo}
-          min={1900}
-          max={2027}
-          step={1}
-          onFrom={(yearFrom) => onChange({ yearFrom })}
-          onTo={(yearTo) => onChange({ yearTo })}
-        />
-        <SliderRangeControl
-          label="Объем двигателя"
-          from={filters.engineFrom}
-          to={filters.engineTo}
-          min={0}
-          max={6}
-          step={0.1}
-          unit="л"
-          onFrom={(engineFrom) => onChange({ engineFrom })}
-          onTo={(engineTo) => onChange({ engineTo })}
-        />
-        <CompactSelectControl
-          label="Привод"
-          value={filters.drive}
-          options={optionsFor(fieldByKey.get("drive"))}
-          onChange={(drive) => onChange({ drive })}
-        />
-        <CompactSelectControl
-          label="Цвет"
-          value={filters.color}
-          options={optionsFor(fieldByKey.get("color"))}
-          onChange={(color) => onChange({ color })}
-        />
-        <div className="pt-[26px]">
-          <ToggleControl
-            label="Торг"
-            checked={filters.onlyBargain}
-            onChange={(onlyBargain) => onChange({ onlyBargain })}
+        {showFilter("brand") ? (
+          <CompactSelectControl
+            label="Марка"
+            value={filters.brand}
+            options={optionsFor(fieldByKey.get("brand"))}
+            onChange={(brand) => onChange({ brand, model: "" })}
           />
-        </div>
-        <div className="pt-[26px]">
-          <ToggleControl
-            label="Обмен"
-            checked={filters.exchange === "yes"}
-            onChange={(exchange) => onChange({ exchange: exchange ? "yes" : "" })}
+        ) : null}
+        {showFilter("model") ? (
+          <CompactSelectControl
+            label="Модель"
+            value={filters.model}
+            options={modelOptions}
+            placeholder={filters.brand ? "Выберите" : "Сначала марка"}
+            onChange={(model) => onChange({ model })}
           />
-        </div>
+        ) : null}
+        {showFilter("fuel") ? (
+          <CompactSelectControl
+            label="Вид топлива"
+            value={filters.fuel}
+            options={optionsFor(fieldByKey.get("fuel"))}
+            onChange={(fuel) => onChange({ fuel })}
+          />
+        ) : null}
+        {showFilter("transmission") ? (
+          <CompactSelectControl
+            label="Коробка передач"
+            value={filters.transmission}
+            options={optionsFor(fieldByKey.get("transmission"))}
+            onChange={(transmission) => onChange({ transmission })}
+          />
+        ) : null}
+        {showFilter("price") ? (
+          <SliderRangeControl
+            label="Цена"
+            from={filters.minPrice}
+            to={filters.maxPrice}
+            min={0}
+            max={1000000000}
+            step={1000000}
+            unit={filters.currency === "usd" ? "$" : "сум"}
+            onFrom={(minPrice) => onChange({ minPrice })}
+            onTo={(maxPrice) => onChange({ maxPrice })}
+          />
+        ) : null}
+        {showFilter("mileage") ? (
+          <SliderRangeControl
+            label="Пробег"
+            from={filters.mileageFrom}
+            to={filters.mileageTo}
+            min={0}
+            max={3000000}
+            step={5000}
+            unit="км"
+            onFrom={(mileageFrom) => onChange({ mileageFrom })}
+            onTo={(mileageTo) => onChange({ mileageTo })}
+          />
+        ) : null}
+        {showFilter("year") ? (
+          <SliderRangeControl
+            label="Год выпуска"
+            from={filters.yearFrom}
+            to={filters.yearTo}
+            min={1900}
+            max={2027}
+            step={1}
+            onFrom={(yearFrom) => onChange({ yearFrom })}
+            onTo={(yearTo) => onChange({ yearTo })}
+          />
+        ) : null}
+        {showFilter("engine") ? (
+          <SliderRangeControl
+            label="Объем двигателя"
+            from={filters.engineFrom}
+            to={filters.engineTo}
+            min={0}
+            max={6}
+            step={0.1}
+            unit="л"
+            onFrom={(engineFrom) => onChange({ engineFrom })}
+            onTo={(engineTo) => onChange({ engineTo })}
+          />
+        ) : null}
+        {showFilter("drive") ? (
+          <CompactSelectControl
+            label="Привод"
+            value={filters.drive}
+            options={optionsFor(fieldByKey.get("drive"))}
+            onChange={(drive) => onChange({ drive })}
+          />
+        ) : null}
+        {showFilter("color") ? (
+          <CompactSelectControl
+            label="Цвет"
+            value={filters.color}
+            options={optionsFor(fieldByKey.get("color"))}
+            onChange={(color) => onChange({ color })}
+          />
+        ) : null}
+        {showFilter("bargain") ? (
+          <div className="pt-[26px]">
+            <ToggleControl
+              label="Торг"
+              checked={filters.onlyBargain}
+              onChange={(onlyBargain) => onChange({ onlyBargain })}
+            />
+          </div>
+        ) : null}
+        {showFilter("exchange") ? (
+          <div className="pt-[26px]">
+            <ToggleControl
+              label="Обмен"
+              checked={filters.exchange === "yes"}
+              onChange={(exchange) => onChange({ exchange: exchange ? "yes" : "" })}
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5 flex justify-end">
@@ -663,7 +792,13 @@ export function CompactSearchFilters({
             label="Подкатегория"
             value={filters.subcategory}
             options={subcategoryOptions}
-            onChange={(subcategory) => onChange({ subcategory })}
+            onChange={(subcategory) =>
+              onChange(
+                filters.category === "auto"
+                  ? getAutoSubcategoryPatch(subcategory)
+                  : { subcategory }
+              )
+            }
           />
         ) : null}
 
