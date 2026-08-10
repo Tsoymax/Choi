@@ -27,6 +27,7 @@ function FieldControl({
   const options = field.getOptions ? field.getOptions(values) : field.options;
   const isSelectDisabled = field.type === "select" && field.dependsOn && !values[field.dependsOn];
   const isDecimalNumber = field.type === "number" && (field.step ?? 1) < 1;
+  const suggestionsId = `sell-field-attribute-${field.key}-suggestions`;
 
   function normalizeValue(nextValue: string) {
     if (field.type === "number") {
@@ -92,6 +93,30 @@ function FieldControl({
             </option>
           ))}
         </select>
+      ) : field.type === "number" && field.suggestions ? (
+        <div className="relative mt-2">
+          <input
+            type="text"
+            inputMode={isDecimalNumber ? "decimal" : "numeric"}
+            list={suggestionsId}
+            value={value}
+            onChange={(event) => onChange(normalizeValue(event.target.value))}
+            className="focus-ring h-14 w-full rounded-2xl border border-ink/10 bg-white px-4 pr-14 text-base font-medium text-ink shadow-sm placeholder:text-ink/38"
+            placeholder={field.placeholder ?? "Выберите"}
+          />
+          <datalist id={suggestionsId}>
+            {field.suggestions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </datalist>
+          {field.unit ? (
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-ink/45">
+              {field.unit}
+            </span>
+          ) : null}
+        </div>
       ) : field.type === "number" ? (
         <div className="mt-2 grid grid-cols-[48px_minmax(0,1fr)_48px] overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm focus-within:ring-2 focus-within:ring-leaf/45">
           <button

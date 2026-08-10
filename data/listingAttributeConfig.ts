@@ -15,6 +15,7 @@ export type ListingAttributeField = {
   step?: number;
   maxLength?: number;
   options?: ListingAttributeOption[];
+  suggestions?: ListingAttributeOption[];
   dependsOn?: string;
   getOptions?: (values: Record<string, string>) => ListingAttributeOption[];
 };
@@ -40,6 +41,47 @@ const carMonthOptions = Array.from({ length: 12 }, (_, index) => {
   const month = String(index + 1).padStart(2, "0");
   return { value: month, label: month };
 });
+
+const carYearSuggestions = Array.from({ length: 128 }, (_, index) => {
+  const year = String(2027 - index);
+  return { value: year, label: year };
+});
+
+const carMileageSuggestions = [
+  "0",
+  "5000",
+  "10000",
+  "20000",
+  "30000",
+  "50000",
+  "80000",
+  "100000",
+  "150000",
+  "200000",
+  "300000",
+  "500000",
+  "800000"
+];
+
+const carEngineSuggestions = [
+  "0.8",
+  "1.0",
+  "1.2",
+  "1.4",
+  "1.5",
+  "1.6",
+  "1.8",
+  "2.0",
+  "2.2",
+  "2.4",
+  "2.5",
+  "3.0",
+  "3.5",
+  "4.0",
+  "4.5",
+  "5.0",
+  "6.0"
+];
 
 const carBrands = [
   "Chevrolet",
@@ -260,9 +302,9 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           dependsOn: "brand",
           getOptions: getCarModelOptions
         },
-        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1950, max: 2026, step: 1, maxLength: 4 },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
         { key: "month", label: "Месяц выпуска", type: "select", required: true, options: carMonthOptions },
-        { key: "mileage", label: "Пробег", type: "number", required: true, unit: "км", placeholder: "Выберите", min: 0, max: 999999, step: 1000, maxLength: 6 },
+        { key: "mileage", label: "Пробег", type: "number", required: true, unit: "км", placeholder: "Выберите", min: 0, max: 3000000, step: 1000, maxLength: 7, suggestions: toOptions(carMileageSuggestions) },
         {
           key: "fuel",
           label: "Тип топлива",
@@ -289,7 +331,7 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
           type: "select",
           options: toOptions(["Передний", "Задний", "Полный"])
         },
-        { key: "engine", label: "Объем двигателя", type: "number", placeholder: "Выберите", min: 0, max: 9.9, step: 0.1, maxLength: 4 },
+        { key: "engine", label: "Объем двигателя", type: "number", placeholder: "Выберите", min: 0, max: 6, step: 0.1, maxLength: 4, suggestions: toOptions(carEngineSuggestions) },
         { key: "color", label: "Цвет", type: "select", options: carColorOptions },
         { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
         { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
