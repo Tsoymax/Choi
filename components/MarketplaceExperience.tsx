@@ -178,11 +178,14 @@ export function MarketplaceExperience({
       });
   }, [activeCategory, allProducts, currentLocation, homeDistrict, query, radius]);
 
-  function openCategorySearch(categoryId: string) {
+  function openCategorySearch(categoryId: string, subcategory?: string) {
     const params = new URLSearchParams();
     const category = sellCategories.find((item) => item.id === categoryId);
     if (category) {
       params.set("category", category.id);
+    }
+    if (subcategory?.trim()) {
+      params.set("subcategory", subcategory.trim());
     }
     params.set("district", homeDistrict);
     params.set("distanceRadius", radius);

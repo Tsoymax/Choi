@@ -1,13 +1,17 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { Category } from "./types";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
+import { getSubcategories } from "@/components/sell/sellData";
 
 type CategoryGridProps = {
   categories: Category[];
   activeCategory: string;
   language: Language;
-  onCategoryChange: (categoryId: string) => void;
+  onCategoryChange: (categoryId: string, subcategory?: string) => void;
 };
 
 const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: string; descriptionUz: string }> = {
@@ -86,6 +90,25 @@ export function CategoryGrid({
   onCategoryChange
 }: CategoryGridProps) {
   const t = translations[language];
+  const [expandedCategory, setExpandedCategory] = useState("");
+  const expandedCategoryCopy = categoryCopy[expandedCategory];
+  const expandedCategoryLabel =
+    language === "uz"
+      ? expandedCategoryCopy?.uz
+      : expandedCategoryCopy?.ru;
+  const subcategories = useMemo(
+    () => getSubcategories(expandedCategory),
+    [expandedCategory]
+  );
+
+  function handleCategoryClick(categoryId: string) {
+    setExpandedCategory((current) => (current === categoryId ? "" : categoryId));
+  }
+
+  function handleAllCategoriesClick() {
+    setExpandedCategory("");
+    onCategoryChange("all");
+  }
 
   return (
     <section id="categories" className="mx-auto max-w-[1504px] px-4 py-5 sm:px-6 lg:px-8">
@@ -98,9 +121,9 @@ export function CategoryGrid({
         </div>
         <button
           type="button"
-          onClick={() => onCategoryChange("all")}
+          onClick={handleAllCategoriesClick}
           className={`focus-ring h-11 shrink-0 rounded-full px-5 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 ${
-            activeCategory === "all"
+            activeCategory === "all" && !expandedCategory
               ? "bg-leaf text-white"
               : "border border-ink/10 bg-white text-ink hover:border-leaf/30"
           }`}
@@ -115,12 +138,41 @@ export function CategoryGrid({
             key={category.id}
             category={category}
             index={index}
-            active={activeCategory === category.id}
+            active={activeCategory === category.id || expandedCategory === category.id}
             language={language}
-            onClick={() => onCategoryChange(category.id)}
+            onClick={() => handleCategoryClick(category.id)}
           />
         ))}
       </div>
+
+      {expandedCategory && subcategories.length > 0 ? (
+        <div className="mt-4 rounded-[24px] border border-ink/8 bg-white p-4 shadow-[0_12px_34px_rgba(24,32,29,0.07)] sm:p-5">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-leaf">
+                Подкатегории
+              </p>
+              <h3 className="mt-1 text-xl font-semibold text-ink">
+                {expandedCategoryLabel ?? "Выберите раздел"}
+              </h3>
+            </div>
+            <p className="text-sm text-ink/55">Выберите уточнение для поиска рядом</p>
+          </div>
+
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+            {subcategories.map((subcategory) => (
+              <button
+                key={subcategory.id}
+                type="button"
+                onClick={() => onCategoryChange(expandedCategory, subcategory.label)}
+                className="focus-ring shrink-0 rounded-full border border-ink/10 bg-mist px-4 py-2 text-sm font-semibold text-ink transition hover:-translate-y-0.5 hover:border-leaf/25 hover:bg-leaf hover:text-white"
+              >
+                {subcategory.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
