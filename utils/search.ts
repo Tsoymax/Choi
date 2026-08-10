@@ -1,6 +1,10 @@
 import type { Listing } from "@/utils/listings";
 import { getCategoryLabel, getDistrictLabel } from "@/utils/listings";
-import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
+import {
+  getSubcategoryLabel,
+  sellCategories,
+  tashkentDistricts
+} from "@/components/sell/sellData";
 import type { Coordinates, DistanceRadius } from "@/lib/location/distance";
 import { getListingDistance, isInsideRadius } from "@/lib/location/distance";
 import { getLocationForDistrict } from "@/lib/location/currentLocation";
@@ -263,6 +267,7 @@ function isNewListing(listing: Listing) {
 function matchesDynamicFilters(listing: Listing, filters: SearchFiltersState) {
   if (filters.subcategory) {
     const subcategoryKeys = [
+      "subcategory",
       "service_category",
       "home_category",
       "business_category",
@@ -467,7 +472,7 @@ export function getActiveFilterChips(filters: SearchFiltersState) {
         normalize(category.label) === normalize(filters.category)
     )?.label ?? filters.category
   );
-  add("subcategory", filters.subcategory);
+  add("subcategory", getSubcategoryLabel(filters.category, filters.subcategory));
   add("district", getDistrictLabel(filters.district));
   add("minPrice", `от ${filters.minPrice}`);
   add("maxPrice", `до ${filters.maxPrice}`);

@@ -2,7 +2,11 @@
 
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
-import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
+import {
+  getSubcategories,
+  sellCategories,
+  tashkentDistricts
+} from "@/components/sell/sellData";
 import {
   getAttributeGroups,
   type ListingAttributeField
@@ -475,6 +479,10 @@ function AutoCompactFilters({
   }, []);
 
   const modelOptions = optionsFor(fieldByKey.get("model"), { brand: filters.brand });
+  const subcategoryOptions = getSubcategories(filters.category).map((subcategory) => ({
+    value: subcategory.label,
+    label: subcategory.label
+  }));
 
   return (
     <div className="mt-3 rounded-[24px] border border-ink/8 bg-[#f1f3f2] p-4 shadow-[0_18px_60px_rgba(24,32,29,0.08)] sm:p-5">
@@ -500,6 +508,12 @@ function AutoCompactFilters({
             label: category.label
           }))}
           onChange={(category) => onChange({ category })}
+        />
+        <CompactSelectControl
+          label="Подкатегория"
+          value={filters.subcategory}
+          options={subcategoryOptions}
+          onChange={(subcategory) => onChange({ subcategory })}
         />
         <CompactSelectControl
           label="Марка"
@@ -617,6 +631,10 @@ export function CompactSearchFilters({
 }: CompactSearchFiltersProps) {
   const [open, setOpen] = useState(false);
   const hasFilters = hasExtraFilters(filters);
+  const subcategoryOptions = getSubcategories(filters.category).map((subcategory) => ({
+    value: subcategory.label,
+    label: subcategory.label
+  }));
 
   return (
     <div className="mb-6">
@@ -639,6 +657,15 @@ export function CompactSearchFilters({
           }))}
           onChange={(category) => onChange({ category })}
         />
+
+        {filters.category && subcategoryOptions.length > 0 ? (
+          <ChipSelect
+            label="Подкатегория"
+            value={filters.subcategory}
+            options={subcategoryOptions}
+            onChange={(subcategory) => onChange({ subcategory })}
+          />
+        ) : null}
 
         <ChipSelect
           label="Район"

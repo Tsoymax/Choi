@@ -3,6 +3,7 @@ import {
   getAttributeField,
   getAttributeGroups
 } from "@/data/listingAttributeConfig";
+import { getSubcategoryLabel } from "@/components/sell/sellData";
 
 type ListingAttributesSectionProps = {
   category: string;
@@ -23,12 +24,31 @@ export function ListingAttributesSection({
 
   const groups = getAttributeGroups(category);
   const knownKeys = new Set(groups.flatMap((group) => group.fields.map((field) => field.key)));
-  const unknownAttributes = filledAttributes.filter(([key]) => !knownKeys.has(key));
+  const subcategory = getSubcategoryLabel(category, attributes.subcategory);
+  const unknownAttributes = filledAttributes.filter(
+    ([key]) => !knownKeys.has(key) && key !== "subcategory"
+  );
 
   return (
     <section className="overflow-hidden rounded-[24px] bg-white p-6 shadow-[0_18px_60px_rgba(24,32,29,0.08)]">
       <h2 className="text-2xl font-semibold text-ink">Характеристики</h2>
       <div className="mt-5 space-y-6">
+        {subcategory ? (
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-leaf">
+              Раздел
+            </h3>
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="min-w-0 rounded-2xl border border-ink/8 bg-mist/45 p-4">
+                <dt className="text-sm font-medium text-ink/52">Подкатегория</dt>
+                <dd className="mt-1 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
+                  {subcategory}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        ) : null}
+
         {groups.map((group) => {
           const groupAttributes = group.fields
             .map((field) => ({

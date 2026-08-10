@@ -1,4 +1,8 @@
-import { sellCategories, tashkentDistricts } from "@/components/sell/sellData";
+import {
+  getSubcategories,
+  sellCategories,
+  tashkentDistricts
+} from "@/components/sell/sellData";
 import type { SearchFiltersState } from "@/utils/search";
 import { distanceRadiusOptions } from "@/lib/location/distance";
 import { getAttributeGroups, type ListingAttributeField } from "@/data/listingAttributeConfig";
@@ -13,6 +17,10 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
   const dynamicFields = getAttributeGroups(filters.category).flatMap((group) => group.fields);
   const fieldByKey = new Map(dynamicFields.map((field) => [field.key, field]));
   const carModelOptions = fieldByKey.get("model")?.getOptions?.({ brand: filters.brand }) ?? fieldByKey.get("model")?.options ?? [];
+  const subcategoryOptions = getSubcategories(filters.category).map((subcategory) => ({
+    value: subcategory.label,
+    label: subcategory.label
+  }));
 
   function selectField(
     label: string,
@@ -91,15 +99,14 @@ export function SearchFiltersFields({ filters, onChange }: Omit<SearchFiltersPro
         </select>
       </label>
 
-      <label className="block">
-        <span className="text-sm font-semibold text-ink">Подкатегория</span>
-        <input
-          value={filters.subcategory}
-          onChange={(event) => onChange({ subcategory: event.target.value })}
-          placeholder="Например, ремонт, мебель, запчасть"
-          className="focus-ring mt-2 h-12 w-full rounded-2xl border border-ink/10 bg-white px-4 text-sm font-semibold text-ink shadow-sm"
-        />
-      </label>
+      {filters.category && subcategoryOptions.length > 0
+        ? selectField(
+            "Подкатегория",
+            filters.subcategory,
+            "subcategory",
+            subcategoryOptions
+          )
+        : null}
 
       <label className="block">
         <span className="text-sm font-semibold text-ink">Район</span>

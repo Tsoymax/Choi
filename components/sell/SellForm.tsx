@@ -36,11 +36,18 @@ import { ListingAttributesFields } from "./ListingAttributesFields";
 import { LocationSelect } from "./LocationSelect";
 import { PhotoUploader, type UploadPhoto } from "./PhotoUploader";
 import { PriceField } from "./PriceField";
-import { sellCategories } from "./sellData";
+import { getSubcategories, sellCategories } from "./sellData";
+import { SubcategorySelect } from "./SubcategorySelect";
 
 type FormErrors = Partial<
   Record<
-    "photos" | "category" | "description" | "price" | "district" | "profile",
+    | "photos"
+    | "category"
+    | "subcategory"
+    | "description"
+    | "price"
+    | "district"
+    | "profile",
     string
   >
 >;
@@ -75,6 +82,7 @@ type SellFormProps = {
 const fieldScrollIds: Record<keyof FormErrors, string> = {
   photos: "sell-field-photos",
   category: "sell-field-category",
+  subcategory: "sell-field-subcategory",
   description: "sell-field-description",
   price: "sell-field-price",
   district: "sell-field-district",
@@ -132,6 +140,7 @@ function getEffectiveListingTitle(
     "home_category",
     "business_category",
     "service_category",
+    "subcategory",
     "company",
     "material",
     "condition",
@@ -179,6 +188,7 @@ export function SellForm({
   const [profileLoadError] = useState(profileError);
   const photosRef = useRef<UploadPhoto[]>([]);
   const initialPhotoIdsRef = useRef(initialListing?.images.map((image) => image.id) ?? []);
+  const subcategories = useMemo(() => getSubcategories(category), [category]);
 
   const mainPhoto = useMemo(
     () => photos.find((photo) => photo.id === mainPhotoId) ?? photos[0],
@@ -343,6 +353,7 @@ export function SellForm({
       const fieldOrder = [
         "photos",
         "category",
+        "subcategory",
         "price",
         "description",
         "district",
@@ -387,6 +398,9 @@ export function SellForm({
     }
     if (!category) {
       nextErrors.category = "Выберите категорию.";
+    }
+    if (category && subcategories.length > 0 && !attributes.subcategory?.trim()) {
+      nextErrors.subcategory = "Выберите подкатегорию.";
     }
     if (!description.trim()) {
       nextErrors.description = "Добавьте описание.";
@@ -651,7 +665,22 @@ export function SellForm({
               setAttributes({});
               setAttributeErrors({});
               markDirty();
-              setErrors((current) => ({ ...current, category: undefined }));
+              setErrors((current) => ({
+                ...current,
+                category: undefined,
+                subcategory: undefined
+              }));
+            }}
+          />
+
+          <SubcategorySelect
+            category={category}
+            value={attributes.subcategory ?? ""}
+            error={errors.subcategory}
+            onChange={(value) => {
+              setAttributes((current) => ({ ...current, subcategory: value }));
+              markDirty();
+              setErrors((current) => ({ ...current, subcategory: undefined }));
             }}
           />
 
