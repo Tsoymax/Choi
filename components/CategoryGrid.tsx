@@ -16,8 +16,8 @@ type CategoryGridProps = {
 
 const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: string; descriptionUz: string }> = {
   auto: {
-    ru: "Авто",
-    uz: "Avto",
+    ru: "Транспорт",
+    uz: "Transport",
     descriptionRu: "Машины рядом",
     descriptionUz: "Yaqindagi mashinalar"
   },
@@ -34,8 +34,8 @@ const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: stri
     descriptionUz: "Telefon va texnika"
   },
   fashion: {
-    ru: "Одежда и аксессуары",
-    uz: "Kiyim va aksessuarlar",
+    ru: "Одежда, обувь и аксессуары",
+    uz: "Kiyim, poyabzal va aksessuarlar",
     descriptionRu: "Одежда, обувь, сумки",
     descriptionUz: "Kiyim, poyabzal, sumkalar"
   },
@@ -52,8 +52,8 @@ const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: stri
     descriptionUz: "Ustalar va yordam"
   },
   parts: {
-    ru: "Запчасти",
-    uz: "Ehtiyot qismlar",
+    ru: "Все для авто",
+    uz: "Avto uchun hammasi",
     descriptionRu: "Для авто и ремонта",
     descriptionUz: "Avto qismlari"
   },
@@ -217,7 +217,7 @@ function CategoryCard({
   language,
   onClick
 }: CategoryCardProps) {
-  const { label, description } = getCategoryDisplay(category, language);
+  const { label } = getCategoryDisplay(category, language);
 
   return (
     <button
@@ -230,11 +230,8 @@ function CategoryCard({
       <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-leaf opacity-0 transition group-hover:opacity-100">
         <ArrowUpRight size={16} />
       </span>
-      <span className="relative z-10 block max-w-[72%] text-base font-semibold leading-tight text-ink sm:text-lg">
+      <span className="relative z-10 block max-w-[74%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
         {label}
-      </span>
-      <span className="relative z-10 mt-2 block max-w-[68%] text-xs font-medium leading-5 text-ink/54 sm:text-sm">
-        {description}
       </span>
       <span className="absolute -bottom-4 -right-5 h-[112px] w-[132px] transition duration-300 group-hover:scale-105 sm:-bottom-5 sm:-right-4 sm:h-[138px] sm:w-[160px]">
         <span

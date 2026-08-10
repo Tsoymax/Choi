@@ -2,8 +2,8 @@
   {
     "id": "auto",
     "label": "Auto",
-    "labelRu": "Авто",
-    "labelUz": "Avto",
+    "labelRu": "Транспорт",
+    "labelUz": "Transport",
     "description": "Cars and transport",
     "descriptionRu": "Автомобили рядом",
     "descriptionUz": "Yaqindagi avtomobillar"
@@ -29,8 +29,8 @@
   {
     "id": "fashion",
     "label": "Fashion",
-    "labelRu": "Одежда и аксессуары",
-    "labelUz": "Kiyim va aksessuarlar",
+    "labelRu": "Одежда, обувь и аксессуары",
+    "labelUz": "Kiyim, poyabzal va aksessuarlar",
     "description": "Clothes and style",
     "descriptionRu": "Одежда, обувь, сумки",
     "descriptionUz": "Kiyim, poyabzal, sumka"
@@ -56,8 +56,8 @@
   {
     "id": "parts",
     "label": "Parts",
-    "labelRu": "Запчасти",
-    "labelUz": "Ehtiyot qismlar",
+    "labelRu": "Все для авто",
+    "labelUz": "Avto uchun hammasi",
     "description": "Auto parts",
     "descriptionRu": "Запчасти для авто",
     "descriptionUz": "Avto ehtiyot qismlari"
