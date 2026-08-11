@@ -223,22 +223,21 @@ function CategoryCard({
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative min-h-[138px] w-full overflow-hidden rounded-[24px] border bg-[linear-gradient(135deg,#ffffff_0%,#ffffff_58%,#f1f7f2_100%)] p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${
+      className={`focus-ring group relative min-h-[138px] w-full overflow-hidden rounded-[24px] border bg-white p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${
         active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
       }`}
     >
-      <span className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-leaf/7 blur-2xl transition duration-300 group-hover:bg-leaf/11" />
+      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#ffffff_0%,#ffffff_48%,rgba(241,247,242,0.58)_100%)]" />
+      <span className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-leaf/7 blur-2xl transition duration-300 group-hover:bg-leaf/11" />
       <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-leaf opacity-0 transition group-hover:opacity-100">
         <ArrowUpRight size={16} />
       </span>
-      <span className="relative z-10 block max-w-[74%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
+      <span className="relative z-10 block max-w-[58%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
         {label}
       </span>
-      <span className="absolute -bottom-2 -right-3 h-[112px] w-[150px] overflow-hidden rounded-[30px] bg-[radial-gradient(circle_at_58%_42%,rgba(255,255,255,0.94),rgba(239,247,240,0.72)_58%,rgba(218,234,220,0.54)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_16px_28px_rgba(24,32,29,0.08)] transition duration-300 group-hover:scale-[1.03] sm:-bottom-2 sm:-right-2 sm:h-[136px] sm:w-[178px]">
-        <span className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-white/75 blur-2xl" />
-        <span className="pointer-events-none absolute inset-x-5 bottom-2 h-4 rounded-full bg-ink/7 blur-md" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 w-[58%] overflow-hidden rounded-r-[24px] opacity-95 [mask-image:linear-gradient(90deg,transparent_0%,#000_28%)] [-webkit-mask-image:linear-gradient(90deg,transparent_0%,#000_28%)]">
         <span
-          className="absolute inset-0 block scale-[1.04] bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat mix-blend-multiply drop-shadow-[0_14px_22px_rgba(24,32,29,0.12)] transition duration-300"
+          className="absolute inset-0 block scale-[1.12] bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat drop-shadow-[0_16px_24px_rgba(24,32,29,0.1)] transition duration-300 group-hover:scale-[1.17]"
           style={{ backgroundPosition: spritePositions[index] ?? "50% 50%" }}
           aria-hidden="true"
         />
