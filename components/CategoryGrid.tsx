@@ -224,19 +224,20 @@ function CategoryCard({
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative min-h-[138px] w-full overflow-hidden rounded-[24px] border bg-white p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${
+      className={`focus-ring group relative min-h-[142px] w-full overflow-hidden rounded-[24px] border bg-white p-5 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[168px] sm:p-6 ${
         active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_58%,rgba(241,247,242,0.96)_0%,rgba(241,247,242,0.78)_29%,rgba(255,255,255,0)_58%)]" />
-      <span className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-leaf/6 blur-2xl transition duration-300 group-hover:bg-leaf/10" />
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_83%_58%,rgba(238,246,240,0.88)_0%,rgba(248,251,248,0.58)_38%,rgba(255,255,255,0)_68%)]" />
+      <span className="pointer-events-none absolute -right-10 -bottom-12 h-48 w-48 rounded-full bg-leaf/7 blur-2xl transition duration-300 group-hover:bg-leaf/11" />
       <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-leaf opacity-0 transition group-hover:opacity-100">
         <ArrowUpRight size={16} />
       </span>
-      <span className="relative z-10 block max-w-[57%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
-        {label}
+      <span className="relative z-10 flex min-h-[96px] max-w-[52%] items-center text-[22px] font-semibold leading-[1.16] text-ink sm:max-w-[50%] sm:text-[24px]">
+        <span className="block text-balance">{label}</span>
       </span>
-      <span className="pointer-events-none absolute inset-y-2 right-1 flex w-[56%] items-center justify-end overflow-hidden rounded-r-[22px] pr-1 sm:inset-y-3 sm:right-2 sm:w-[55%] sm:pr-0">
+      <span className="pointer-events-none absolute inset-y-2 right-2 flex w-[55%] items-center justify-end overflow-hidden rounded-r-[22px] sm:inset-y-3 sm:right-3 sm:w-[54%]">
+        <span className="absolute bottom-2 right-0 h-[78%] w-[88%] rounded-[30px] bg-[radial-gradient(ellipse_at_center,rgba(241,247,242,0.92)_0%,rgba(255,255,255,0.72)_46%,rgba(255,255,255,0)_74%)]" />
         <Image
           src={categoryImagePaths[index] ?? categoryImagePaths[0]}
           alt=""
@@ -244,7 +245,13 @@ function CategoryCard({
           height={420}
           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 26vw, 18vw"
           aria-hidden="true"
-          className="h-[96%] w-full object-contain object-right-bottom drop-shadow-[0_16px_24px_rgba(24,32,29,0.10)] transition duration-300 group-hover:scale-[1.04]"
+          className="relative z-10 h-[96%] w-full object-contain object-right-bottom mix-blend-multiply drop-shadow-[0_18px_24px_rgba(24,32,29,0.10)] contrast-[1.02] transition duration-300 group-hover:scale-[1.045]"
+          style={{
+            WebkitMaskImage:
+              "radial-gradient(ellipse at 68% 55%, #000 0%, #000 54%, rgba(0,0,0,0.86) 64%, transparent 86%)",
+            maskImage:
+              "radial-gradient(ellipse at 68% 55%, #000 0%, #000 54%, rgba(0,0,0,0.86) 64%, transparent 86%)"
+          }}
         />
       </span>
     </button>
