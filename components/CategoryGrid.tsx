@@ -224,28 +224,32 @@ function CategoryCard({
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative min-h-[142px] w-full overflow-hidden rounded-[24px] border bg-white p-5 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[168px] sm:p-6 ${
+      className={`focus-ring group relative grid min-h-[148px] w-full grid-cols-[minmax(0,0.9fr)_minmax(116px,1fr)] items-center gap-2 overflow-hidden rounded-[24px] border bg-white px-5 py-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[172px] sm:grid-cols-[minmax(0,1fr)_minmax(140px,1fr)] sm:px-6 ${
         active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_56%,rgba(238,246,240,0.8)_0%,rgba(250,252,250,0.48)_42%,rgba(255,255,255,0)_70%)]" />
-      <span className="pointer-events-none absolute -right-8 -bottom-10 h-44 w-44 rounded-full bg-leaf/8 blur-2xl transition duration-300 group-hover:bg-leaf/12" />
-      <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-leaf opacity-0 transition group-hover:opacity-100">
+      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.98)_40%,rgba(238,246,240,0.62)_100%)]" />
+      <span className="pointer-events-none absolute -right-10 -bottom-10 h-44 w-44 rounded-full bg-leaf/10 blur-2xl transition duration-300 group-hover:bg-leaf/14" />
+      <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-leaf opacity-0 shadow-sm transition group-hover:opacity-100">
         <ArrowUpRight size={16} />
       </span>
-      <span className="relative z-10 flex min-h-[96px] max-w-[50%] items-center text-[21px] font-semibold leading-[1.14] tracking-[-0.01em] text-ink sm:text-[23px]">
-        <span className="block text-balance">{label}</span>
+
+      <span className="relative z-10 flex min-w-0 items-center">
+        <span className="block max-w-[12rem] text-balance break-words text-[21px] font-semibold leading-[1.12] tracking-normal text-ink sm:text-[23px]">
+          {label}
+        </span>
       </span>
-      <span className="pointer-events-none absolute inset-y-3 right-4 flex w-[50%] items-center justify-end sm:inset-y-4 sm:right-5">
-        <span className="absolute bottom-0 right-0 h-[76%] w-[86%] rounded-full bg-mist/70 blur-xl transition duration-300 group-hover:bg-mist" />
+
+      <span className="relative z-10 flex h-[118px] min-w-0 items-center justify-end sm:h-[138px]">
+        <span className="absolute bottom-1 right-0 h-[72%] w-[88%] rounded-full bg-mist/80 blur-xl transition duration-300 group-hover:bg-mist" />
         <Image
           src={categoryImagePaths[index] ?? categoryImagePaths[0]}
           alt=""
-          width={420}
-          height={420}
-          sizes="(max-width: 640px) 48vw, (max-width: 1024px) 26vw, 18vw"
+          width={720}
+          height={560}
+          sizes="(max-width: 640px) 42vw, (max-width: 1024px) 24vw, 16vw"
           aria-hidden="true"
-          className="relative z-10 h-[96%] w-full object-contain object-right-bottom drop-shadow-[0_18px_24px_rgba(24,32,29,0.12)] transition duration-300 group-hover:scale-[1.045]"
+          className="relative z-10 h-full w-full object-contain object-right-center drop-shadow-[0_18px_24px_rgba(24,32,29,0.13)] transition duration-300 group-hover:scale-[1.04]"
         />
       </span>
     </button>
