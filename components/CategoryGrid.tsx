@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import type { Category } from "./types";
 import type { Language } from "./i18n";
@@ -71,16 +72,16 @@ const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: stri
   }
 };
 
-const spritePositions = [
-  "0% 0%",
-  "50% 0%",
-  "100% 0%",
-  "0% 50%",
-  "50% 50%",
-  "100% 50%",
-  "0% 100%",
-  "50% 100%",
-  "100% 100%"
+const categoryImagePaths = [
+  "/images/categories/transport.png",
+  "/images/categories/real-estate.png",
+  "/images/categories/electronics.png",
+  "/images/categories/fashion.png",
+  "/images/categories/jobs.png",
+  "/images/categories/services.png",
+  "/images/categories/parts.png",
+  "/images/categories/home.png",
+  "/images/categories/business.png"
 ];
 
 export function CategoryGrid({
@@ -227,19 +228,23 @@ function CategoryCard({
         active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#ffffff_0%,#ffffff_48%,rgba(241,247,242,0.58)_100%)]" />
-      <span className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-leaf/7 blur-2xl transition duration-300 group-hover:bg-leaf/11" />
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_58%,rgba(241,247,242,0.96)_0%,rgba(241,247,242,0.78)_29%,rgba(255,255,255,0)_58%)]" />
+      <span className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full bg-leaf/6 blur-2xl transition duration-300 group-hover:bg-leaf/10" />
       <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-leaf opacity-0 transition group-hover:opacity-100">
         <ArrowUpRight size={16} />
       </span>
-      <span className="relative z-10 block max-w-[58%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
+      <span className="relative z-10 block max-w-[57%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
         {label}
       </span>
-      <span className="pointer-events-none absolute inset-y-0 right-0 w-[58%] overflow-hidden rounded-r-[24px] opacity-95 [mask-image:linear-gradient(90deg,transparent_0%,#000_28%)] [-webkit-mask-image:linear-gradient(90deg,transparent_0%,#000_28%)]">
-        <span
-          className="absolute inset-0 block scale-[1.12] bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat drop-shadow-[0_16px_24px_rgba(24,32,29,0.1)] transition duration-300 group-hover:scale-[1.17]"
-          style={{ backgroundPosition: spritePositions[index] ?? "50% 50%" }}
+      <span className="pointer-events-none absolute inset-y-2 right-1 flex w-[56%] items-center justify-end overflow-hidden rounded-r-[22px] pr-1 sm:inset-y-3 sm:right-2 sm:w-[55%] sm:pr-0">
+        <Image
+          src={categoryImagePaths[index] ?? categoryImagePaths[0]}
+          alt=""
+          width={420}
+          height={420}
+          sizes="(max-width: 640px) 48vw, (max-width: 1024px) 26vw, 18vw"
           aria-hidden="true"
+          className="h-[96%] w-full object-contain object-right-bottom drop-shadow-[0_16px_24px_rgba(24,32,29,0.10)] transition duration-300 group-hover:scale-[1.04]"
         />
       </span>
     </button>
