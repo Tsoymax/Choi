@@ -83,6 +83,18 @@ const spritePositions = [
   "100% 100%"
 ];
 
+const spriteTransforms = [
+  "scale-[1.3] -translate-x-8 translate-y-2",
+  "scale-[1.08] translate-x-1 translate-y-1",
+  "scale-[1.08] translate-x-1 translate-y-1",
+  "scale-[1.1] translate-x-1 translate-y-2",
+  "scale-[1.08] translate-x-1 translate-y-2",
+  "scale-[1.08] translate-x-1 translate-y-1",
+  "scale-[1.12] -translate-x-1 translate-y-1",
+  "scale-[1.1] translate-x-1 translate-y-1",
+  "scale-[1.08] translate-x-1 translate-y-1"
+];
+
 export function CategoryGrid({
   categories,
   activeCategory,
@@ -223,22 +235,28 @@ function CategoryCard({
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative min-h-[138px] w-full overflow-hidden rounded-[24px] border bg-white p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${
+      className={`focus-ring group relative min-h-[138px] w-full overflow-hidden rounded-[24px] border bg-[linear-gradient(135deg,#ffffff_0%,#ffffff_58%,#f1f7f2_100%)] p-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[164px] sm:p-5 ${
         active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
       }`}
     >
+      <span className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-leaf/7 blur-2xl transition duration-300 group-hover:bg-leaf/11" />
       <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-mist text-leaf opacity-0 transition group-hover:opacity-100">
         <ArrowUpRight size={16} />
       </span>
       <span className="relative z-10 block max-w-[74%] pt-3 text-lg font-semibold leading-tight text-ink sm:text-xl">
         {label}
       </span>
-      <span className="absolute -bottom-4 -right-5 h-[112px] w-[132px] transition duration-300 group-hover:scale-105 sm:-bottom-5 sm:-right-4 sm:h-[138px] sm:w-[160px]">
+      <span className="absolute -bottom-2 -right-3 h-[112px] w-[150px] overflow-hidden rounded-[30px] bg-[radial-gradient(circle_at_70%_36%,rgba(255,255,255,0.96),rgba(255,255,255,0.74)_42%,rgba(221,235,222,0.56)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_16px_28px_rgba(24,32,29,0.08)] transition duration-300 group-hover:scale-[1.03] sm:-bottom-2 sm:-right-2 sm:h-[136px] sm:w-[178px]">
+        <span className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-white/80 blur-2xl" />
+        <span className="pointer-events-none absolute inset-x-4 bottom-2 h-5 rounded-full bg-ink/8 blur-md" />
         <span
-          className="block h-full w-full bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat drop-shadow-[0_14px_22px_rgba(24,32,29,0.12)]"
+          className={`absolute inset-0 block bg-[url('/images/category-sprite.png')] bg-[length:300%_300%] bg-no-repeat drop-shadow-[0_14px_22px_rgba(24,32,29,0.12)] transition duration-300 ${spriteTransforms[index] ?? ""}`}
           style={{ backgroundPosition: spritePositions[index] ?? "50% 50%" }}
           aria-hidden="true"
         />
+        {index === 0 ? (
+          <span className="pointer-events-none absolute left-4 top-[52%] h-5 w-12 rounded-full bg-white/85 blur-[2px]" />
+        ) : null}
       </span>
     </button>
   );
