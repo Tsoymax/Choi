@@ -131,7 +131,7 @@ export function CategoryGrid({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-[repeat(20,minmax(0,1fr))]">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[repeat(20,minmax(0,1fr))]">
         {categories.map((category, index) => {
           const isExpanded = expandedCategory === category.id;
           const desktopSpan = index < 4 ? "lg:col-span-5" : "lg:col-span-4";
@@ -143,6 +143,7 @@ export function CategoryGrid({
                 label={categoryDisplay.label}
                 imageSrc={categoryImagePaths[index] ?? categoryImagePaths[0]}
                 active={activeCategory === category.id || isExpanded}
+                compact={index >= 4}
                 onClick={() => handleCategoryClick(category.id)}
               />
 
@@ -180,40 +181,44 @@ type CategoryTileProps = {
   label: string;
   imageSrc: string;
   active: boolean;
+  compact: boolean;
   onClick: () => void;
 };
 
-function CategoryTile({ label, imageSrc, active, onClick }: CategoryTileProps) {
+function CategoryTile({ label, imageSrc, active, compact, onClick }: CategoryTileProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative grid min-h-[156px] w-full grid-cols-[minmax(0,1fr)_132px] items-center overflow-hidden rounded-[28px] border bg-white text-left shadow-[0_14px_38px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(24,32,29,0.11)] sm:min-h-[176px] sm:grid-cols-[minmax(0,1fr)_154px] ${
+      className={`focus-ring group relative min-h-[154px] w-full overflow-hidden rounded-[24px] border bg-white text-left shadow-[0_12px_30px_rgba(24,32,29,0.065)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(24,32,29,0.105)] sm:min-h-[182px] ${
+        compact ? "lg:min-h-[150px]" : "lg:min-h-[182px]"
+      } ${
         active ? "border-leaf ring-2 ring-leaf/15" : "border-ink/8 hover:border-leaf/25"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_58%,rgba(238,246,240,0.95)_0%,rgba(255,255,255,0.88)_45%,rgba(255,255,255,1)_78%)]" />
-      <span className="pointer-events-none absolute right-7 top-1/2 h-[122px] w-[122px] -translate-y-1/2 rounded-full bg-mist/80 blur-xl transition duration-300 group-hover:scale-110 group-hover:bg-leaf/12 sm:h-[144px] sm:w-[144px]" />
+      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,#ffffff_0%,#ffffff_46%,rgba(244,249,245,0.95)_100%)]" />
+      <span className="pointer-events-none absolute bottom-0 right-0 h-[78%] w-[58%] rounded-tl-[42px] bg-gradient-to-br from-white/70 via-mist/60 to-mist/90" />
+      <span className="pointer-events-none absolute bottom-3 right-5 h-24 w-32 rounded-full bg-leaf/8 blur-2xl transition duration-300 group-hover:bg-leaf/12 sm:h-28 sm:w-40" />
 
-      <span className="relative z-10 min-w-0 px-6 py-5 sm:px-7">
-        <span className="block max-w-[13rem] text-balance break-words text-[22px] font-semibold leading-[1.12] tracking-normal text-ink sm:text-[25px]">
+      <span className="relative z-20 block min-w-0 px-4 pt-5 sm:px-5 sm:pt-6">
+        <span className="block max-w-[68%] text-balance break-words text-[18px] font-semibold leading-[1.14] tracking-normal text-ink sm:text-[20px] lg:max-w-[58%]">
           {label}
         </span>
       </span>
 
-      <span className="relative z-10 flex h-[136px] min-w-0 items-center justify-center pr-3 sm:h-[154px] sm:pr-4">
+      <span className="pointer-events-none absolute bottom-1 right-2 z-10 flex h-[96px] w-[58%] items-end justify-end sm:bottom-2 sm:right-3 sm:h-[128px] lg:right-4">
         <Image
           src={imageSrc}
           alt=""
           width={720}
           height={560}
-          sizes="(max-width: 640px) 34vw, (max-width: 1024px) 22vw, 15vw"
+          sizes="(max-width: 640px) 42vw, (max-width: 1024px) 24vw, 15vw"
           aria-hidden="true"
-          className="h-full w-full object-contain drop-shadow-[0_18px_26px_rgba(24,32,29,0.14)] transition duration-300 group-hover:scale-[1.055]"
+          className="h-full w-full object-contain object-right-bottom drop-shadow-[0_18px_24px_rgba(24,32,29,0.13)] transition duration-300 group-hover:scale-[1.055]"
         />
       </span>
 
-      <span className="pointer-events-none absolute bottom-4 left-6 flex items-center gap-1.5 text-xs font-semibold text-leaf/0 transition group-hover:text-leaf/80 sm:left-7">
+      <span className="pointer-events-none absolute bottom-4 left-4 z-20 flex items-center gap-1.5 text-xs font-semibold text-leaf/0 transition group-hover:text-leaf/80 sm:left-5">
         <span>Открыть</span>
         <ChevronDown size={14} />
       </span>
