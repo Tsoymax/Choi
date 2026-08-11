@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import type { Category } from "./types";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
@@ -15,12 +15,15 @@ type CategoryGridProps = {
   onCategoryChange: (categoryId: string, subcategory?: string) => void;
 };
 
-const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: string; descriptionUz: string }> = {
+const categoryCopy: Record<
+  string,
+  { ru: string; uz: string; descriptionRu: string; descriptionUz: string }
+> = {
   auto: {
     ru: "Транспорт",
     uz: "Transport",
-    descriptionRu: "Машины рядом",
-    descriptionUz: "Yaqindagi mashinalar"
+    descriptionRu: "Авто рядом",
+    descriptionUz: "Yaqindagi transport"
   },
   "real-estate": {
     ru: "Недвижимость",
@@ -55,8 +58,8 @@ const categoryCopy: Record<string, { ru: string; uz: string; descriptionRu: stri
   parts: {
     ru: "Все для авто",
     uz: "Avto uchun hammasi",
-    descriptionRu: "Для авто и ремонта",
-    descriptionUz: "Avto qismlari"
+    descriptionRu: "Запчасти и аксессуары",
+    descriptionUz: "Avto ehtiyot qismlari"
   },
   home: {
     ru: "Для дома",
@@ -107,11 +110,11 @@ export function CategoryGrid({
   }
 
   return (
-    <section id="categories" className="mx-auto max-w-[1504px] px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mb-4 flex items-center justify-between gap-4">
+    <section id="categories" className="mx-auto max-w-[1504px] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold tracking-normal text-ink">Категории</h2>
-          <p className="mt-1 hidden text-sm text-ink/52 sm:block">
+          <p className="mt-1 hidden text-sm text-ink/55 sm:block">
             Выберите раздел и смотрите объявления рядом
           </p>
         </div>
@@ -128,58 +131,28 @@ export function CategoryGrid({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[repeat(20,minmax(0,1fr))]">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-[repeat(20,minmax(0,1fr))]">
         {categories.map((category, index) => {
           const isExpanded = expandedCategory === category.id;
           const desktopSpan = index < 4 ? "lg:col-span-5" : "lg:col-span-4";
-          const categoryLabel = getCategoryDisplay(category, language).label;
+          const categoryDisplay = getCategoryDisplay(category, language);
 
           return (
             <div key={category.id} className={`min-w-0 ${desktopSpan}`}>
-              <CategoryCard
-                category={category}
-                index={index}
+              <CategoryTile
+                label={categoryDisplay.label}
+                imageSrc={categoryImagePaths[index] ?? categoryImagePaths[0]}
                 active={activeCategory === category.id || isExpanded}
-                language={language}
                 onClick={() => handleCategoryClick(category.id)}
               />
 
               {isExpanded && subcategories.length > 0 ? (
-                <div className="relative mt-3 overflow-hidden rounded-[24px] border border-leaf/16 bg-gradient-to-br from-white via-white to-mist/70 p-3.5 shadow-[0_14px_34px_rgba(24,32,29,0.09)] animate-in fade-in slide-in-from-top-1 duration-200 sm:p-4">
-                  <span className="absolute left-8 top-0 h-3 w-3 -translate-y-1/2 rotate-45 border-l border-t border-leaf/16 bg-white" />
-                  <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-leaf/8" />
-                  <div className="relative flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-leaf/85">
-                        Выберите подкатегорию
-                      </p>
-                      <h3 className="mt-1 line-clamp-1 text-base font-semibold text-ink">
-                        {categoryLabel}
-                      </h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setExpandedCategory("")}
-                      className="focus-ring grid h-8 w-8 shrink-0 place-items-center rounded-full bg-mist text-sm font-semibold text-leaf transition hover:bg-leaf hover:text-white"
-                      aria-label="Закрыть подкатегории"
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  <div className="relative mt-3 flex max-h-[188px] flex-wrap gap-2 overflow-y-auto pr-1">
-                    {subcategories.map((subcategory) => (
-                      <button
-                        key={subcategory.id}
-                        type="button"
-                        onClick={() => onCategoryChange(expandedCategory, subcategory.label)}
-                        className="focus-ring rounded-full border border-ink/8 bg-white px-3.5 py-2 text-sm font-semibold text-ink shadow-[0_6px_16px_rgba(24,32,29,0.05)] transition hover:-translate-y-0.5 hover:border-leaf/25 hover:bg-leaf hover:text-white"
-                      >
-                        {subcategory.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <SubcategoryPanel
+                  title={categoryDisplay.label}
+                  subcategories={subcategories}
+                  onClose={() => setExpandedCategory("")}
+                  onSelect={(subcategory) => onCategoryChange(category.id, subcategory)}
+                />
               ) : null}
             </div>
           );
@@ -203,55 +176,100 @@ function getCategoryDisplay(category: Category, language: Language) {
   return { label, description };
 }
 
-type CategoryCardProps = {
-  category: Category;
-  index: number;
+type CategoryTileProps = {
+  label: string;
+  imageSrc: string;
   active: boolean;
-  language: Language;
   onClick: () => void;
 };
 
-function CategoryCard({
-  category,
-  index,
-  active,
-  language,
-  onClick
-}: CategoryCardProps) {
-  const { label } = getCategoryDisplay(category, language);
-
+function CategoryTile({ label, imageSrc, active, onClick }: CategoryTileProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative grid min-h-[148px] w-full grid-cols-[minmax(0,0.9fr)_minmax(116px,1fr)] items-center gap-2 overflow-hidden rounded-[24px] border bg-white px-5 py-4 text-left shadow-[0_12px_34px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:border-leaf/25 hover:shadow-[0_18px_44px_rgba(24,32,29,0.11)] sm:min-h-[172px] sm:grid-cols-[minmax(0,1fr)_minmax(140px,1fr)] sm:px-6 ${
-        active ? "border-leaf ring-2 ring-leaf/18" : "border-ink/8"
+      className={`focus-ring group relative grid min-h-[156px] w-full grid-cols-[minmax(0,1fr)_132px] items-center overflow-hidden rounded-[28px] border bg-white text-left shadow-[0_14px_38px_rgba(24,32,29,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(24,32,29,0.11)] sm:min-h-[176px] sm:grid-cols-[minmax(0,1fr)_154px] ${
+        active ? "border-leaf ring-2 ring-leaf/15" : "border-ink/8 hover:border-leaf/25"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.98)_40%,rgba(238,246,240,0.62)_100%)]" />
-      <span className="pointer-events-none absolute -right-10 -bottom-10 h-44 w-44 rounded-full bg-leaf/10 blur-2xl transition duration-300 group-hover:bg-leaf/14" />
-      <span className="pointer-events-none absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-leaf opacity-0 shadow-sm transition group-hover:opacity-100">
-        <ArrowUpRight size={16} />
-      </span>
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_58%,rgba(238,246,240,0.95)_0%,rgba(255,255,255,0.88)_45%,rgba(255,255,255,1)_78%)]" />
+      <span className="pointer-events-none absolute right-7 top-1/2 h-[122px] w-[122px] -translate-y-1/2 rounded-full bg-mist/80 blur-xl transition duration-300 group-hover:scale-110 group-hover:bg-leaf/12 sm:h-[144px] sm:w-[144px]" />
 
-      <span className="relative z-10 flex min-w-0 items-center">
-        <span className="block max-w-[12rem] text-balance break-words text-[21px] font-semibold leading-[1.12] tracking-normal text-ink sm:text-[23px]">
+      <span className="relative z-10 min-w-0 px-6 py-5 sm:px-7">
+        <span className="block max-w-[13rem] text-balance break-words text-[22px] font-semibold leading-[1.12] tracking-normal text-ink sm:text-[25px]">
           {label}
         </span>
       </span>
 
-      <span className="relative z-10 flex h-[118px] min-w-0 items-center justify-end sm:h-[138px]">
-        <span className="absolute bottom-1 right-0 h-[72%] w-[88%] rounded-full bg-mist/80 blur-xl transition duration-300 group-hover:bg-mist" />
+      <span className="relative z-10 flex h-[136px] min-w-0 items-center justify-center pr-3 sm:h-[154px] sm:pr-4">
         <Image
-          src={categoryImagePaths[index] ?? categoryImagePaths[0]}
+          src={imageSrc}
           alt=""
           width={720}
           height={560}
-          sizes="(max-width: 640px) 42vw, (max-width: 1024px) 24vw, 16vw"
+          sizes="(max-width: 640px) 34vw, (max-width: 1024px) 22vw, 15vw"
           aria-hidden="true"
-          className="relative z-10 h-full w-full object-contain object-right-center drop-shadow-[0_18px_24px_rgba(24,32,29,0.13)] transition duration-300 group-hover:scale-[1.04]"
+          className="h-full w-full object-contain drop-shadow-[0_18px_26px_rgba(24,32,29,0.14)] transition duration-300 group-hover:scale-[1.055]"
         />
       </span>
+
+      <span className="pointer-events-none absolute bottom-4 left-6 flex items-center gap-1.5 text-xs font-semibold text-leaf/0 transition group-hover:text-leaf/80 sm:left-7">
+        <span>Открыть</span>
+        <ChevronDown size={14} />
+      </span>
     </button>
+  );
+}
+
+type SubcategoryPanelProps = {
+  title: string;
+  subcategories: Array<{ id: string; label: string }>;
+  onClose: () => void;
+  onSelect: (subcategory: string) => void;
+};
+
+function SubcategoryPanel({
+  title,
+  subcategories,
+  onClose,
+  onSelect
+}: SubcategoryPanelProps) {
+  return (
+    <div className="relative mt-3 overflow-hidden rounded-[26px] border border-leaf/15 bg-white p-4 shadow-[0_16px_38px_rgba(24,32,29,0.09)]">
+      <span className="absolute left-8 top-0 h-3 w-3 -translate-y-1/2 rotate-45 border-l border-t border-leaf/15 bg-white" />
+      <span className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-mist blur-2xl" />
+
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-leaf/80">
+            Подкатегории
+          </p>
+          <h3 className="mt-1 line-clamp-2 text-base font-semibold leading-tight text-ink">
+            {title}
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="focus-ring grid h-8 w-8 shrink-0 place-items-center rounded-full bg-mist text-leaf transition hover:bg-leaf hover:text-white"
+          aria-label="Закрыть подкатегории"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      <div className="relative mt-3 flex max-h-[190px] flex-wrap gap-2 overflow-y-auto pr-1">
+        {subcategories.map((subcategory) => (
+          <button
+            key={subcategory.id}
+            type="button"
+            onClick={() => onSelect(subcategory.label)}
+            className="focus-ring rounded-full border border-ink/8 bg-mist/55 px-3.5 py-2 text-sm font-semibold text-ink shadow-[0_6px_16px_rgba(24,32,29,0.04)] transition hover:-translate-y-0.5 hover:border-leaf/30 hover:bg-leaf hover:text-white"
+          >
+            {subcategory.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

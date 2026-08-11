@@ -1,12 +1,12 @@
 [
   {
     "id": "auto",
-    "label": "Auto",
+    "label": "Transport",
     "labelRu": "Транспорт",
     "labelUz": "Transport",
     "description": "Cars and transport",
-    "descriptionRu": "Автомобили рядом",
-    "descriptionUz": "Yaqindagi avtomobillar"
+    "descriptionRu": "Авто рядом",
+    "descriptionUz": "Yaqindagi transport"
   },
   {
     "id": "real-estate",
@@ -33,7 +33,7 @@
     "labelUz": "Kiyim, poyabzal va aksessuarlar",
     "description": "Clothes and style",
     "descriptionRu": "Одежда, обувь, сумки",
-    "descriptionUz": "Kiyim, poyabzal, sumka"
+    "descriptionUz": "Kiyim, poyabzal, sumkalar"
   },
   {
     "id": "jobs",
@@ -59,7 +59,7 @@
     "labelRu": "Все для авто",
     "labelUz": "Avto uchun hammasi",
     "description": "Auto parts",
-    "descriptionRu": "Запчасти для авто",
+    "descriptionRu": "Запчасти и аксессуары",
     "descriptionUz": "Avto ehtiyot qismlari"
   },
   {
@@ -69,7 +69,7 @@
     "labelUz": "Uy uchun",
     "description": "Furniture and decor",
     "descriptionRu": "Мебель и уют",
-    "descriptionUz": "Mebel va bezak"
+    "descriptionUz": "Mebel va uy buyumlari"
   },
   {
     "id": "business",
