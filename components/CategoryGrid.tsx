@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import { ChevronDown, X } from "lucide-react";
 import type { Category } from "./types";
 import type { Language } from "./i18n";
@@ -75,18 +74,6 @@ const categoryCopy: Record<
   }
 };
 
-const categoryImagePaths = [
-  "/images/categories/transport.png",
-  "/images/categories/real-estate.png",
-  "/images/categories/electronics.png",
-  "/images/categories/fashion.png",
-  "/images/categories/jobs.png",
-  "/images/categories/services.png",
-  "/images/categories/parts.png",
-  "/images/categories/home.png",
-  "/images/categories/business.png"
-];
-
 export function CategoryGrid({
   categories,
   activeCategory,
@@ -141,7 +128,7 @@ export function CategoryGrid({
             <div key={category.id} className={`min-w-0 ${desktopSpan}`}>
               <CategoryTile
                 label={categoryDisplay.label}
-                imageSrc={categoryImagePaths[index] ?? categoryImagePaths[0]}
+                imageIndex={index}
                 active={activeCategory === category.id || isExpanded}
                 compact={index >= 4}
                 onClick={() => handleCategoryClick(category.id)}
@@ -179,46 +166,59 @@ function getCategoryDisplay(category: Category, language: Language) {
 
 type CategoryTileProps = {
   label: string;
-  imageSrc: string;
+  imageIndex: number;
   active: boolean;
   compact: boolean;
   onClick: () => void;
 };
 
-function CategoryTile({ label, imageSrc, active, compact, onClick }: CategoryTileProps) {
+function CategoryTile({
+  label,
+  imageIndex,
+  active,
+  compact,
+  onClick
+}: CategoryTileProps) {
+  const spriteColumn = imageIndex % 3;
+  const spriteRow = Math.floor(imageIndex / 3);
+  const spritePosition = `${spriteColumn * 50}% ${spriteRow * 50}%`;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative min-h-[154px] w-full overflow-hidden rounded-[24px] border bg-white text-left shadow-[0_12px_30px_rgba(24,32,29,0.065)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(24,32,29,0.105)] sm:min-h-[182px] ${
-        compact ? "lg:min-h-[150px]" : "lg:min-h-[182px]"
+      className={`focus-ring group relative h-[210px] w-full overflow-hidden rounded-[24px] border bg-[#f7f7f2] text-left shadow-[0_12px_30px_rgba(24,32,29,0.065)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_rgba(24,32,29,0.11)] sm:h-[220px] ${
+        compact ? "lg:h-[170px]" : "lg:h-[190px]"
       } ${
         active ? "border-leaf ring-2 ring-leaf/15" : "border-ink/8 hover:border-leaf/25"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,#ffffff_0%,#ffffff_46%,rgba(244,249,245,0.95)_100%)]" />
-      <span className="pointer-events-none absolute bottom-0 right-0 h-[78%] w-[58%] rounded-tl-[42px] bg-gradient-to-br from-white/70 via-mist/60 to-mist/90" />
-      <span className="pointer-events-none absolute bottom-3 right-5 h-24 w-32 rounded-full bg-leaf/8 blur-2xl transition duration-300 group-hover:bg-leaf/12 sm:h-28 sm:w-40" />
+      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.99)_0%,rgba(255,255,255,0.96)_45%,rgba(240,245,238,0.72)_100%)]" />
+      <span className="pointer-events-none absolute -bottom-16 -right-12 h-48 w-48 rounded-full bg-leaf/10 blur-3xl transition duration-300 group-hover:bg-leaf/15" />
+      <span className="pointer-events-none absolute left-0 top-0 h-1 w-0 bg-leaf transition-all duration-300 group-hover:w-full" />
 
-      <span className="relative z-20 block min-w-0 px-4 pt-5 sm:px-5 sm:pt-6">
-        <span className="block max-w-[68%] text-balance break-words text-[18px] font-semibold leading-[1.14] tracking-normal text-ink sm:text-[20px] lg:max-w-[58%]">
+      <span className="absolute left-0 top-0 z-20 block w-full min-w-0 px-4 pt-4 sm:px-5 sm:pt-5 lg:top-1/2 lg:max-w-[52%] lg:-translate-y-1/2 lg:py-5">
+        <span
+          className={`block max-w-full text-balance font-semibold leading-[1.18] tracking-normal text-ink [overflow-wrap:normal] ${
+            compact ? "text-[16px] sm:text-[17px] lg:text-[16px]" : "text-[17px] sm:text-[19px] lg:text-[17px]"
+          }`}
+        >
           {label}
         </span>
       </span>
 
-      <span className="pointer-events-none absolute bottom-1 right-2 z-10 flex h-[96px] w-[58%] items-end justify-end sm:bottom-2 sm:right-3 sm:h-[128px] lg:right-4">
-        <Image
-          src={imageSrc}
-          alt=""
-          width={720}
-          height={560}
-          sizes="(max-width: 640px) 42vw, (max-width: 1024px) 24vw, 15vw"
-          aria-hidden="true"
-          className="h-full w-full object-contain object-right-bottom drop-shadow-[0_18px_24px_rgba(24,32,29,0.13)] transition duration-300 group-hover:scale-[1.055]"
-        />
-      </span>
+      <span className="pointer-events-none absolute inset-x-3 bottom-2 z-[5] h-[116px] rounded-[20px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.92)_0%,rgba(241,245,239,0.55)_58%,transparent_78%)] sm:h-[126px] lg:bottom-0 lg:left-auto lg:right-0 lg:h-full lg:w-[48%] lg:rounded-none" />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-1/2 z-10 h-[124px] w-[160px] -translate-x-1/2 bg-no-repeat transition duration-500 [mask-image:radial-gradient(ellipse_at_center,#000_62%,transparent_98%)] [mask-repeat:no-repeat] group-hover:scale-[1.045] sm:h-[136px] sm:w-[176px] lg:bottom-0 lg:left-auto lg:right-0 lg:h-full lg:w-[48%] lg:translate-x-0"
+        style={{
+          backgroundImage: "url('/images/category-sprite-v2.png')",
+          backgroundPosition: spritePosition,
+          backgroundSize: "300% 300%"
+        }}
+      />
 
-      <span className="pointer-events-none absolute bottom-4 left-4 z-20 flex items-center gap-1.5 text-xs font-semibold text-leaf/0 transition group-hover:text-leaf/80 sm:left-5">
+      <span className="pointer-events-none absolute bottom-3 left-4 z-20 hidden items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-leaf opacity-0 shadow-sm backdrop-blur-sm transition duration-300 group-hover:opacity-100 lg:flex">
         <span>Открыть</span>
         <ChevronDown size={14} />
       </span>
