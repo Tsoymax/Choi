@@ -16,7 +16,6 @@ export const sellSubcategoriesByCategory: Record<
 > = {
   auto: [
     { id: "passenger-cars", label: "Легковые авто" },
-    { id: "electric-cars", label: "Электромобили" },
     { id: "motorcycles", label: "Мототехника" },
     { id: "trucks", label: "Грузовики" },
     { id: "buses", label: "Автобусы" },
