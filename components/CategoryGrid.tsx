@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { Category } from "./types";
 import type { Language } from "./i18n";
 import { translations } from "./i18n";
@@ -82,6 +82,7 @@ export function CategoryGrid({
 }: CategoryGridProps) {
   const t = translations[language];
   const [expandedCategory, setExpandedCategory] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const subcategories = useMemo(
     () => getSubcategories(expandedCategory),
     [expandedCategory]
@@ -89,10 +90,12 @@ export function CategoryGrid({
 
   function handleCategoryClick(categoryId: string) {
     setExpandedCategory((current) => (current === categoryId ? "" : categoryId));
+    setSelectedSubcategory("");
   }
 
   function handleAllCategoriesClick() {
     setExpandedCategory("");
+    setSelectedSubcategory("");
     onCategoryChange("all");
   }
 
@@ -125,7 +128,10 @@ export function CategoryGrid({
           const categoryDisplay = getCategoryDisplay(category, language);
 
           return (
-            <div key={category.id} className={`min-w-0 ${desktopSpan}`}>
+            <div
+              key={category.id}
+              className={`min-w-0 ${desktopSpan} ${isExpanded ? "col-span-2" : ""}`}
+            >
               <CategoryTile
                 label={categoryDisplay.label}
                 imageIndex={index}
@@ -138,8 +144,15 @@ export function CategoryGrid({
                 <SubcategoryPanel
                   title={categoryDisplay.label}
                   subcategories={subcategories}
-                  onClose={() => setExpandedCategory("")}
-                  onSelect={(subcategory) => onCategoryChange(category.id, subcategory)}
+                  selectedSubcategory={selectedSubcategory}
+                  onClose={() => {
+                    setExpandedCategory("");
+                    setSelectedSubcategory("");
+                  }}
+                  onSelect={(subcategory) => {
+                    setSelectedSubcategory(subcategory);
+                    onCategoryChange(category.id, subcategory);
+                  }}
                 />
               ) : null}
             </div>
@@ -187,30 +200,30 @@ function CategoryTile({
     <button
       type="button"
       onClick={onClick}
-      className={`focus-ring group relative h-[210px] w-full overflow-hidden rounded-[24px] border bg-[#f7f7f2] text-left shadow-[0_12px_30px_rgba(24,32,29,0.065)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_rgba(24,32,29,0.11)] sm:h-[220px] ${
-        compact ? "lg:h-[170px]" : "lg:h-[190px]"
+      className={`focus-ring group relative h-[196px] w-full overflow-hidden rounded-[24px] border bg-[#f4f4e8] text-left shadow-[0_12px_30px_rgba(24,32,29,0.065)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_46px_rgba(24,32,29,0.11)] sm:h-[210px] ${
+        compact ? "lg:h-[172px]" : "lg:h-[192px]"
       } ${
         active ? "border-leaf ring-2 ring-leaf/15" : "border-ink/8 hover:border-leaf/25"
       }`}
     >
-      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.99)_0%,rgba(255,255,255,0.96)_45%,rgba(240,245,238,0.72)_100%)]" />
-      <span className="pointer-events-none absolute -bottom-16 -right-12 h-48 w-48 rounded-full bg-leaf/10 blur-3xl transition duration-300 group-hover:bg-leaf/15" />
-      <span className="pointer-events-none absolute left-0 top-0 h-1 w-0 bg-leaf transition-all duration-300 group-hover:w-full" />
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_88%_78%,rgba(255,255,255,0.88),transparent_38%),linear-gradient(118deg,#ffffff_0%,#fbfbf7_49%,#edf0e2_100%)]" />
+      <span className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-leaf/[0.06] blur-3xl transition duration-300 group-hover:bg-leaf/[0.11]" />
+      <span className="pointer-events-none absolute left-0 top-0 h-full w-1 bg-leaf/0 transition-all duration-300 group-hover:bg-leaf/60" />
 
-      <span className="absolute left-0 top-0 z-20 block w-full min-w-0 px-4 pt-4 sm:px-5 sm:pt-5 lg:top-1/2 lg:max-w-[52%] lg:-translate-y-1/2 lg:py-5">
+      <span className="absolute left-0 top-0 z-20 block max-w-[63%] min-w-0 px-4 pt-5 sm:px-5 sm:pt-6 lg:max-w-[57%] lg:px-6 lg:pt-6">
         <span
-          className={`block max-w-full text-balance font-semibold leading-[1.18] tracking-normal text-ink [overflow-wrap:normal] ${
-            compact ? "text-[16px] sm:text-[17px] lg:text-[16px]" : "text-[17px] sm:text-[19px] lg:text-[17px]"
+          className={`block max-w-full whitespace-normal font-semibold leading-[1.16] tracking-normal text-ink [overflow-wrap:normal] ${
+            compact ? "text-[16px] sm:text-[18px] lg:text-[17px]" : "text-[17px] sm:text-[20px] lg:text-[18px]"
           }`}
         >
           {label}
         </span>
       </span>
 
-      <span className="pointer-events-none absolute inset-x-3 bottom-2 z-[5] h-[116px] rounded-[20px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.92)_0%,rgba(241,245,239,0.55)_58%,transparent_78%)] sm:h-[126px] lg:bottom-0 lg:left-auto lg:right-0 lg:h-full lg:w-[48%] lg:rounded-none" />
+      <span className="pointer-events-none absolute bottom-0 right-0 z-[5] h-full w-[65%] bg-[linear-gradient(90deg,rgba(247,248,242,0)_0%,rgba(247,248,242,0.18)_24%,rgba(247,248,242,0.8)_100%)]" />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-1/2 z-10 h-[124px] w-[160px] -translate-x-1/2 bg-no-repeat transition duration-500 [mask-image:radial-gradient(ellipse_at_center,#000_62%,transparent_98%)] [mask-repeat:no-repeat] group-hover:scale-[1.045] sm:h-[136px] sm:w-[176px] lg:bottom-0 lg:left-auto lg:right-0 lg:h-full lg:w-[48%] lg:translate-x-0"
+        className="pointer-events-none absolute bottom-0 right-0 z-10 h-[96%] w-[58%] bg-no-repeat transition duration-500 [mask-image:linear-gradient(90deg,transparent_0%,#000_18%,#000_100%)] [mask-repeat:no-repeat] group-hover:scale-[1.035] group-hover:brightness-[1.02]"
         style={{
           backgroundImage: "url('/images/category-sprite-v2.png')",
           backgroundPosition: spritePosition,
@@ -218,10 +231,7 @@ function CategoryTile({
         }}
       />
 
-      <span className="pointer-events-none absolute bottom-3 left-4 z-20 hidden items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-leaf opacity-0 shadow-sm backdrop-blur-sm transition duration-300 group-hover:opacity-100 lg:flex">
-        <span>Открыть</span>
-        <ChevronDown size={14} />
-      </span>
+      <span className="pointer-events-none absolute bottom-0 right-0 z-20 h-16 w-24 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,255,255,0.28),transparent_70%)]" />
     </button>
   );
 }
@@ -229,6 +239,7 @@ function CategoryTile({
 type SubcategoryPanelProps = {
   title: string;
   subcategories: Array<{ id: string; label: string }>;
+  selectedSubcategory: string;
   onClose: () => void;
   onSelect: (subcategory: string) => void;
 };
@@ -236,6 +247,7 @@ type SubcategoryPanelProps = {
 function SubcategoryPanel({
   title,
   subcategories,
+  selectedSubcategory,
   onClose,
   onSelect
 }: SubcategoryPanelProps) {
@@ -263,17 +275,26 @@ function SubcategoryPanel({
         </button>
       </div>
 
-      <div className="relative mt-3 flex max-h-[190px] flex-wrap gap-2 overflow-y-auto pr-1">
-        {subcategories.map((subcategory) => (
-          <button
-            key={subcategory.id}
-            type="button"
-            onClick={() => onSelect(subcategory.label)}
-            className="focus-ring rounded-full border border-ink/8 bg-mist/55 px-3.5 py-2 text-sm font-semibold text-ink shadow-[0_6px_16px_rgba(24,32,29,0.04)] transition hover:-translate-y-0.5 hover:border-leaf/30 hover:bg-leaf hover:text-white"
-          >
-            {subcategory.label}
-          </button>
-        ))}
+      <div className="relative mt-4 grid max-h-[220px] grid-cols-2 gap-2 overflow-y-auto pr-1">
+        {subcategories.map((subcategory) => {
+          const isSelected = selectedSubcategory === subcategory.label;
+
+          return (
+            <button
+              key={subcategory.id}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => onSelect(subcategory.label)}
+              className={`focus-ring min-h-11 min-w-0 rounded-2xl border px-3 py-2 text-left text-sm font-semibold leading-snug transition ${
+                isSelected
+                  ? "border-leaf bg-leaf text-white shadow-[0_8px_18px_rgba(75,129,94,0.24)]"
+                  : "border-ink/8 bg-mist/55 text-ink shadow-[0_6px_16px_rgba(24,32,29,0.04)] hover:border-leaf/30 hover:bg-white"
+              }`}
+            >
+              {subcategory.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
