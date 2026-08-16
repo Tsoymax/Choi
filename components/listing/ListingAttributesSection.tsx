@@ -22,11 +22,12 @@ export function ListingAttributesSection({
     return null;
   }
 
-  const groups = getAttributeGroups(category);
+  const groups = getAttributeGroups(category, attributes.subcategory);
   const knownKeys = new Set(groups.flatMap((group) => group.fields.map((field) => field.key)));
   const subcategory = getSubcategoryLabel(category, attributes.subcategory);
   const unknownAttributes = filledAttributes.filter(
-    ([key]) => !knownKeys.has(key) && key !== "subcategory"
+    ([key]) =>
+      !knownKeys.has(key) && key !== "subcategory" && key !== "rental_unit"
   );
 
   return (
@@ -74,7 +75,12 @@ export function ListingAttributesSection({
                   >
                     <dt className="text-sm font-medium text-ink/52">{field.label}</dt>
                     <dd className="mt-1 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
-                      {formatAttributeValue(category, field.key, value)}
+                      {formatAttributeValue(
+                        category,
+                        field.key,
+                        value,
+                        attributes.subcategory
+                      )}
                     </dd>
                   </div>
                 ))}
@@ -90,7 +96,7 @@ export function ListingAttributesSection({
             </h3>
             <dl className="mt-3 grid gap-3 sm:grid-cols-2">
               {unknownAttributes.map(([key, value]) => {
-                const field = getAttributeField(category, key);
+                const field = getAttributeField(category, key, attributes.subcategory);
                 return (
                   <div
                     key={key}
@@ -100,7 +106,7 @@ export function ListingAttributesSection({
                       {field?.label ?? key}
                     </dt>
                     <dd className="mt-1 break-words text-base font-semibold text-ink [overflow-wrap:anywhere]">
-                      {formatAttributeValue(category, key, value)}
+                      {formatAttributeValue(category, key, value, attributes.subcategory)}
                     </dd>
                   </div>
                 );

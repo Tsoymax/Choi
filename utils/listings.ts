@@ -264,20 +264,28 @@ export function getDistrictLabel(districtId: string) {
   );
 }
 
-export function formatListingPrice(listing: Pick<Listing, "price" | "currency" | "negotiable">) {
+export function formatListingPrice(
+  listing: Pick<Listing, "price" | "currency" | "negotiable" | "attributes">
+) {
   if (listing.negotiable) {
     return "Договорная";
   }
 
+  const rentalUnit = listing.attributes?.rental_unit;
+  const rentalSuffix =
+    rentalUnit === "hour" ? "/час" : rentalUnit === "per-day" ? "/день" : rentalUnit === "day" ? "/сутки" : "";
+
   if (listing.currency === "uzs") {
-    return `${new Intl.NumberFormat("ru-RU").format(listing.price)} сум`;
+    return `${new Intl.NumberFormat("ru-RU").format(listing.price)} сум${rentalSuffix}`;
   }
 
-  return new Intl.NumberFormat("en-US", {
+  const amount = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0
   }).format(listing.price);
+
+  return `${amount}${rentalSuffix}`;
 }
 
 export function formatListingDate(createdAt?: string) {

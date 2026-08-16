@@ -17,7 +17,12 @@ type ListingPreviewProps = {
   image?: string;
 };
 
-function formatPreviewPrice(price: string, currency: "uzs" | "usd", negotiable: boolean) {
+function formatPreviewPrice(
+  price: string,
+  currency: "uzs" | "usd",
+  negotiable: boolean,
+  rentalUnit?: string
+) {
   if (negotiable) {
     return "Договорная";
   }
@@ -27,11 +32,14 @@ function formatPreviewPrice(price: string, currency: "uzs" | "usd", negotiable: 
   }
 
   const amount = Number(price);
+  const rentalSuffix =
+    rentalUnit === "hour" ? "/час" : rentalUnit === "per-day" ? "/день" : rentalUnit === "day" ? "/сутки" : "";
+
   if (currency === "uzs") {
-    return `${new Intl.NumberFormat("ru-RU").format(amount)} сум`;
+    return `${new Intl.NumberFormat("ru-RU").format(amount)} сум${rentalSuffix}`;
   }
 
-  return `$${new Intl.NumberFormat("en-US").format(amount)}`;
+  return `$${new Intl.NumberFormat("en-US").format(amount)}${rentalSuffix}`;
 }
 
 export function ListingPreview({
@@ -87,7 +95,7 @@ export function ListingPreview({
           ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
             <strong className="break-words text-xl font-semibold text-ink [overflow-wrap:anywhere]">
-              {formatPreviewPrice(price, currency, negotiable)}
+              {formatPreviewPrice(price, currency, negotiable, attributes.rental_unit)}
             </strong>
             {displayColor ? (
               <span

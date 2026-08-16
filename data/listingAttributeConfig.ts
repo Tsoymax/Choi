@@ -288,6 +288,248 @@ const carColorOptions = toOptions([
   "Комбинированный"
 ]);
 
+const passengerCarBrands = [
+  "Chevrolet",
+  "Daewoo",
+  "BYD",
+  "Kia",
+  "Hyundai",
+  "Toyota",
+  "Chery",
+  "Geely",
+  "Haval",
+  "Jetour",
+  "Changan",
+  "JAC",
+  "Volkswagen",
+  "Mercedes-Benz",
+  "BMW",
+  "Lexus",
+  "Audi",
+  "Nissan",
+  "Honda",
+  "LADA",
+  "Tesla"
+];
+
+const passengerCarModelsByBrand: Record<string, string[]> = {
+  Chevrolet: [
+    "Cobalt",
+    "Cobalt MCM",
+    "Onix",
+    "Nexia",
+    "Gentra",
+    "Lacetti",
+    "Spark",
+    "Malibu",
+    "Malibu XL",
+    "Tracker",
+    "Captiva",
+    "Equinox",
+    "Traverse",
+    "Tahoe",
+    "Damas",
+    "Labo"
+  ],
+  Daewoo: ["Matiz", "Nexia", "Gentra", "Lacetti", "Spark", "Damas", "Tico"],
+  BYD: ["Chazor", "Song Plus DM-i", "Song Pro DM-i", "Yuan Up", "E2", "Seal", "Dolphin", "Han"],
+  Kia: ["K5", "K8", "Seltos", "Sonet", "Sportage", "Sorento", "Carnival", "Rio", "Picanto"],
+  Hyundai: ["Elantra", "Sonata", "Tucson", "Santa Fe", "Palisade", "Accent", "Creta", "Venue"],
+  Toyota: ["Camry", "Corolla", "RAV4", "Highlander", "Fortuner", "Land Cruiser Prado", "Land Cruiser 300", "Yaris"],
+  Chery: ["Tiggo 7 Pro", "Tiggo 8 Pro", "Tiggo 9", "Arrizo 6 Pro", "Tiggo 4 Pro"],
+  Geely: ["Monjaro", "Coolray", "Atlas Pro", "Emgrand", "Okavango"],
+  Haval: ["Jolion", "M6", "Dargo", "H6", "H9"],
+  Jetour: ["X70 Plus", "X90 Plus", "T2", "Dashing"],
+  Changan: ["UNI-K", "UNI-T", "CS55 Plus", "Alsvin"],
+  JAC: ["JS4", "JS6", "J7", "S3"],
+  Volkswagen: ["Polo", "Jetta", "Tiguan", "Touareg", "Passat"],
+  "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "GLC", "GLE", "GLS"],
+  BMW: ["3 Series", "5 Series", "X3", "X5", "X7"],
+  Lexus: ["ES", "RX", "NX", "LX", "GX"],
+  Audi: ["A4", "A6", "Q5", "Q7", "Q8"],
+  Nissan: ["Altima", "X-Trail", "Qashqai", "Patrol", "Sentra"],
+  Honda: ["Civic", "Accord", "CR-V", "Pilot"],
+  LADA: ["Granta", "Vesta", "Niva", "Largus"],
+  Tesla: ["Model 3", "Model Y", "Model S", "Model X"]
+};
+
+const motorcycleModelsByBrand: Record<string, string[]> = {
+  Yamaha: ["MT-07", "MT-09", "R1", "R6", "NMAX", "XMAX", "YZF-R15"],
+  Honda: ["CBR 600RR", "CBR 1000RR", "CB 500", "Africa Twin", "PCX", "Dio"],
+  Suzuki: ["GSX-R600", "GSX-R1000", "V-Strom 650", "Burgman", "Hayabusa"],
+  Kawasaki: ["Ninja 400", "Ninja 650", "Ninja ZX-6R", "Z900", "Versys 650"],
+  KTM: ["Duke 200", "Duke 390", "RC 390", "Adventure 390"],
+  "BMW Motorrad": ["G 310 R", "F 850 GS", "R 1250 GS", "S 1000 RR"],
+  Bajaj: ["Pulsar NS200", "Pulsar N160", "Dominar 400"],
+  CFMOTO: ["250NK", "450SR", "650NK", "800MT"],
+  Benelli: ["TNT 300", "TRK 502", "Leoncino 500"],
+  Lifan: ["KP200", "KPT200", "LF150"],
+  "Harley-Davidson": ["Sportster", "Street Bob", "Fat Boy"],
+  Other: ["Другая модель"]
+};
+
+const truckModelsByBrand: Record<string, string[]> = {
+  Isuzu: ["NPR", "NQR", "FVR", "GIGA"],
+  MAN: ["TGL", "TGM", "TGS", "TGX"],
+  KamAZ: ["4308", "5490", "65115", "6520"],
+  Howo: ["A7", "TX", "T5G"],
+  Shacman: ["X3000", "F3000", "L3000"],
+  Dongfeng: ["C31", "C53", "KX"],
+  Foton: ["Aumark", "Auman", "Forland"],
+  Hyundai: ["HD65", "HD78", "Mighty", "EX8"],
+  "Mercedes-Benz": ["Atego", "Actros", "Axor"],
+  Volvo: ["FL", "FM", "FH"],
+  Scania: ["P-series", "G-series", "R-series"],
+  GAZ: ["Gazelle", "Valdai", "GAZon Next"],
+  MAZ: ["4370", "5551", "5440"],
+  DAF: ["LF", "CF", "XF"],
+  Other: ["Другая модель"]
+};
+
+const busModelsByBrand: Record<string, string[]> = {
+  Isuzu: ["SAZ NP26", "SAZ NP37", "NQR 71"],
+  "Mercedes-Benz": ["Sprinter", "Conecto", "Tourismo"],
+  Yutong: ["ZK6122H9", "ZK6118H2", "ZK6852HG"],
+  "King Long": ["XMQ6127", "XMQ6900", "XMQ6706"],
+  Higer: ["KLQ6129", "KLQ6885", "KLQ6840"],
+  "Golden Dragon": ["XML6125", "XML6907"],
+  MAN: ["Lion's City", "Lion's Coach"],
+  Hyundai: ["County", "Universe"],
+  Daewoo: ["BH120", "BS106"],
+  PAZ: ["3205", "Vector Next"],
+  Other: ["Другая модель"]
+};
+
+function getVehicleModelOptions(
+  values: Record<string, string>,
+  modelsByBrand: Record<string, string[]>
+) {
+  return toOptions(modelsByBrand[values.brand] ?? []);
+}
+
+const vehicleFuelOptions = toOptions([
+  "Бензин",
+  "Бензин-Метан",
+  "Бензин-Пропан",
+  "Дизель",
+  "Электро",
+  "Гибрид"
+]);
+
+const vehicleTransmissionOptions = toOptions(["Автомат", "Механика", "Вариатор", "Робот"]);
+const vehicleDriveOptions = toOptions(["Передний", "Задний", "Полный"]);
+
+const passengerCarFields: ListingAttributeField[] = [
+  { key: "brand", label: "Марка", type: "select", required: true, options: toOptions(passengerCarBrands) },
+  { key: "model", label: "Модель", type: "select", required: true, dependsOn: "brand", getOptions: (values) => getVehicleModelOptions(values, passengerCarModelsByBrand) },
+  { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
+  { key: "month", label: "Месяц выпуска", type: "select", required: true, options: carMonthOptions },
+  { key: "mileage", label: "Пробег", type: "number", required: true, unit: "км", placeholder: "Выберите", min: 0, max: 3000000, step: 1000, maxLength: 7, suggestions: toOptions(carMileageSuggestions) },
+  { key: "fuel", label: "Тип топлива", type: "select", required: true, options: vehicleFuelOptions },
+  { key: "transmission", label: "Коробка", type: "select", options: vehicleTransmissionOptions },
+  { key: "drive", label: "Привод", type: "select", options: vehicleDriveOptions },
+  { key: "engine", label: "Объем двигателя", type: "number", placeholder: "Выберите", unit: "л", min: 0, max: 6, step: 0.1, maxLength: 4, suggestions: toOptions(carEngineSuggestions) },
+  { key: "color", label: "Цвет", type: "select", options: carColorOptions },
+  { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
+  { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
+  { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
+];
+
+const vehicleAttributeGroupsBySubcategory: Record<string, ListingAttributeGroup[]> = {
+  "passenger-cars": [{ title: "Легковой автомобиль", fields: passengerCarFields }],
+  motorcycles: [
+    {
+      title: "Мототехника",
+      fields: [
+        { key: "brand", label: "Марка", type: "select", required: true, options: toOptions(Object.keys(motorcycleModelsByBrand)) },
+        { key: "model", label: "Модель", type: "select", required: true, dependsOn: "brand", getOptions: (values) => getVehicleModelOptions(values, motorcycleModelsByBrand) },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
+        { key: "mileage", label: "Пробег", type: "number", unit: "км", placeholder: "Выберите", min: 0, max: 1000000, step: 1000, maxLength: 7, suggestions: toOptions(carMileageSuggestions) },
+        { key: "vehicle_type", label: "Тип", type: "select", options: toOptions(["Мотоцикл", "Скутер", "Мопед", "Эндуро", "Квадроцикл", "Снегоход"]) },
+        { key: "fuel", label: "Тип топлива", type: "select", options: toOptions(["Бензин", "Электро"]) },
+        { key: "engine", label: "Объем двигателя", type: "number", unit: "см³", placeholder: "Выберите", min: 0, max: 2500, step: 10, maxLength: 4, suggestions: toOptions(["50", "110", "125", "150", "200", "250", "300", "400", "600", "750", "1000", "1200"]) },
+        { key: "color", label: "Цвет", type: "select", options: carColorOptions },
+        { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
+        { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
+        { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
+      ]
+    }
+  ],
+  trucks: [
+    {
+      title: "Грузовик",
+      fields: [
+        { key: "brand", label: "Марка", type: "select", required: true, options: toOptions(Object.keys(truckModelsByBrand)) },
+        { key: "model", label: "Модель", type: "select", required: true, dependsOn: "brand", getOptions: (values) => getVehicleModelOptions(values, truckModelsByBrand) },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
+        { key: "mileage", label: "Пробег", type: "number", unit: "км", placeholder: "Выберите", min: 0, max: 3000000, step: 1000, maxLength: 7, suggestions: toOptions(carMileageSuggestions) },
+        { key: "fuel", label: "Тип топлива", type: "select", options: vehicleFuelOptions },
+        { key: "drive", label: "Колесная формула", type: "select", options: toOptions(["4x2", "4x4", "6x2", "6x4", "6x6", "8x4"]) },
+        { key: "body_type", label: "Тип кузова", type: "select", options: toOptions(["Бортовой", "Тентованный", "Самосвал", "Рефрижератор", "Фургон", "Цистерна", "Контейнеровоз", "Эвакуатор"]) },
+        { key: "payload", label: "Грузоподъемность", type: "number", unit: "т", placeholder: "Выберите", min: 0, max: 100, step: 0.5, maxLength: 5 },
+        { key: "color", label: "Цвет", type: "select", options: carColorOptions },
+        { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
+        { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
+        { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
+      ]
+    }
+  ],
+  buses: [
+    {
+      title: "Автобус",
+      fields: [
+        { key: "brand", label: "Марка", type: "select", required: true, options: toOptions(Object.keys(busModelsByBrand)) },
+        { key: "model", label: "Модель", type: "select", required: true, dependsOn: "brand", getOptions: (values) => getVehicleModelOptions(values, busModelsByBrand) },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
+        { key: "mileage", label: "Пробег", type: "number", unit: "км", placeholder: "Выберите", min: 0, max: 3000000, step: 1000, maxLength: 7, suggestions: toOptions(carMileageSuggestions) },
+        { key: "fuel", label: "Тип топлива", type: "select", options: vehicleFuelOptions },
+        { key: "seats", label: "Количество мест", type: "number", unit: "мест", placeholder: "Выберите", min: 1, max: 120, step: 1, maxLength: 3 },
+        { key: "bus_type", label: "Тип автобуса", type: "select", options: toOptions(["Городской", "Междугородний", "Туристический", "Микроавтобус", "Школьный"]) },
+        { key: "color", label: "Цвет", type: "select", options: carColorOptions },
+        { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
+        { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
+        { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
+      ]
+    }
+  ],
+  trailers: [
+    {
+      title: "Прицеп",
+      fields: [
+        { key: "trailer_type", label: "Тип прицепа", type: "select", required: true, options: toOptions(["Легковой", "Бортовой", "Тентованный", "Рефрижератор", "Самосвальный", "Контейнеровоз", "Автовоз", "Цистерна", "Низкорамный", "Полуприцеп"]) },
+        { key: "manufacturer", label: "Производитель", type: "text", placeholder: "Например, Schmitz" },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
+        { key: "axles", label: "Количество осей", type: "select", options: toOptions(["1", "2", "3", "4+"]) },
+        { key: "payload", label: "Грузоподъемность", type: "number", unit: "т", placeholder: "Выберите", min: 0, max: 100, step: 0.5, maxLength: 5 },
+        { key: "volume", label: "Объем", type: "number", unit: "м³", placeholder: "Выберите", min: 0, max: 150, step: 1, maxLength: 4 },
+        { key: "length", label: "Длина", type: "number", unit: "м", placeholder: "Выберите", min: 0, max: 30, step: 0.1, maxLength: 4 },
+        { key: "brakes", label: "Тормозная система", type: "select", options: toOptions(["Есть", "Нет", "Требует ремонта"]) },
+        { key: "color", label: "Цвет", type: "select", options: carColorOptions },
+        { key: "customs", label: "Растаможен", type: "select", options: yesNoOptions },
+        { key: "bargain", label: "Торг", type: "select", options: yesNoOptions },
+        { key: "exchange", label: "Обмен", type: "select", options: yesNoOptions }
+      ]
+    }
+  ],
+  "car-rental": [
+    {
+      title: "Автомобиль в аренду",
+      fields: [
+        { key: "brand", label: "Марка", type: "select", required: true, options: toOptions(passengerCarBrands) },
+        { key: "model", label: "Модель", type: "select", required: true, dependsOn: "brand", getOptions: (values) => getVehicleModelOptions(values, passengerCarModelsByBrand) },
+        { key: "year", label: "Год выпуска", type: "number", required: true, placeholder: "Выберите", min: 1900, max: 2027, step: 1, maxLength: 4, suggestions: carYearSuggestions },
+        { key: "month", label: "Месяц выпуска", type: "select", options: carMonthOptions },
+        { key: "mileage", label: "Пробег", type: "number", unit: "км", placeholder: "Выберите", min: 0, max: 3000000, step: 1000, maxLength: 7, suggestions: toOptions(carMileageSuggestions) },
+        { key: "fuel", label: "Тип топлива", type: "select", options: vehicleFuelOptions },
+        { key: "transmission", label: "Коробка", type: "select", options: vehicleTransmissionOptions },
+        { key: "drive", label: "Привод", type: "select", options: vehicleDriveOptions },
+        { key: "seats", label: "Количество мест", type: "number", unit: "мест", placeholder: "Выберите", min: 2, max: 12, step: 1, maxLength: 2 },
+        { key: "color", label: "Цвет", type: "select", options: carColorOptions }
+      ]
+    }
+  ]
+};
+
 export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGroup[]> = {
   auto: [
     {
@@ -456,12 +698,16 @@ export const listingAttributeGroupsByCategory: Record<string, ListingAttributeGr
   ]
 };
 
-export function getAttributeGroups(category: string) {
+export function getAttributeGroups(category: string, subcategory?: string) {
+  if (category === "auto" && subcategory) {
+    return vehicleAttributeGroupsBySubcategory[subcategory] ?? listingAttributeGroupsByCategory.auto;
+  }
+
   return listingAttributeGroupsByCategory[category] ?? [];
 }
 
-export function getAttributeField(category: string, key: string) {
-  return getAttributeGroups(category)
+export function getAttributeField(category: string, key: string, subcategory?: string) {
+  return getAttributeGroups(category, subcategory)
     .flatMap((group) => group.fields)
     .find((field) => field.key === key);
 }
@@ -469,9 +715,10 @@ export function getAttributeField(category: string, key: string) {
 export function formatAttributeValue(
   category: string,
   key: string,
-  value: string
+  value: string,
+  subcategory?: string
 ) {
-  const field = getAttributeField(category, key);
+  const field = getAttributeField(category, key, subcategory);
   const optionLabel = field?.options?.find((option) => option.value === value)?.label;
   const displayValue = optionLabel ?? value;
   return field?.unit ? `${displayValue} ${field.unit}` : displayValue;

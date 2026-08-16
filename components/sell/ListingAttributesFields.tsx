@@ -180,9 +180,9 @@ export function ListingAttributesFields({
   errors = {},
   onChange
 }: ListingAttributesFieldsProps) {
-  const groups = getAttributeGroups(category);
+  const groups = getAttributeGroups(category, values.subcategory);
 
-  if (!category || groups.length === 0) {
+  if (!category || (category === "auto" && !values.subcategory) || groups.length === 0) {
     return null;
   }
 

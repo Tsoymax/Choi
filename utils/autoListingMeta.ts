@@ -1,8 +1,10 @@
 export function getAutoListingTitle(attributes?: Record<string, string>) {
   const brand = attributes?.brand?.trim();
   const model = attributes?.model?.trim();
+  const manufacturer = attributes?.manufacturer?.trim();
+  const trailerType = attributes?.trailer_type?.trim();
 
-  return [brand, model].filter(Boolean).join(" ") || "Авто";
+  return [brand || manufacturer, model || trailerType].filter(Boolean).join(" ") || "Транспорт";
 }
 
 function formatMileage(value?: string) {

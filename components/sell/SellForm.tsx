@@ -189,6 +189,7 @@ export function SellForm({
   const photosRef = useRef<UploadPhoto[]>([]);
   const initialPhotoIdsRef = useRef(initialListing?.images.map((image) => image.id) ?? []);
   const subcategories = useMemo(() => getSubcategories(category), [category]);
+  const isCarRental = category === "auto" && attributes.subcategory === "car-rental";
 
   const mainPhoto = useMemo(
     () => photos.find((photo) => photo.id === mainPhotoId) ?? photos[0],
@@ -417,7 +418,7 @@ export function SellForm({
 
     setErrors(nextErrors);
     const nextAttributeErrors: Record<string, string> = {};
-    getAttributeGroups(category).forEach((group) => {
+    getAttributeGroups(category, attributes.subcategory).forEach((group) => {
       group.fields.forEach((field) => {
         if (field.required && !attributes[field.key]?.trim()) {
           nextAttributeErrors[field.key] = "Заполните поле.";
@@ -678,7 +679,10 @@ export function SellForm({
             value={attributes.subcategory ?? ""}
             error={errors.subcategory}
             onChange={(value) => {
-              setAttributes((current) => ({ ...current, subcategory: value }));
+              setAttributes({ subcategory: value });
+              if (value === "car-rental") {
+                setNegotiable(false);
+              }
               markDirty();
               setErrors((current) => ({ ...current, subcategory: undefined }));
             }}
@@ -709,6 +713,8 @@ export function SellForm({
             price={price}
             currency={currency}
             negotiable={negotiable}
+            isRental={isCarRental}
+            rentalUnit={attributes.rental_unit ?? "day"}
             error={errors.price}
             onPriceChange={(value) => {
               setPrice(value);
@@ -723,6 +729,10 @@ export function SellForm({
               setNegotiable(value);
               markDirty();
               setErrors((current) => ({ ...current, price: undefined }));
+            }}
+            onRentalUnitChange={(value) => {
+              setAttributes((current) => ({ ...current, rental_unit: value }));
+              markDirty();
             }}
           />
 
