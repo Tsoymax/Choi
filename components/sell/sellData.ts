@@ -101,6 +101,21 @@ export function getSubcategories(category: string) {
   return sellSubcategoriesByCategory[category] ?? [];
 }
 
+export function getSubcategoryId(category: string, value?: string) {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  return (
+    getSubcategories(category).find(
+      (subcategory) =>
+        subcategory.id === normalizedValue || subcategory.label === normalizedValue
+    )?.id ?? normalizedValue
+  );
+}
+
 export function getSubcategoryLabel(category: string, value?: string) {
   const normalizedValue = value?.trim();
 

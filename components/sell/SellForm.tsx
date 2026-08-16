@@ -36,7 +36,7 @@ import { ListingAttributesFields } from "./ListingAttributesFields";
 import { LocationSelect } from "./LocationSelect";
 import { PhotoUploader, type UploadPhoto } from "./PhotoUploader";
 import { PriceField } from "./PriceField";
-import { getSubcategories, sellCategories } from "./sellData";
+import { getSubcategories, getSubcategoryId, sellCategories } from "./sellData";
 import { SubcategorySelect } from "./SubcategorySelect";
 
 type FormErrors = Partial<
@@ -173,9 +173,14 @@ export function SellForm({
     initialListing?.currency ?? "uzs"
   );
   const [negotiable, setNegotiable] = useState(initialListing?.negotiable ?? false);
-  const [attributes, setAttributes] = useState<Record<string, string>>(
-    initialListing?.attributes ?? {}
-  );
+  const [attributes, setAttributes] = useState<Record<string, string>>(() => {
+    const initialAttributes = initialListing?.attributes ?? {};
+    const subcategory = getSubcategoryId(category, initialAttributes.subcategory);
+
+    return subcategory
+      ? { ...initialAttributes, subcategory }
+      : initialAttributes;
+  });
   const [attributeErrors, setAttributeErrors] = useState<Record<string, string>>({});
   const [district, setDistrict] = useState(
     initialListing?.district ?? initialProfile?.district ?? ""

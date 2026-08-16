@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { getSubcategories } from "./sellData";
+import { getSubcategories, getSubcategoryId } from "./sellData";
 
 type SubcategorySelectProps = {
   category: string;
@@ -20,6 +20,8 @@ export function SubcategorySelect({
     return null;
   }
 
+  const selectedValue = getSubcategoryId(category, value);
+
   return (
     <label id="sell-field-subcategory" className="block scroll-mt-28">
       <span className="text-sm font-semibold text-ink">
@@ -27,13 +29,13 @@ export function SubcategorySelect({
       </span>
       <span className="relative mt-2 block">
         <select
-          value={value}
+          value={selectedValue}
           onChange={(event) => onChange(event.target.value)}
           className="focus-ring h-14 w-full appearance-none rounded-2xl border border-ink/10 bg-white px-4 pr-11 text-base font-medium text-ink shadow-sm"
         >
           <option value="">Выберите подкатегорию</option>
           {subcategories.map((subcategory) => (
-            <option key={subcategory.id} value={subcategory.label}>
+            <option key={subcategory.id} value={subcategory.id}>
               {subcategory.label}
             </option>
           ))}
